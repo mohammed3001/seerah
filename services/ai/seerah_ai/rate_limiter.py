@@ -115,15 +115,25 @@ class RateLimiter:
         key = self._key(user_id)
         member = f"{now_ms}:{uuid.uuid4().hex}"
 
-        # 1) prune old members 2) count 3) tentatively add 4) re-count
+        # Single pipeline: prune old, add tentatively, count, refresh TTL.
+        # If the post-add count exceeds the limit, roll back the just-added
+        # entry. This collapses the TOCTOU window of a check-then-record
+        # sequence: concurrent requests all participate in the same ordered
+        # ZADD+ZCARD pipeline, so only the first `limit` entries within the
+        # window survive.
         commands: list[list[str | int]] = [
             ["ZREMRANGEBYSCORE", key, "0", str(window_start_ms - 1)],
+            ["ZADD", key, str(now_ms), member],
             ["ZCARD", key],
+            ["EXPIRE", key, str(WINDOW_SECONDS)],
         ]
         result = await self._client.pipeline(commands)
-        count_before = _result_int(result[1])
+        count_after = _result_int(result[2])
 
-        if count_before >= limit:
+        if count_after > limit:
+            # Roll back: remove the entry we just added. Best-effort; even if
+            # this fails the entry will expire after WINDOW_SECONDS.
+            await self._client.pipeline([["ZREM", key, member]])
             return RateLimitResult(
                 allowed=False,
                 limit=limit,
@@ -131,16 +141,10 @@ class RateLimiter:
                 reset_at=reset_at,
             )
 
-        record_commands: list[list[str | int]] = [
-            ["ZADD", key, str(now_ms), member],
-            ["EXPIRE", key, str(WINDOW_SECONDS)],
-        ]
-        await self._client.pipeline(record_commands)
-
         return RateLimitResult(
             allowed=True,
             limit=limit,
-            remaining=limit - count_before - 1,
+            remaining=max(0, limit - count_after),
             reset_at=reset_at,
         )
 

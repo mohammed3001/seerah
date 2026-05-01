@@ -64,11 +64,20 @@ class OpenAIClient:
         if attachments:
             user_content = [{"type": "text", "text": user_prompt}, *attachments]
 
+        # Vision-capable model is used whenever the caller passed image/file
+        # attachments. Otherwise a deployer who set OPENAI_MODEL to a cheap
+        # text-only model would silently break smart-fill.
+        model = (
+            self._settings.openai_vision_model
+            if attachments
+            else self._settings.openai_model
+        )
+
         last_error: Exception | None = None
         for attempt in range(3):
             try:
                 completion = await self._client.chat.completions.create(
-                    model=self._settings.openai_model,
+                    model=model,
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_content},

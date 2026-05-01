@@ -10,46 +10,62 @@ from seerah_ai.rate_limiter import RateLimiter, _UpstashClient
 
 
 class FakeUpstash:
-    def __init__(self, count: int) -> None:
-        self.count = count
+    """Test double for the Upstash REST client.
+
+    Returns deterministic results for the rate-limiter's two pipeline shapes:
+    - main pipeline: [ZREMRANGEBYSCORE, ZADD, ZCARD, EXPIRE]
+    - rollback pipeline: [ZREM]
+    """
+
+    def __init__(self, count_after: int) -> None:
+        self.count_after = count_after
         self.calls: list[list[list[Any]]] = []
 
     async def pipeline(
         self, commands: list[list[Any]], *, client: Any = None
     ) -> list[dict[str, Any]]:
         self.calls.append(commands)
-        # First call returns prune + count; second is record (ZADD + EXPIRE)
-        if commands[0][0] == "ZREMRANGEBYSCORE":
-            return [{"result": 0}, {"result": self.count}]
-        return [{"result": 1}, {"result": 1}]
+        if commands and commands[0][0] == "ZREM":
+            return [{"result": 1}]
+        # Main pipeline: prune, ZADD, ZCARD, EXPIRE
+        return [
+            {"result": 0},
+            {"result": 1},
+            {"result": self.count_after},
+            {"result": 1},
+        ]
 
 
 @pytest.mark.asyncio
 async def test_rate_limiter_allows_when_under_limit(monkeypatch: Any) -> None:
-    fake = FakeUpstash(count=3)
+    fake = FakeUpstash(count_after=4)  # 3 prior + 1 new
     limiter = RateLimiter(client=fake)  # type: ignore[arg-type]
     monkeypatch.setattr(limiter, "_configured", True)
     result = await limiter.check_and_record("user-1", "free")
     assert result.allowed
     assert result.limit == 10
-    assert result.remaining == 6  # 10 - 3 - 1
-    assert len(fake.calls) == 2  # prune+count, then record
+    assert result.remaining == 6  # 10 - 4
+    assert len(fake.calls) == 1  # single combined pipeline
 
 
 @pytest.mark.asyncio
-async def test_rate_limiter_blocks_when_at_limit(monkeypatch: Any) -> None:
-    fake = FakeUpstash(count=10)
+async def test_rate_limiter_blocks_and_rolls_back_on_overflow(
+    monkeypatch: Any,
+) -> None:
+    fake = FakeUpstash(count_after=11)  # exceeds free limit (10)
     limiter = RateLimiter(client=fake)  # type: ignore[arg-type]
     monkeypatch.setattr(limiter, "_configured", True)
     result = await limiter.check_and_record("user-1", "free")
     assert not result.allowed
     assert result.remaining == 0
-    assert len(fake.calls) == 1  # only prune+count, no record
+    # Two pipelines: main + rollback ZREM
+    assert len(fake.calls) == 2
+    assert fake.calls[1][0][0] == "ZREM"
 
 
 @pytest.mark.asyncio
 async def test_rate_limiter_prime_has_higher_limit(monkeypatch: Any) -> None:
-    fake = FakeUpstash(count=50)
+    fake = FakeUpstash(count_after=51)  # 50 prior + 1 new
     limiter = RateLimiter(client=fake)  # type: ignore[arg-type]
     monkeypatch.setattr(limiter, "_configured", True)
     result = await limiter.check_and_record("user-1", "prime")
