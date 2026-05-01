@@ -1,0 +1,44 @@
+[project]
+name = "seerah-ai"
+version = "0.0.0"
+description = "Seerah AI service — Anthropic Claude integration for resume rewrites, suggestions, and ATS scoring."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.115.6",
+  "uvicorn[standard]>=0.34.0",
+  "pydantic>=2.10.4",
+  "pydantic-settings>=2.7.0",
+  "anthropic>=0.42.0",
+  "httpx>=0.27",
+  "supabase>=2.29.0",
+  "redis>=5.2.1",
+  "sentry-sdk[fastapi]>=2.19.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.8.4",
+  "pytest>=8.3.4",
+  "pytest-asyncio>=0.25.0",
+  "mypy>=1.14.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["seerah_ai*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = []
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

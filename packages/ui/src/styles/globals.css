@@ -1,0 +1,7 @@
+/* Shared base styles consumed by `apps/web` and `apps/admin`.
+   Tailwind directives are added once Tailwind is wired into the consuming app.
+   Keep this file intentionally minimal during the infrastructure tier. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
