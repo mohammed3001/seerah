@@ -5,67 +5,333 @@
  *   pnpm dlx supabase gen types typescript --project-id "$SUPABASE_PROJECT_REF" \
  *     --schema public > packages/types/src/database.ts
  *
- * The placeholder type below mirrors the public schema until the first
- * generation is run. Keep in sync with `supabase/migrations/`.
+ * The shape below mirrors the public schema in `supabase/migrations/`. Keep
+ * in sync until automated generation is wired up.
+ *
+ * NOTE: Row/Insert/Update aliases are declared as `type` (not `interface`).
+ * Interfaces don't satisfy `Record<string, unknown>` (they're open for
+ * declaration merging), which is the constraint @supabase/postgrest-js uses
+ * to decide whether a schema is "valid" — so using interfaces here causes
+ * `from(...)` to infer `never` for the row type.
  */
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export interface Database {
+type ProfilesRow = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  plan: "free" | "prime" | "enterprise";
+  plan_expires_at: string | null;
+  stripe_customer_id: string | null;
+  max_resumes: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type ResumesRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  slug: string;
+  template_id: string;
+  language: "ar" | "en";
+  is_public: boolean;
+  password_hash: string | null;
+  hide_from_search: boolean;
+  completion_score: number;
+  custom_url: string | null;
+  views_count: number;
+  theme: Json;
+  section_order: Json;
+  section_labels: Json;
+  hidden_fields: Json;
+  show_education_first: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type PersonalInfoRow = {
+  id: string;
+  resume_id: string;
+  full_name: string | null;
+  job_title: string | null;
+  bio: string | null;
+  email: string | null;
+  phone: string | null;
+  phone_country_code: string | null;
+  website: string | null;
+  city: string | null;
+  country: string | null;
+  nationality: string | null;
+  date_of_birth: string | null;
+  gender: "male" | "female" | null;
+  marital_status: "single" | "married" | "divorced" | "widowed" | null;
+  health_status: "healthy" | "has_condition" | "hidden" | null;
+  military_service: "yes" | "no" | "hidden" | null;
+  avatar_path: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type SectionItemBase = {
+  id: string;
+  resume_id: string;
+  is_visible: boolean;
+  sort_order: number;
+};
+
+type EducationRow = SectionItemBase & {
+  institution: string | null;
+  degree: string | null;
+  field_of_study: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  description: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type ExperienceRow = SectionItemBase & {
+  company: string | null;
+  job_title: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  description: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type SkillsRow = SectionItemBase & {
+  name: string;
+  level: "beginner" | "intermediate" | "good" | "advanced" | "expert" | null;
+};
+
+type LanguagesRow = SectionItemBase & {
+  language_name: string;
+  fluency: "beginner" | "limited" | "professional" | "full" | "native" | null;
+  is_sign_language: boolean;
+};
+
+type CoursesRow = SectionItemBase & {
+  name: string | null;
+  institution: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  description: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type ProjectsRow = SectionItemBase & {
+  name: string | null;
+  url: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  description: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type ReferencesRow = SectionItemBase & {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  phone_country_code: string | null;
+  description: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type SocialLinksRow = SectionItemBase & {
+  url: string | null;
+  link_type: string | null;
+};
+
+type HobbiesRow = SectionItemBase & {
+  name: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type AddressRow = {
+  id: string;
+  resume_id: string;
+  national_address: string | null;
+  ar: Json;
+  en: Json;
+};
+
+type TemplatesRow = {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  preview_url: string | null;
+  thumbnail_url: string | null;
+  is_premium: boolean;
+  is_active: boolean;
+  category: string;
+  tags: string[];
+  sort_order: number;
+  created_at: string;
+};
+
+type SubscriptionsRow = {
+  id: string;
+  user_id: string;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  status: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type SupportTicketsRow = {
+  id: string;
+  user_id: string | null;
+  subject: string;
+  message: string;
+  attachment_url: string | null;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AiUsageRow = {
+  id: string;
+  user_id: string | null;
+  resume_id: string | null;
+  action_type: string | null;
+  tokens_used: number | null;
+  created_at: string;
+};
+
+type ResumeViewsRow = {
+  id: string;
+  resume_id: string;
+  viewer_ip: string | null;
+  referrer: string | null;
+  user_agent: string | null;
+  viewed_at: string;
+};
+
+export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: {
-          id: string;
-          email: string;
-          full_name: string | null;
-          avatar_url: string | null;
-          plan: "free" | "prime" | "enterprise";
-          plan_expires_at: string | null;
-          stripe_customer_id: string | null;
-          max_resumes: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["profiles"]["Row"],
-          "created_at" | "updated_at" | "max_resumes" | "plan"
-        > & {
-          plan?: "free" | "prime" | "enterprise";
-          max_resumes?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
+        Row: ProfilesRow;
+        Insert: Partial<ProfilesRow> & { id: string; email: string };
+        Update: Partial<ProfilesRow>;
         Relationships: [];
       };
       resumes: {
-        Row: {
-          id: string;
-          user_id: string;
-          title: string;
-          slug: string;
-          template_id: string;
-          language: "ar" | "en";
-          is_public: boolean;
-          password_hash: string | null;
-          hide_from_search: boolean;
-          completion_score: number;
-          custom_url: string | null;
-          views_count: number;
-          theme: Json;
-          section_order: Json;
-          section_labels: Json;
-          hidden_fields: Json;
-          show_education_first: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["resumes"]["Row"]> & {
-          user_id: string;
-          slug: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["resumes"]["Row"]>;
+        Row: ResumesRow;
+        Insert: Partial<ResumesRow> & { user_id: string; slug: string };
+        Update: Partial<ResumesRow>;
+        Relationships: [];
+      };
+      personal_info: {
+        Row: PersonalInfoRow;
+        Insert: Partial<PersonalInfoRow> & { resume_id: string };
+        Update: Partial<PersonalInfoRow>;
+        Relationships: [];
+      };
+      education: {
+        Row: EducationRow;
+        Insert: Partial<EducationRow> & { resume_id: string };
+        Update: Partial<EducationRow>;
+        Relationships: [];
+      };
+      experience: {
+        Row: ExperienceRow;
+        Insert: Partial<ExperienceRow> & { resume_id: string };
+        Update: Partial<ExperienceRow>;
+        Relationships: [];
+      };
+      skills: {
+        Row: SkillsRow;
+        Insert: Partial<SkillsRow> & { resume_id: string; name: string };
+        Update: Partial<SkillsRow>;
+        Relationships: [];
+      };
+      languages: {
+        Row: LanguagesRow;
+        Insert: Partial<LanguagesRow> & { resume_id: string; language_name: string };
+        Update: Partial<LanguagesRow>;
+        Relationships: [];
+      };
+      courses: {
+        Row: CoursesRow;
+        Insert: Partial<CoursesRow> & { resume_id: string };
+        Update: Partial<CoursesRow>;
+        Relationships: [];
+      };
+      projects: {
+        Row: ProjectsRow;
+        Insert: Partial<ProjectsRow> & { resume_id: string };
+        Update: Partial<ProjectsRow>;
+        Relationships: [];
+      };
+      references: {
+        Row: ReferencesRow;
+        Insert: Partial<ReferencesRow> & { resume_id: string };
+        Update: Partial<ReferencesRow>;
+        Relationships: [];
+      };
+      social_links: {
+        Row: SocialLinksRow;
+        Insert: Partial<SocialLinksRow> & { resume_id: string };
+        Update: Partial<SocialLinksRow>;
+        Relationships: [];
+      };
+      hobbies: {
+        Row: HobbiesRow;
+        Insert: Partial<HobbiesRow> & { resume_id: string };
+        Update: Partial<HobbiesRow>;
+        Relationships: [];
+      };
+      address: {
+        Row: AddressRow;
+        Insert: Partial<AddressRow> & { resume_id: string };
+        Update: Partial<AddressRow>;
+        Relationships: [];
+      };
+      templates: {
+        Row: TemplatesRow;
+        Insert: Partial<TemplatesRow> & { id: string; name: string };
+        Update: Partial<TemplatesRow>;
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: SubscriptionsRow;
+        Insert: Partial<SubscriptionsRow> & { user_id: string };
+        Update: Partial<SubscriptionsRow>;
+        Relationships: [];
+      };
+      support_tickets: {
+        Row: SupportTicketsRow;
+        Insert: Partial<SupportTicketsRow> & { subject: string; message: string };
+        Update: Partial<SupportTicketsRow>;
+        Relationships: [];
+      };
+      ai_usage: {
+        Row: AiUsageRow;
+        Insert: Partial<AiUsageRow>;
+        Update: Partial<AiUsageRow>;
+        Relationships: [];
+      };
+      resume_views: {
+        Row: ResumeViewsRow;
+        Insert: Partial<ResumeViewsRow> & { resume_id: string };
+        Update: Partial<ResumeViewsRow>;
         Relationships: [];
       };
     };
@@ -83,7 +349,7 @@ export interface Database {
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
-}
+};
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];
