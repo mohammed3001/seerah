@@ -68,13 +68,19 @@ export function PreviewPane() {
       <div className="flex-1 overflow-auto bg-zinc-100 p-6 dark:bg-zinc-900">
         <div
           style={{
-            transform: `scale(${previewZoom})`,
-            transformOrigin: "top center",
             width: `${210 * previewZoom}mm`,
             margin: "0 auto",
           }}
         >
-          <PreviewRenderer data={debounced} language={previewLang} />
+          <div
+            style={{
+              transform: `scale(${previewZoom})`,
+              transformOrigin: "top left",
+              width: "210mm",
+            }}
+          >
+            <PreviewRenderer data={debounced} language={previewLang} />
+          </div>
         </div>
       </div>
     </div>
