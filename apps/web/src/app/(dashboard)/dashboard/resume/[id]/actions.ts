@@ -132,18 +132,26 @@ export async function reorderSectionItems(
   const supabase = await createSupabaseServerClient();
   // Update each row's sort_order. Doing individual updates avoids RLS edge cases
   // with bulk upserts.
-  await Promise.all(
-    orderedIds.map((id, idx) =>
-      (supabase.from(table) as unknown as {
-        update: (p: Record<string, unknown>) => {
-          eq: (c: string, v: string) => { eq: (c: string, v: string) => Promise<unknown> };
-        };
-      })
-        .update({ sort_order: idx })
-        .eq("id", id)
-        .eq("resume_id", resumeId),
+  type UpdateResult = { error: { message: string } | null };
+  const results = await Promise.all(
+    orderedIds.map(
+      (id, idx) =>
+        (
+          supabase.from(table) as unknown as {
+            update: (p: Record<string, unknown>) => {
+              eq: (c: string, v: string) => {
+                eq: (c: string, v: string) => Promise<UpdateResult>;
+              };
+            };
+          }
+        )
+          .update({ sort_order: idx })
+          .eq("id", id)
+          .eq("resume_id", resumeId) as Promise<UpdateResult>,
     ),
   );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { error: failed.error.message };
   revalidatePath(`/dashboard/resume/${resumeId}`);
   return { ok: true };
 }

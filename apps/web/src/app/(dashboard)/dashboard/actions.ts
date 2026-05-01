@@ -89,7 +89,13 @@ export async function duplicateResumeAction(
     return { error: "وصلت للحد الأقصى للسير. قم بترقية اشتراكك." };
   }
 
-  const { data: source } = await supabase.from("resumes").select("*").eq("id", sourceId).single();
+  // RLS exposes any `is_public=true` resume to SELECT, so always scope by user_id.
+  const { data: source } = await supabase
+    .from("resumes")
+    .select("*")
+    .eq("id", sourceId)
+    .eq("user_id", user.id)
+    .single();
   if (!source) return { error: "السيرة الأصلية غير موجودة" };
 
   const newSlug = `${source.slug}-copy-${Math.random().toString(36).slice(2, 6)}`;
