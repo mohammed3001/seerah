@@ -36,7 +36,17 @@ export async function handleAIRoute<TInput, TOutput>(
 
   let input: TInput;
   try {
-    input = (await request.json()) as TInput;
+    // Strip any client-supplied `caller` from the parsed body. Every route
+    // handler builds its FastAPI payload as `{ caller, ...input }` where
+    // `caller` is the server-derived identity. Without this strip, a client
+    // posting `{"caller": {"user_id": "victim", "plan": "enterprise"}, ...}`
+    // would have its key win the spread (later keys overwrite earlier ones),
+    // letting them impersonate any user and force any plan tier — bypassing
+    // rate limits and the entire RLS-tied trust model documented above.
+    const raw = (await request.json()) as Record<string, unknown>;
+    const { caller: _clientCaller, ...safeInput } = raw;
+    void _clientCaller;
+    input = safeInput as TInput;
   } catch {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
