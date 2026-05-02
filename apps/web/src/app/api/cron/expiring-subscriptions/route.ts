@@ -64,14 +64,17 @@ export async function GET(request: Request): Promise<Response> {
     if (!row.user_id || !row.current_period_end) continue;
 
     // Idempotency: one expiring email per (user, subscription, period_end).
-    // Storing the period_end in `metadata` lets us re-send in future periods
-    // without keeping a separate "we already mailed" flag on subscriptions.
+    // We key on `row.id` — the subscriptions PK, always non-null — rather
+    // than `stripe_subscription_id`, which is null for Paddle subscriptions
+    // and would make `metadata->>subscription_id = ''` never match the
+    // stored JSON null (PostgreSQL: `null = ''` evaluates to NULL, not TRUE).
+    // Storing the period_end as well lets us re-send in future periods.
     const { data: prior } = await admin
       .from("email_log")
       .select("id")
       .eq("user_id", row.user_id)
       .eq("template", "subscription_expiring")
-      .eq("metadata->>subscription_id", row.stripe_subscription_id ?? "")
+      .eq("metadata->>subscription_row_id", row.id)
       .eq("metadata->>period_end", row.current_period_end)
       .limit(1)
       .maybeSingle();
@@ -103,8 +106,11 @@ export async function GET(request: Request): Promise<Response> {
       },
       metadata: {
         // Indexed by the idempotency lookup above so a re-run of the cron in
-        // the same window doesn't double-send.
-        subscription_id: row.stripe_subscription_id ?? null,
+        // the same window doesn't double-send. `subscription_row_id` is the
+        // subscriptions table PK (always non-null); we keep `subscription_id`
+        // (the provider id) for debugging but don't use it for the lookup.
+        subscription_row_id: row.id,
+        subscription_id: row.stripe_subscription_id,
         period_end: row.current_period_end,
       },
     });

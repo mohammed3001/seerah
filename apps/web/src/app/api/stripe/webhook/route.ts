@@ -189,11 +189,15 @@ export async function POST(request: Request): Promise<Response> {
 
         const recipient = await getRecipient(userId);
         if (recipient) {
-          // amount_total is in the smallest currency unit (cents / halalas).
-          const amount = (session.amount_total ?? 0) / 100;
-          const currency = (session.currency?.toLowerCase() === "sar" ? "sar" : "usd") as
-            | "sar"
-            | "usd";
+          // The renewal price the email should display. Read it off the
+          // subscription's first price item — NOT off `session.amount_total`,
+          // which is 0 for trial checkouts (nothing is charged at signup).
+          // unit_amount is in the smallest currency unit (cents / halalas).
+          const priceItem = sub.items.data[0]?.price;
+          const unitAmount = priceItem?.unit_amount ?? 0;
+          const amount = unitAmount / 100;
+          const rawCurrency = (priceItem?.currency ?? session.currency ?? "usd").toLowerCase();
+          const currency = (rawCurrency === "sar" ? "sar" : "usd") as "sar" | "usd";
           await sendEmail({
             template: "subscription_confirmed",
             to: recipient.email,
