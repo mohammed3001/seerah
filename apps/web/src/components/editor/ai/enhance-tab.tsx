@@ -60,7 +60,12 @@ export function EnhanceTab({ onRateLimit }: Props) {
       });
       if (!res.ok) {
         toast.error(res.error.message_ar);
-        if (res.status === 429) onRateLimit(null);
+        // On 429 the upstream error body carries the rate_limit snapshot —
+        // surface it so the user sees `0 / limit` instead of the bar
+        // disappearing at the exact moment the quota matters.
+        if ("rate_limit" in res.error && res.error.rate_limit) {
+          onRateLimit(res.error.rate_limit);
+        }
         return;
       }
       onRateLimit(res.rate_limit);

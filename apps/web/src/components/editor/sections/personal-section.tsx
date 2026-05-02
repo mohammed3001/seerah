@@ -48,6 +48,15 @@ export function PersonalSection() {
     if (data.personal) setForm(data.personal);
   }, [data.personal]);
 
+  // Tracks the latest form so callbacks captured by long-lived components
+  // (e.g. the AI panel's onAccept) read fresh values instead of the snapshot
+  // taken at click time. Without this, an external sync arriving while the
+  // panel is open would be reverted when the user accepts the suggestion.
+  const formRef = React.useRef(form);
+  React.useEffect(() => {
+    formRef.current = form;
+  });
+
   const saveDebounced = useDebouncedCallback(async (patch: Partial<PersonalRow>) => {
     const result = await upsertSingletonAction(data.resume.id, "personal_info", patch);
     if ("error" in result) toast.error(result.error);
@@ -165,8 +174,12 @@ export function PersonalSection() {
                     // to form.en.bio even when the editor was opened in
                     // Arabic mode (and vice versa).
                     onAccept: (text, lang) => {
+                      // Read via formRef so a sync that arrived while the
+                      // panel was open isn't clobbered by a stale snapshot.
                       const target =
-                        (form[lang] as Record<string, string> | undefined) ?? {};
+                        (formRef.current[lang] as
+                          | Record<string, string>
+                          | undefined) ?? {};
                       update(lang, { ...target, bio: text } as PersonalRow["ar"]);
                     },
                   })

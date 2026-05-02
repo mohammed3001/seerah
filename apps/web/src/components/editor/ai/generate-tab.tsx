@@ -93,6 +93,9 @@ export function GenerateTab({ onRateLimit }: Props) {
       });
       if (!res.ok) {
         toast.error(res.error.message_ar);
+        if ("rate_limit" in res.error && res.error.rate_limit) {
+          onRateLimit(res.error.rate_limit);
+        }
         return;
       }
       onRateLimit(res.rate_limit);
