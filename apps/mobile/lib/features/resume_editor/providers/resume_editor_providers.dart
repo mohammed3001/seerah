@@ -163,15 +163,22 @@ class EditorController extends StateNotifier<EditorState> {
     _pending[key] = _Pending(
       payload: mergedPayload,
       timer: Timer(debounceDuration, () async {
+        // Notifier may have been disposed before the timer fired.
+        if (!mounted) return;
         try {
           state = state.copyWith(autosaveBusy: true);
           await flush();
+          // After the await, dispose() may have run. StateNotifier throws
+          // StateError on writes to a closed instance, which surfaces as
+          // an unhandled async error from the Timer callback. Bail.
+          if (!mounted) return;
           state = state.copyWith(
             autosaveBusy: false,
             lastSavedAt: DateTime.now(),
           );
         } catch (_) {
           // Surfacing errors is the screen's responsibility — toasts.
+          if (!mounted) return;
           state = state.copyWith(autosaveBusy: false);
           rethrow;
         }
@@ -217,14 +224,23 @@ class EditorController extends StateNotifier<EditorState> {
   Future<void> flushAll() async {
     final futures = _drainPending();
     if (futures.isEmpty) return;
+    if (!mounted) {
+      // Disposal raced ahead — fire-and-forget the writes so the user's
+      // edits still land server-side, but never write to `state`.
+      unawaited(Future.wait(futures).catchError((_) => <void>[]));
+      return;
+    }
     state = state.copyWith(autosaveBusy: true);
     try {
       await Future.wait(futures);
     } finally {
-      state = state.copyWith(
-        autosaveBusy: false,
-        lastSavedAt: DateTime.now(),
-      );
+      // Same race window: the user may navigate away during the await.
+      if (mounted) {
+        state = state.copyWith(
+          autosaveBusy: false,
+          lastSavedAt: DateTime.now(),
+        );
+      }
     }
   }
 

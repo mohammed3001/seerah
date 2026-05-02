@@ -7,6 +7,7 @@
 //   - State is updated optimistically before the upsert lands.
 // =============================================================================
 
+import "dart:async";
 import "dart:io";
 
 import "package:flutter_test/flutter_test.dart";
@@ -133,6 +134,47 @@ void main() {
       expect(repo.rowUpdates.single.payload, {"job_title": "Senior"});
     });
 
+    test(
+        "REGRESSION: in-flight write that lands AFTER dispose() does not crash",
+        () async {
+      // Race: heartbeat / debounce timer fires → state busy=true → await
+      // repository → user navigates away → super.dispose() → repository
+      // resolves → callback resumes → `state = ...` previously threw
+      // StateError because StateNotifier rejects writes after dispose.
+      final completer = Completer<void>();
+      final localRepo = _SlowRepository(completer.future);
+      final localController = EditorController(
+        resumeId: "r1",
+        initial: bundle,
+        repository: localRepo,
+      );
+      localController.queueSingleton(
+        "personal_info",
+        {"full_name": "M"},
+        optimistic: (b) =>
+            b.copyWith(personal: b.personal!.copyWith(fullName: "M")),
+      );
+
+      // Force-flush to start the repository call immediately (skip the
+      // 1.5s debounce — we just need an in-flight await).
+      final flushFuture = localController.flushAll();
+      // Yield so flushAll begins awaiting the slow repository call.
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(localRepo.callsStarted, 1,
+          reason: "repository call should be in flight");
+
+      // Now dispose racing ahead of the repository completion.
+      localController.dispose();
+
+      // Let the repository finish. Without the mounted guard this would
+      // throw `StateError: Tried to read state of <ProviderContainer> ...`
+      // from the resumed flushAll callback.
+      completer.complete();
+      await flushFuture; // must not throw
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      expect(localRepo.callsCompleted, 1);
+    });
+
     test("REGRESSION: dispose() flushes pending edits instead of dropping them",
         () async {
       // User typed something within the debounce window, then the editor was
@@ -236,6 +278,63 @@ class _RecordingRepository implements ResumeRepositoryBase {
   }) async =>
       "stub";
 
+  @override
+  String publicAvatarUrl(String path) => "https://example/$path";
+}
+
+/// Repository that holds every upsert open until `gate` completes, used to
+/// reproduce the race between an in-flight write and dispose().
+class _SlowRepository implements ResumeRepositoryBase {
+  _SlowRepository(this.gate);
+  final Future<void> gate;
+  int callsStarted = 0;
+  int callsCompleted = 0;
+
+  @override
+  Future<ResumeFull> fetchFull(String resumeId) => throw UnimplementedError();
+
+  @override
+  Future<void> upsertPersonal(
+      String resumeId, Map<String, dynamic> patch) async {
+    callsStarted++;
+    await gate;
+    callsCompleted++;
+  }
+
+  @override
+  Future<void> upsertAddress(
+      String resumeId, Map<String, dynamic> patch) async {
+    callsStarted++;
+    await gate;
+    callsCompleted++;
+  }
+
+  @override
+  Future<void> updateRow(
+      String table, String id, Map<String, dynamic> patch) async {
+    callsStarted++;
+    await gate;
+    callsCompleted++;
+  }
+
+  @override
+  Future<String> insertRow(
+          String table, String resumeId, Map<String, dynamic> values) async =>
+      throw UnimplementedError();
+  @override
+  Future<void> deleteRow(String table, String id) async {}
+  @override
+  Future<void> reorderRows(String table, List<String> orderedIds) async {}
+  @override
+  Future<void> updateResumeMeta(
+      String resumeId, Map<String, dynamic> patch) async {}
+  @override
+  Future<String> uploadAvatar({
+    required String userId,
+    required String resumeId,
+    required File file,
+  }) async =>
+      "stub";
   @override
   String publicAvatarUrl(String path) => "https://example/$path";
 }
