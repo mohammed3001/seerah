@@ -268,6 +268,10 @@ class _RecordingRepository implements ResumeRepositoryBase {
   Future<ResumeFull> fetchFull(String resumeId) => throw UnimplementedError();
 
   @override
+  Future<Map<String, dynamic>> fetchFullJson(String resumeId) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> upsertPersonal(
       String resumeId, Map<String, dynamic> patch) async {
     singletonUpserts.add(_SingletonCall("personal_info", patch));
@@ -318,6 +322,10 @@ class _RecordingRepository implements ResumeRepositoryBase {
 class _FailingRepository implements ResumeRepositoryBase {
   @override
   Future<ResumeFull> fetchFull(String resumeId) => throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> fetchFullJson(String resumeId) =>
+      throw UnimplementedError();
   @override
   Future<void> upsertPersonal(
           String resumeId, Map<String, dynamic> patch) async =>
@@ -362,6 +370,10 @@ class _SlowRepository implements ResumeRepositoryBase {
 
   @override
   Future<ResumeFull> fetchFull(String resumeId) => throw UnimplementedError();
+
+  @override
+  Future<Map<String, dynamic>> fetchFullJson(String resumeId) =>
+      throw UnimplementedError();
 
   @override
   Future<void> upsertPersonal(

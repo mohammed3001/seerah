@@ -3,6 +3,7 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 import "package:hive_flutter/hive_flutter.dart";
 
+import "../../features/auth/biometric_lock_screen.dart";
 import "../../features/auth/forgot_password_screen.dart";
 import "../../features/auth/login_screen.dart";
 import "../../features/auth/register_screen.dart";
@@ -17,6 +18,8 @@ import "../../features/support/support_screen.dart";
 import "../../features/templates/templates_screen.dart";
 import "../../shared/widgets/app_shell.dart";
 import "../auth/auth_state.dart";
+import "../auth/biometric_gate.dart";
+import "../auth/biometric_service.dart";
 import "../auth/supabase_init.dart";
 
 /// Top-level routes. Keep this list narrow; nested feature routes belong
@@ -24,6 +27,7 @@ import "../auth/supabase_init.dart";
 class Routes {
   const Routes._();
   static const String onboarding = "/onboarding";
+  static const String biometricLock = "/auth/lock";
   static const String login = "/auth/login";
   static const String register = "/auth/register";
   static const String forgotPassword = "/auth/forgot-password";
@@ -66,19 +70,33 @@ Future<void> markOnboardingSeen() async {
 /// onboarding has actually been completed. Auth routes are *deliberately*
 /// exempt from forced onboarding so a returning user who taps "لدي حساب"
 /// can sign in directly without first sitting through three intro pages.
+///
+/// Biometric lock: signed-in users who opted into biometric unlock and
+/// haven't cleared the in-process gate get redirected to
+/// [Routes.biometricLock]. The lock route is *not* treated as a regular
+/// auth route — sending the user away from it on token-refresh would
+/// bypass the lock entirely.
 String? resolveRedirect({
   required String location,
   required bool loggedIn,
   required bool seenOnboarding,
+  required bool biometricEnrolled,
+  required bool biometricUnlocked,
 }) {
   final isOnboarding = location == Routes.onboarding;
-  final isAuthRoute = location.startsWith("/auth/");
+  final isLock = location == Routes.biometricLock;
+  // Treat the lock screen as its own bucket — it lives under /auth/ for
+  // URL hygiene, but the redirect rules below treat it specially.
+  final isAuthRoute = location.startsWith("/auth/") && !isLock;
 
-  if (!seenOnboarding && !isOnboarding && !isAuthRoute) {
+  if (!seenOnboarding && !isOnboarding && !isAuthRoute && !isLock) {
     return Routes.onboarding;
   }
 
   if (!loggedIn && !isAuthRoute && !isOnboarding) {
+    // The lock screen is meaningless when we're not signed in — bounce
+    // to login instead.
+    if (isLock) return Routes.login;
     return Routes.login;
   }
 
@@ -87,6 +105,19 @@ String? resolveRedirect({
   }
 
   if (loggedIn && isOnboarding && seenOnboarding) {
+    return Routes.dashboard;
+  }
+
+  // Biometric gate sits in front of every signed-in screen except the
+  // lock screen itself.
+  if (loggedIn && biometricEnrolled && !biometricUnlocked && !isLock) {
+    return Routes.biometricLock;
+  }
+
+  // Conversely, if the user landed on the lock but doesn't have it
+  // enrolled (e.g. they disabled it on another device and the gate state
+  // is stale), let them through.
+  if (loggedIn && isLock && (!biometricEnrolled || biometricUnlocked)) {
     return Routes.dashboard;
   }
 
@@ -106,6 +137,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRouterRefresh();
   ref.onDispose(notifier.dispose);
   ref.listen(authStateChangesProvider, (_, __) => notifier.notify());
+  // The biometric gate is also part of redirect input — refresh on flip.
+  ref.listen(biometricGateProvider, (_, __) => notifier.notify());
+  ref.listen(biometricEnrolledProvider, (_, __) => notifier.notify());
 
   return GoRouter(
     initialLocation: Routes.dashboard,
@@ -114,11 +148,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       location: state.matchedLocation,
       loggedIn: ref.read(isSignedInProvider),
       seenOnboarding: _hasSeenOnboarding(),
+      biometricEnrolled: ref.read(biometricEnrolledProvider),
+      biometricUnlocked: ref.read(biometricGateProvider),
     ),
     routes: [
       GoRoute(
         path: Routes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: Routes.biometricLock,
+        builder: (context, state) => const BiometricLockScreen(),
       ),
       GoRoute(
         path: Routes.login,

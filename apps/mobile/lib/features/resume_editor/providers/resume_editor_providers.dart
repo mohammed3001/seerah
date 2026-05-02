@@ -14,14 +14,34 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:supabase_flutter/supabase_flutter.dart";
 
 import "../../../core/api/api_client.dart";
+import "../../../core/offline/cached_resume_repository.dart";
+import "../../../core/offline/connectivity_provider.dart";
+import "../../../core/offline/resume_cache.dart";
+import "../../../core/offline/sync_worker.dart";
 import "../models/section_models.dart";
 import "../services/ai_service.dart";
 import "../services/resume_repository.dart";
 
 // -------- Singletons --------------------------------------------------------
 
-final resumeRepositoryProvider = Provider<ResumeRepository>((ref) {
+/// The "live" repository — always hits Supabase. Used by the sync worker
+/// when replaying queued mutations on reconnect.
+final liveResumeRepositoryProvider = Provider<ResumeRepository>((ref) {
   return ResumeRepository(Supabase.instance.client);
+});
+
+/// Decorated repository the editor screens consume. Adds offline cache
+/// for reads and outbox for writes. Internally delegates to
+/// [liveResumeRepositoryProvider].
+final resumeRepositoryProvider = Provider<ResumeRepositoryBase>((ref) {
+  final live = ref.watch(liveResumeRepositoryProvider);
+  return CachedResumeRepository(
+    inner: live,
+    cache: ResumeCache.fromHive(),
+    outbox: ref.watch(outboxProvider),
+    isOffline: () =>
+        ref.read(connectivityProvider) == ConnectivityStatus.offline,
+  );
 });
 
 final aiServiceProvider = Provider<AIService>((ref) {

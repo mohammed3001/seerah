@@ -5,6 +5,7 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "core/auth/supabase_init.dart";
 import "core/config/env.dart";
+import "core/offline/sync_worker.dart";
 import "core/router/app_router.dart";
 import "core/router/deep_link_handler.dart";
 import "core/theme/app_theme.dart";
@@ -43,6 +44,11 @@ class _SeerahAppState extends ConsumerState<SeerahApp> {
       return const _MisconfiguredApp();
     }
     final router = ref.watch(appRouterProvider);
+    // Subscribe the sync worker to connectivity changes. We `ref.watch`
+    // (not `read`) so the provider stays alive for the app's lifetime;
+    // its body sets up a `ref.listen` and never returns a value. Doing
+    // this in build() is safe because Riverpod caches the provider.
+    ref.watch(syncOnReconnectProvider);
     if (!_deepLinksWired) {
       // The router must exist before deep links can navigate. We start the
       // listener on first build, which is the earliest GoRouter is alive.

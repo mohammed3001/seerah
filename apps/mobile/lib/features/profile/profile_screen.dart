@@ -3,6 +3,8 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:supabase_flutter/supabase_flutter.dart";
 
 import "../../core/auth/auth_state.dart";
+import "../../core/auth/biometric_gate.dart";
+import "../../core/auth/biometric_service.dart";
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -10,6 +12,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final biometricAvailable = ref.watch(biometricAvailableProvider);
+    final biometricEnabled = ref.watch(biometricEnrolledProvider);
     return Scaffold(
       appBar: AppBar(title: const Text("الإعدادات")),
       body: ListView(
@@ -42,10 +46,55 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () {},
           ),
           const Divider(height: 1),
+          // Biometric toggle. Only shown when the device actually supports
+          // it — there's no point letting the user opt into a feature
+          // they can't use, the next launch would just bypass it. The
+          // `biometricAvailable` future is cheap (cached by Riverpod), so
+          // we render an inert tile while it resolves.
+          biometricAvailable.when(
+            data: (canUse) {
+              if (!canUse) return const SizedBox.shrink();
+              return SwitchListTile(
+                secondary: const Icon(Icons.fingerprint_rounded),
+                title: const Text("استخدام البصمة عند الفتح"),
+                subtitle: const Text(
+                  "اطلب التحقق ببصمة اليد أو Face ID قبل عرض السير",
+                ),
+                value: biometricEnabled,
+                onChanged: (v) async {
+                  if (v) {
+                    // Verify the user actually has working biometrics
+                    // *before* persisting the toggle, otherwise we'd
+                    // strand them at a lock screen they can't clear.
+                    final ok = await ref
+                        .read(biometricServiceProvider)
+                        .authenticate(reason: "تأكيد تفعيل البصمة");
+                    if (!ok) return;
+                    await ref
+                        .read(biometricEnrolledProvider.notifier)
+                        .setEnabled(true);
+                  } else {
+                    await ref
+                        .read(biometricEnrolledProvider.notifier)
+                        .setEnabled(false);
+                  }
+                },
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.logout_rounded),
             title: const Text("تسجيل الخروج"),
             onTap: () async {
+              // Reset both the gate and the toggle so the next sign-in
+              // (potentially a different user) starts clean.
+              ref.read(biometricGateProvider.notifier).reset();
+              await ref
+                  .read(biometricEnrolledProvider.notifier)
+                  .setEnabled(false);
               await Supabase.instance.client.auth.signOut();
             },
           ),

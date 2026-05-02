@@ -917,6 +917,53 @@ class ResumeFull {
   final List<SocialLink> socialLinks;
   final List<Hobby> hobbies;
 
+  /// Reconstructs a [ResumeFull] from the raw JSON bundle returned by
+  /// [ResumeRepository.fetchFullJson] (and persisted by the offline
+  /// cache). The shape mirrors the Supabase responses 1:1; new fields can
+  /// be added to any sub-table without breaking older cached payloads
+  /// because every model's `fromJson` tolerates missing keys.
+  factory ResumeFull.fromBundleJson(Map<String, dynamic> json) {
+    Map<String, dynamic>? readMap(String key) {
+      final raw = json[key];
+      return raw is Map ? raw.cast<String, dynamic>() : null;
+    }
+
+    List<T> readList<T>(
+      String key,
+      T Function(Map<String, dynamic>) ctor,
+    ) {
+      final raw = json[key];
+      if (raw is! List) return const [];
+      return raw
+          .whereType<Map>()
+          .map((row) => ctor(row.cast<String, dynamic>()))
+          .toList(growable: false);
+    }
+
+    final resumeRow = readMap("resume");
+    if (resumeRow == null) {
+      throw ArgumentError(
+        "ResumeFull.fromBundleJson: missing `resume` row",
+      );
+    }
+    final personal = readMap("personal_info");
+    final address = readMap("address");
+    return ResumeFull(
+      meta: ResumeMeta.fromJson(resumeRow),
+      personal: personal == null ? null : PersonalInfo.fromJson(personal),
+      address: address == null ? null : Address.fromJson(address),
+      education: readList("education", Education.fromJson),
+      experience: readList("experience", Experience.fromJson),
+      skills: readList("skills", Skill.fromJson),
+      languages: readList("languages", LanguageItem.fromJson),
+      courses: readList("courses", Course.fromJson),
+      projects: readList("projects", Project.fromJson),
+      references: readList("references", ReferenceItem.fromJson),
+      socialLinks: readList("social_links", SocialLink.fromJson),
+      hobbies: readList("hobbies", Hobby.fromJson),
+    );
+  }
+
   ResumeFull copyWith({
     PersonalInfo? personal,
     Address? address,
