@@ -177,10 +177,13 @@ class EditorController extends StateNotifier<EditorState> {
             lastSavedAt: DateTime.now(),
           );
         } catch (_) {
-          // Surfacing errors is the screen's responsibility — toasts.
+          // Don't rethrow: this runs inside a Timer callback with no caller
+          // to propagate to, so rethrowing produces an unhandled async
+          // error (and a spurious Crashlytics/Sentry report). Errors are
+          // surfaced to the screen via state in a follow-up — for now we
+          // just clear the busy flag so the spinner stops.
           if (!mounted) return;
           state = state.copyWith(autosaveBusy: false);
-          rethrow;
         }
       }),
     );

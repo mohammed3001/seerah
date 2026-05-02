@@ -10,7 +10,12 @@ import "package:flutter/material.dart";
 import "../../../core/theme/colors.dart";
 
 /// Single-line text field with optional AI button overlay.
-class EditorTextField extends StatelessWidget {
+///
+/// Uses an internal `TextEditingController` (not `TextFormField.initialValue`)
+/// so external updates to `value` — like AI-accepted text — actually replace
+/// what the user sees. `initialValue` is read once in `initState` and silently
+/// ignored on rebuild, which would silently break the AI accept flow.
+class EditorTextField extends StatefulWidget {
   const EditorTextField({
     super.key,
     required this.label,
@@ -37,21 +42,46 @@ class EditorTextField extends StatelessWidget {
   final String? errorText;
 
   @override
+  State<EditorTextField> createState() => _EditorTextFieldState();
+}
+
+class _EditorTextFieldState extends State<EditorTextField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(EditorTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncExternalValue(_controller, oldWidget.value, widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return _LabeledField(
-      label: label,
-      onAiTap: onAiTap,
+      label: widget.label,
+      onAiTap: widget.onAiTap,
       child: TextFormField(
-        initialValue: value,
-        onChanged: onChanged,
-        maxLength: maxLength,
-        keyboardType: keyboardType,
-        textDirection: textDirection,
+        controller: _controller,
+        onChanged: widget.onChanged,
+        maxLength: widget.maxLength,
+        keyboardType: widget.keyboardType,
+        textDirection: widget.textDirection,
         decoration: InputDecoration(
-          hintText: hintText,
-          prefixIcon: icon == null ? null : Icon(icon, size: 20),
-          counterText: maxLength == null ? null : "",
-          errorText: errorText,
+          hintText: widget.hintText,
+          prefixIcon: widget.icon == null ? null : Icon(widget.icon, size: 20),
+          counterText: widget.maxLength == null ? null : "",
+          errorText: widget.errorText,
         ),
       ),
     );
@@ -59,7 +89,7 @@ class EditorTextField extends StatelessWidget {
 }
 
 /// Multi-line textarea with character counter + AI button.
-class EditorTextArea extends StatelessWidget {
+class EditorTextArea extends StatefulWidget {
   const EditorTextArea({
     super.key,
     required this.label,
@@ -82,21 +112,46 @@ class EditorTextArea extends StatelessWidget {
   final VoidCallback? onAiTap;
 
   @override
+  State<EditorTextArea> createState() => _EditorTextAreaState();
+}
+
+class _EditorTextAreaState extends State<EditorTextArea> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(EditorTextArea oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncExternalValue(_controller, oldWidget.value, widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return _LabeledField(
-      label: label,
-      onAiTap: onAiTap,
+      label: widget.label,
+      onAiTap: widget.onAiTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
-            initialValue: value,
-            onChanged: onChanged,
-            minLines: minLines,
-            maxLines: maxLines,
-            maxLength: maxLength,
+            controller: _controller,
+            onChanged: widget.onChanged,
+            minLines: widget.minLines,
+            maxLines: widget.maxLines,
+            maxLength: widget.maxLength,
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: widget.hintText,
               counterText: "",
               alignLabelWithHint: true,
             ),
@@ -104,11 +159,14 @@ class EditorTextArea extends StatelessWidget {
           const SizedBox(height: 4),
           Align(
             alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              "${value.length}/$maxLength",
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) => Text(
+                "${_controller.text.length}/${widget.maxLength}",
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -116,6 +174,30 @@ class EditorTextArea extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Sync helper used by both single-line and multi-line fields.
+///
+/// Updates `controller.text` only when:
+///   1. The new external `value` differs from the previous external value
+///      (i.e. the parent really pushed a new value, not just rebuilt), AND
+///   2. The current controller text matches the previous external value
+///      (i.e. the user hasn't started typing into the field — typing is
+///      always reflected via `onChanged` round-tripping through the parent).
+///
+/// Without (2), every keystroke would cause `didUpdateWidget` to clobber the
+/// in-progress text with the parent's last-known value, fighting the user.
+void _syncExternalValue(
+  TextEditingController controller,
+  String oldExternal,
+  String newExternal,
+) {
+  if (oldExternal == newExternal) return;
+  if (controller.text != oldExternal) return; // user is actively typing
+  controller.value = TextEditingValue(
+    text: newExternal,
+    selection: TextSelection.collapsed(offset: newExternal.length),
+  );
 }
 
 class EditorDropdownField<T> extends StatelessWidget {
