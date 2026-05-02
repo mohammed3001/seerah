@@ -32,7 +32,7 @@ Future<void> showUpgradeSheet(
           ),
           const SizedBox(height: 8),
           Text(
-            "فعّل برايم للوصول لكل التصاميم بلا قيود + ٣٠ تصدير يوميًا"
+            "فعّل برايم للوصول لكل التصاميم بلا قيود + تصدير غير محدود"
             " + إزالة العلامة المائية + ٥ سير ذاتية.",
             textAlign: TextAlign.center,
             style: Theme.of(sheetContext).textTheme.bodyMedium,
