@@ -17,12 +17,18 @@ import {
   Textarea,
 } from "@seerah/ui";
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { submitSupportTicket } from "@/app/(dashboard)/support/actions";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const ERROR_MESSAGES: Record<string, string> = {
+  subject_invalid: "الموضوع يجب أن يكون بين 3 و200 حرف.",
+  message_invalid: "الرسالة يجب أن تكون بين 10 و4000 حرف.",
+  insert_failed: "تعذّر حفظ الطلب. حاول مرة أخرى.",
+};
 
 export function SupportDialog({ open, onOpenChange }: Props) {
   const [subject, setSubject] = useState("");
@@ -36,20 +42,14 @@ export function SupportDialog({ open, onOpenChange }: Props) {
     }
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const { error } = await supabase.from("support_tickets").insert({
-        user_id: user?.id ?? null,
-        subject: subject.trim(),
-        message: message.trim(),
-      });
-      if (error) {
-        toast.error(error.message);
+      // Goes through the server action so the support_ticket_received email
+      // fires and analytics tracking runs server-side.
+      const result = await submitSupportTicket({ subject, message });
+      if (!result.ok) {
+        toast.error(ERROR_MESSAGES[result.error ?? ""] ?? "تعذّر إرسال الطلب");
         return;
       }
-      toast.success("تم استلام طلبك. سنتواصل معك قريبًا.");
+      toast.success("تم استلام طلبك. ستصلك رسالة تأكيد على بريدك.");
       setSubject("");
       setMessage("");
       onOpenChange(false);

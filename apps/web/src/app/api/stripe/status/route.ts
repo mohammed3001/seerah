@@ -36,9 +36,7 @@ export async function GET(): Promise<Response> {
   const supabase = await createSupabaseServerClient();
   const { data: row } = await supabase
     .from("subscriptions")
-    .select(
-      "status, cancel_at_period_end, current_period_end, trial_end, provider",
-    )
+    .select("status, cancel_at_period_end, current_period_end, trial_end, provider")
     .eq("user_id", session.userId)
     .order("updated_at", { ascending: false })
     .limit(1)
