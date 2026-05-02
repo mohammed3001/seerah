@@ -1,11 +1,17 @@
 /**
  * POST /api/stripe/checkout
  *
- * Body: { currency?: "sar" | "usd" }
+ * Body: { currency?: "sar" | "usd"; success_url?: string; cancel_url?: string }
  *
  * Creates a Stripe Checkout session for the Prime annual subscription with a
  * 7-day trial. Reuses the customer.id stored on profiles.stripe_customer_id;
  * if missing, creates one and persists it. Returns the redirect URL.
+ *
+ * `success_url` / `cancel_url` are optional and exist for the mobile client,
+ * which routes the user back into the app via a custom URL scheme
+ * (e.g. `seerah://subscription/success?session_id={CHECKOUT_SESSION_ID}`).
+ * Both are validated against an allowlist (web origin OR `seerah://`) to
+ * prevent open-redirect abuse.
  */
 
 import { headers } from "next/headers";
@@ -26,6 +32,31 @@ export const dynamic = "force-dynamic";
 
 interface Body {
   currency?: "sar" | "usd";
+  success_url?: string;
+  cancel_url?: string;
+}
+
+const MOBILE_SCHEME = "seerah://";
+
+/**
+ * Allow caller-supplied redirect URLs only when they target our own web
+ * origin or the mobile app scheme. Everything else is silently ignored —
+ * Stripe Checkout would be a fantastic open-redirect vector otherwise.
+ */
+function safeRedirect(
+  candidate: string | undefined,
+  origin: string,
+): string | null {
+  if (!candidate) return null;
+  if (candidate.startsWith(MOBILE_SCHEME)) return candidate;
+  try {
+    const parsed = new URL(candidate);
+    const expected = new URL(origin);
+    if (parsed.origin === expected.origin) return candidate;
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -87,12 +118,17 @@ export async function POST(request: Request): Promise<Response> {
   const origin =
     hdrs.get("origin") ?? process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
+  const successUrl =
+    safeRedirect(body.success_url, origin) ??
+    `${origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = safeRedirect(body.cancel_url, origin) ?? `${origin}/subscription`;
+
   const checkout = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: resolvePriceId(currency), quantity: 1 }],
-    success_url: `${origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/subscription`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     // Stripe Checkout doesn't yet have a dedicated 'ar' locale, but 'auto'
     // honours the user's browser preference (which will be Arabic for our
     // primary audience) and falls back to English otherwise.

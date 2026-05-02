@@ -6,6 +6,7 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "core/auth/supabase_init.dart";
 import "core/config/env.dart";
 import "core/router/app_router.dart";
+import "core/router/deep_link_handler.dart";
 import "core/theme/app_theme.dart";
 
 Future<void> main() async {
@@ -23,11 +24,18 @@ Future<void> main() async {
   runApp(const ProviderScope(child: SeerahApp()));
 }
 
-class SeerahApp extends ConsumerWidget {
+class SeerahApp extends ConsumerStatefulWidget {
   const SeerahApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SeerahApp> createState() => _SeerahAppState();
+}
+
+class _SeerahAppState extends ConsumerState<SeerahApp> {
+  bool _deepLinksWired = false;
+
+  @override
+  Widget build(BuildContext context) {
     if (!Env.isConfigured) {
       // Fail loudly with Arabic copy when SUPABASE_URL/anon key were not
       // supplied via --dart-define. Crashing on first auth call is much
@@ -35,6 +43,13 @@ class SeerahApp extends ConsumerWidget {
       return const _MisconfiguredApp();
     }
     final router = ref.watch(appRouterProvider);
+    if (!_deepLinksWired) {
+      // The router must exist before deep links can navigate. We start the
+      // listener on first build, which is the earliest GoRouter is alive.
+      _deepLinksWired = true;
+      // ignore: discarded_futures
+      ref.read(deepLinkHandlerProvider).start();
+    }
     return MaterialApp.router(
       title: "سيرة",
       debugShowCheckedModeBanner: false,

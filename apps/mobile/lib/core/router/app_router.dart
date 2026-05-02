@@ -12,6 +12,7 @@ import "../../features/onboarding/onboarding_screen.dart";
 import "../../features/profile/profile_screen.dart";
 import "../../features/resume_editor/resume_editor_screen.dart";
 import "../../features/subscription/subscription_screen.dart";
+import "../../features/subscription/subscription_success_screen.dart";
 import "../../features/support/support_screen.dart";
 import "../../features/templates/templates_screen.dart";
 import "../../shared/widgets/app_shell.dart";
@@ -30,6 +31,7 @@ class Routes {
   static const String templates = "/templates";
   static const String exportPath = "/export";
   static const String subscription = "/subscription";
+  static const String subscriptionSuccess = "/subscription/success";
   static const String profile = "/profile";
   static const String support = "/support";
   static const String resume = "/resume";
@@ -148,6 +150,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.subscription,
             builder: (context, state) => const SubscriptionScreen(),
+            routes: [
+              GoRoute(
+                path: "success",
+                builder: (context, state) => SubscriptionSuccessScreen(
+                  sessionId: state.uri.queryParameters["session_id"],
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.profile,
