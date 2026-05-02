@@ -48,10 +48,15 @@ Future<void> markOnboardingSeen() async {
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // Watch the auth stream so the router rebuilds redirect logic on
-  // sign-in / sign-out without the user having to navigate manually.
-  ref.watch(authStateChangesProvider);
-
+  // Re-evaluate the redirect when auth state changes (sign-in, sign-out,
+  // and *every token refresh* — Supabase emits a new event ~hourly). We
+  // must NOT `ref.watch` the auth stream here: that would invalidate this
+  // provider on every refresh, build a fresh GoRouter, and reset the
+  // navigation stack to `initialLocation` mid-session — kicking the user
+  // out of the resume editor while they type.
+  //
+  // Instead we hand GoRouter a `refreshListenable`; it re-runs `redirect`
+  // without rebuilding the router, so deep navigation state is preserved.
   final notifier = _AuthRouterRefresh();
   ref.onDispose(notifier.dispose);
   ref.listen(authStateChangesProvider, (_, __) => notifier.notify());
