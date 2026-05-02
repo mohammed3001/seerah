@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from "@seerah/ui";
 
+import { UpgradeModal } from "@/components/billing/upgrade-modal";
+import { track } from "@/lib/analytics/posthog";
 import {
   DEFAULT_PALETTE,
   RenderTemplate,
@@ -60,6 +62,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
   const onChooseTemplate = React.useCallback(
     (meta: TemplateMeta) => {
       if (meta.is_premium && !isPrime) {
+        track("upgrade_viewed", { source: "template_lock", template_id: meta.id });
         setUpgradePrompt(meta);
         return;
       }
@@ -74,6 +77,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
           toast.error(res.error);
           return;
         }
+        track("template_selected", { template_id: meta.id, is_premium: meta.is_premium });
         toast.success(`تم اختيار تصميم ${meta.name_ar}`);
       });
     },
@@ -242,28 +246,11 @@ export function TemplateGalleryClient({ data, plan }: Props) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(upgradePrompt)} onOpenChange={(o) => !o && setUpgradePrompt(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Crown className="size-5 text-amber-500" />
-              فعّل برايم للوصول لهذا التصميم
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            تصميم {upgradePrompt?.name_ar} متاح للمشتركين في برايم. ترقية اشتراكك تفتح
-            جميع التصاميم المدفوعة وتزيد حدّ السير في حسابك.
-          </p>
-          <div className="flex justify-end gap-2 pt-3">
-            <Button variant="outline" onClick={() => setUpgradePrompt(null)}>
-              لاحقًا
-            </Button>
-            <Button asChild>
-              <a href="/dashboard/billing">ترقية الآن</a>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UpgradeModal
+        open={Boolean(upgradePrompt)}
+        onOpenChange={(o) => !o && setUpgradePrompt(null)}
+        feature="templateLock"
+      />
     </div>
   );
 }

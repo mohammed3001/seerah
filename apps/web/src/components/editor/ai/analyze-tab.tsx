@@ -14,6 +14,7 @@ import {
 } from "@seerah/ui";
 
 import { useEditor, type EditorLanguage } from "../editor-context";
+import { track } from "@/lib/analytics/posthog";
 import { analyzeResumeAction } from "@/lib/ai/actions";
 import type { AnalyzeResumeResponse, RateLimitInfo } from "@/lib/ai/types";
 
@@ -43,6 +44,7 @@ export function AnalyzeTab({ onRateLimit }: Props) {
         return;
       }
       onRateLimit(res.rate_limit);
+      track("ai_used", { endpoint: "analyze_resume", language });
       setResult(res.data);
     } finally {
       setLoading(false);

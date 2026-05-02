@@ -3,6 +3,7 @@
 import {
   Check,
   Copy,
+  Crown,
   Download,
   ExternalLink,
   Facebook,
@@ -19,6 +20,8 @@ import { toast } from "sonner";
 
 import { Button, CircularProgress } from "@seerah/ui";
 
+import { UpgradeModal } from "@/components/billing/upgrade-modal";
+import { track } from "@/lib/analytics/posthog";
 import { cn } from "@/lib/utils";
 
 interface QuotaState {
@@ -66,6 +69,7 @@ export function ExportClient({
   const [quota, setQuota] = React.useState<QuotaState | null>(initialQuota);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
   const isUnlimited = plan !== "free" || (quota?.unlimited ?? false);
 
   const refreshQuota = React.useCallback(async () => {
@@ -113,6 +117,8 @@ export function ExportClient({
               unlimited: false,
             });
           }
+          track("upgrade_viewed", { source: "export_429", format, language });
+          setUpgradeOpen(true);
           return;
         }
         if (!res.ok) {
@@ -124,6 +130,7 @@ export function ExportClient({
         const filename = parseFilename(res.headers.get("content-disposition")) ??
           fallbackFilename(resumeTitle, format, language);
         downloadBlob(blob, filename);
+        track("export_downloaded", { format, language, plan });
         // Update quota meter from response headers.
         const limit = res.headers.get("x-ratelimit-limit");
         const remaining = res.headers.get("x-ratelimit-remaining");
@@ -146,7 +153,7 @@ export function ExportClient({
         setBusy(null);
       }
     },
-    [isUnlimited, refreshQuota, resumeId, resumeTitle],
+    [isUnlimited, plan, refreshQuota, resumeId, resumeTitle],
   );
 
   const onCopy = React.useCallback(async () => {
@@ -224,8 +231,21 @@ export function ExportClient({
                   ? "بلغت الحدّ اليومي. ترقّ إلى برايم للتصدير غير المحدود."
                   : "ترقّ إلى برايم للحصول على تصدير غير محدود."}
               </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 gap-1"
+                onClick={() => {
+                  track("upgrade_viewed", { source: "export_limit" });
+                  setUpgradeOpen(true);
+                }}
+              >
+                <Crown className="size-3.5" />
+                فعّل برايم
+              </Button>
             </div>
           ) : null}
+          <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="exportLimit" />
         </div>
       </section>
 

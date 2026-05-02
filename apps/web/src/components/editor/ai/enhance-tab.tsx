@@ -8,6 +8,7 @@ import { Button, Label, Textarea, ToggleGroup, ToggleGroupItem } from "@seerah/u
 
 import { useEditor, type EditorLanguage } from "../editor-context";
 import { HistoryStrip } from "./history-strip";
+import { track } from "@/lib/analytics/posthog";
 import { enhanceTextAction } from "@/lib/ai/actions";
 import { pushHistory } from "@/lib/ai/history";
 import type { EnhanceFieldType, RateLimitInfo } from "@/lib/ai/types";
@@ -69,6 +70,7 @@ export function EnhanceTab({ onRateLimit }: Props) {
         return;
       }
       onRateLimit(res.rate_limit);
+      track("ai_used", { endpoint: "enhance_text", field_type: fieldType, language });
       setResult({
         ar: res.data.enhanced_ar,
         en: res.data.enhanced_en,

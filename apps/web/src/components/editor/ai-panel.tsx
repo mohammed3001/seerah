@@ -25,10 +25,12 @@ import { ChatTab } from "./ai/chat-tab";
 import { EnhanceTab } from "./ai/enhance-tab";
 import { GenerateTab } from "./ai/generate-tab";
 import { RateLimitBar } from "./ai/rate-limit-bar";
+import { useDashboardSession } from "@/components/dashboard/session-provider";
 import type { RateLimitInfo } from "@/lib/ai/types";
 
 export function AiPanel() {
   const { aiPanel, closeAiPanel, setAiPanelTab } = useEditor();
+  const { profile } = useDashboardSession();
   const [rateLimit, setRateLimit] = React.useState<RateLimitInfo | null>(null);
 
   React.useEffect(() => {
@@ -78,7 +80,7 @@ export function AiPanel() {
             <TabsTrigger value="chat">محادثة</TabsTrigger>
           </TabsList>
 
-          <RateLimitBar rateLimit={rateLimit} className="mx-3" />
+          <RateLimitBar rateLimit={rateLimit} plan={profile.plan} className="mx-3" />
 
           <div className="flex-1 overflow-y-auto px-5 pb-5">
             <TabsContent value="enhance" className="mt-3">

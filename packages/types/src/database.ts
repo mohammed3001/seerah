@@ -26,6 +26,9 @@ type ProfilesRow = {
   plan_expires_at: string | null;
   stripe_customer_id: string | null;
   max_resumes: number;
+  billing_country: string | null;
+  referral_code: string | null;
+  referred_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -48,6 +51,7 @@ type ResumesRow = {
   section_labels: Json;
   hidden_fields: Json;
   show_education_first: boolean;
+  custom_sections: Json;
   created_at: string;
   updated_at: string;
 };
@@ -185,10 +189,16 @@ type SubscriptionsRow = {
   user_id: string;
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
+  stripe_customer_id: string | null;
   status: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  provider: "stripe" | "paddle";
+  trial_end: string | null;
+  canceled_at: string | null;
+  currency: string | null;
+  last_event_id: string | null;
   created_at: string;
   updated_at: string;
 };

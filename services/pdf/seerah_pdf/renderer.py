@@ -40,6 +40,7 @@ class RenderRequest:
     template_id: str | None
     primary_color: str | None
     mode: Literal["light", "dark"] | None
+    watermark: bool = False
 
 
 @dataclass
@@ -115,6 +116,24 @@ class PlaywrightRenderer:
             # template article is in the DOM.
             await page.evaluate("document.fonts ? document.fonts.ready : null")
             await page.wait_for_selector("article", state="attached")
+
+            if req.watermark:
+                # Inject a subtle footer overlay for free-plan exports. Pinned
+                # to the bottom of the article so it appears on every page in
+                # multi-page PDFs and on the screenshot edge for PNGs.
+                await page.add_style_tag(
+                    content=(
+                        "article{position:relative}"
+                        "article::after{"
+                        "content:'\u062a\u0645 \u0625\u0646\u0634\u0627\u0624\u0647\u0627 "
+                        "\u0628\u0640 Seerah.com';"
+                        "position:fixed;bottom:6mm;left:0;right:0;"
+                        "text-align:center;font-size:9px;color:#9ca3af;"
+                        "font-family:system-ui,sans-serif;letter-spacing:0.02em;"
+                        "pointer-events:none;z-index:9999;"
+                        "}"
+                    )
+                )
 
             if req.format == "png":
                 # Screenshot the article element so the PNG is exactly the

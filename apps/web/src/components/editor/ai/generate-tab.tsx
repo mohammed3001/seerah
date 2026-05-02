@@ -8,6 +8,7 @@ import { Button, Label, Textarea, ToggleGroup, ToggleGroupItem } from "@seerah/u
 
 import { useEditor, type EditorLanguage } from "../editor-context";
 import { HistoryStrip } from "./history-strip";
+import { track } from "@/lib/analytics/posthog";
 import { generateSectionAction } from "@/lib/ai/actions";
 import { pushHistory } from "@/lib/ai/history";
 import type {
@@ -99,6 +100,7 @@ export function GenerateTab({ onRateLimit }: Props) {
         return;
       }
       onRateLimit(res.rate_limit);
+      track("ai_used", { endpoint: "generate_section", section_type: sectionType, language });
       setResult(res.data);
       pushHistory(data.resume.id, "generate", {
         text: res.data.explanation,
