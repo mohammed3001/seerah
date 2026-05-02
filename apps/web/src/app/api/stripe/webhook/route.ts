@@ -195,15 +195,20 @@ export async function POST(request: Request): Promise<Response> {
         // invoices have no row to update so we ack and move on.
         if (!subscriptionId) break;
 
-        const admin = getServiceRoleClient();
-        await admin
-          .from("subscriptions")
-          .update({
-            status: "past_due",
-            last_event_id: event.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_subscription_id", subscriptionId);
+        // Don't write a status here. The authoritative status comes from
+        // `customer.subscription.updated`, which Stripe sends alongside this
+        // event. Hardcoding "past_due" would race with that handler and might
+        // be wrong for `incomplete` subscriptions on first-payment failures.
+        // We just refresh the subscription from Stripe so the row reflects
+        // whatever status Stripe currently reports, and PR-B will hook the
+        // failed-payment email off this event.
+        const sub = await getStripe().subscriptions.retrieve(subscriptionId);
+        const userId = await userIdFromMetadata(
+          sub.metadata,
+          typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+        );
+        if (!userId) break;
+        await persistSubscription(userId, sub, event.id);
         break;
       }
       default:

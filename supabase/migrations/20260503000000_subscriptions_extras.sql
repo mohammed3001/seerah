@@ -82,13 +82,17 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.status in ('active', 'trialing') then
+  if new.status in ('active', 'trialing', 'past_due') then
+    -- past_due means a renewal payment failed but Stripe is still retrying
+    -- (typically for ~3 weeks). The user's access must be preserved during
+    -- this grace period; the UI shows a warning banner instead. Only true
+    -- terminal states downgrade the plan.
     update public.profiles
        set plan = 'prime',
            plan_expires_at = new.current_period_end,
            max_resumes = greatest(coalesce(max_resumes, 1), 5)
      where id = new.user_id;
-  elsif new.status in ('canceled', 'incomplete_expired', 'unpaid', 'past_due') then
+  elsif new.status in ('canceled', 'incomplete_expired', 'unpaid') then
     -- Only downgrade if the most recent subscription says so.
     update public.profiles p
        set plan = 'free',
@@ -99,7 +103,7 @@ begin
          select 1
            from public.subscriptions s
           where s.user_id = p.id
-            and s.status in ('active', 'trialing')
+            and s.status in ('active', 'trialing', 'past_due')
             and (s.id <> new.id)
        );
   end if;

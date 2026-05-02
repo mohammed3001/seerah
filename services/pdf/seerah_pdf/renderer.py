@@ -118,16 +118,29 @@ class PlaywrightRenderer:
             await page.wait_for_selector("article", state="attached")
 
             if req.watermark:
-                # Inject a subtle footer overlay for free-plan exports. Pinned
-                # to the bottom of the article so it appears on every page in
-                # multi-page PDFs and on the screenshot edge for PNGs.
+                # Inject a subtle footer overlay for free-plan exports.
+                #
+                # Positioning differs by output format:
+                #   - PDF (pdf_single, pdf_multi): position:fixed makes the
+                #     footer repeat on every printed page (Chromium honours
+                #     fixed-positioned content during print).
+                #   - PNG: page.element_screenshot() crops to the article's
+                #     bounding box, which doesn't include viewport-fixed
+                #     elements that aren't visible at scroll-zero. We use
+                #     position:absolute pinned to the bottom of the article
+                #     so the watermark lands on the screenshot edge.
+                position_css = (
+                    "position:absolute"
+                    if req.format == "png"
+                    else "position:fixed"
+                )
                 await page.add_style_tag(
                     content=(
                         "article{position:relative}"
                         "article::after{"
                         "content:'\u062a\u0645 \u0625\u0646\u0634\u0627\u0624\u0647\u0627 "
                         "\u0628\u0640 Seerah.com';"
-                        "position:fixed;bottom:6mm;left:0;right:0;"
+                        f"{position_css};bottom:6mm;left:0;right:0;"
                         "text-align:center;font-size:9px;color:#9ca3af;"
                         "font-family:system-ui,sans-serif;letter-spacing:0.02em;"
                         "pointer-events:none;z-index:9999;"
