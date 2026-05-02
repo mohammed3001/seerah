@@ -746,11 +746,16 @@ class _ChatTabState extends ConsumerState<_ChatTab> {
     });
     _input.clear();
     final ai = ref.read(aiServiceProvider);
+    // Build the history excluding the empty assistant placeholder we just
+    // appended (the last entry in `_messages`). We previously called
+    // `.toList(growable: false)..removeLast()`, but `removeLast()` on a
+    // fixed-length list throws `UnsupportedError` — that crashed the chat
+    // every time the user sent a message.
     final history = _messages
-        .where((m) => m.content.isNotEmpty || m == _messages.last)
+        .take(_messages.length - 1)
+        .where((m) => m.content.isNotEmpty)
         .map((m) => {"role": m.role, "content": m.content})
-        .toList(growable: false)
-      ..removeLast(); // drop the empty placeholder we just added
+        .toList(growable: false);
     _sub = ai
         .chatStream(
       messages: history,

@@ -185,9 +185,12 @@ class EditorController extends StateNotifier<EditorState> {
     return entry?.payload ?? const {};
   }
 
-  /// Force-flushes all pending writes. Called on a 30-second heartbeat AND
-  /// when the user leaves the editor.
-  Future<void> flushAll() async {
+  /// Drains every entry in `_pending` into a list of repository writes,
+  /// cancelling each entry's timer along the way. Returns the futures the
+  /// caller should await. State is *not* touched here so the same drain
+  /// path works during `dispose()` (where writing to `state` would throw a
+  /// StateError because the StateNotifier is closed).
+  List<Future<void>> _drainPending() {
     final futures = <Future<void>>[];
     for (final key in _pending.keys.toList()) {
       final entry = _pending.remove(key);
@@ -205,29 +208,50 @@ class EditorController extends StateNotifier<EditorState> {
         futures.add(repository.updateRow(table, id, entry.payload));
       }
     }
-    if (futures.isNotEmpty) {
-      state = state.copyWith(autosaveBusy: true);
-      try {
-        await Future.wait(futures);
-      } finally {
-        state = state.copyWith(
-          autosaveBusy: false,
-          lastSavedAt: DateTime.now(),
-        );
-      }
+    return futures;
+  }
+
+  /// Force-flushes all pending writes and updates `lastSavedAt`. Called on
+  /// the 30-second heartbeat AND when the user back-navigates from the
+  /// editor (via `PopScope.onPopInvokedWithResult`).
+  Future<void> flushAll() async {
+    final futures = _drainPending();
+    if (futures.isEmpty) return;
+    state = state.copyWith(autosaveBusy: true);
+    try {
+      await Future.wait(futures);
+    } finally {
+      state = state.copyWith(
+        autosaveBusy: false,
+        lastSavedAt: DateTime.now(),
+      );
     }
   }
 
   @override
   void dispose() {
+    // Stop the heartbeat first so it can't queue another flush while we're
+    // draining.
     _heartbeat?.cancel();
-    for (final p in _pending.values) {
-      p.timer.cancel();
-    }
-    _pending.clear();
-    // Best-effort flush; ignore errors — user is leaving anyway.
-    unawaited(flushAll());
+    _heartbeat = null;
+
+    // Drain *before* super.dispose() so we capture every queued patch. The
+    // returned futures fire-and-forget (we cannot await them in a sync
+    // dispose), but they don't touch StateNotifier.state, so the disposal
+    // is safe and edits aren't silently dropped.
+    //
+    // Previously this path called `_pending.clear()` before flushAll(),
+    // which left flushAll() with nothing to flush — any pending keystroke
+    // outside the 1.5s debounce window was lost when Riverpod auto-disposed
+    // the provider (e.g. user swiped the editor away without back-navigating
+    // through PopScope).
+    final futures = _drainPending();
     super.dispose();
+    if (futures.isNotEmpty) {
+      // Swallow errors — the screen is gone, there's no UI to surface
+      // them through. Server-side RLS still rejects bad writes.
+      unawaited(Future.wait(futures).catchError((_) => <void>[]));
+    }
   }
 }
 

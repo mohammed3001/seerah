@@ -132,6 +132,43 @@ void main() {
       expect(repo.rowUpdates.single.id, "exp1");
       expect(repo.rowUpdates.single.payload, {"job_title": "Senior"});
     });
+
+    test("REGRESSION: dispose() flushes pending edits instead of dropping them",
+        () async {
+      // User typed something within the debounce window, then the editor was
+      // disposed (e.g. Riverpod auto-disposed because the route was popped).
+      // dispose() must drain the pending writes — previous version cleared
+      // the map before flushing, silently losing data.
+      final localRepo = _RecordingRepository();
+      final localController = EditorController(
+        resumeId: "r1",
+        initial: bundle,
+        repository: localRepo,
+      );
+      localController.queueSingleton(
+        "personal_info",
+        {"full_name": "Mohammed"},
+        optimistic: (b) =>
+            b.copyWith(personal: b.personal!.copyWith(fullName: "Mohammed")),
+      );
+      // Sanity: nothing has been written yet.
+      expect(localRepo.singletonUpserts, isEmpty);
+
+      localController.dispose();
+      // dispose() fires the flush asynchronously; give the microtask
+      // queue a chance to drain.
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(
+        localRepo.singletonUpserts.length,
+        1,
+        reason: "dispose() must flush queued patches, not drop them",
+      );
+      expect(
+        localRepo.singletonUpserts.single.payload,
+        {"full_name": "Mohammed"},
+      );
+    });
   });
 }
 
