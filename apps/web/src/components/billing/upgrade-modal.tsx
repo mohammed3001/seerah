@@ -163,9 +163,12 @@ export function UpgradeModal({
       });
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
-        const message = err.error === "stripe_not_configured"
-          ? "خدمة الدفع غير مفعّلة بعد. تواصل مع الدعم."
-          : "تعذر فتح صفحة الدفع. حاول مرة أخرى.";
+        let message = "تعذر فتح صفحة الدفع. حاول مرة أخرى.";
+        if (err.error === "stripe_not_configured") {
+          message = "خدمة الدفع غير مفعّلة بعد. تواصل مع الدعم.";
+        } else if (err.error === "already_subscribed") {
+          message = "أنت مشترك بالفعل في باقة برايم. أدِر اشتراكك من صفحة الاشتراك.";
+        }
         toast.error(message);
         return;
       }

@@ -44,8 +44,11 @@ export async function initBrowserAnalytics(distinctId?: string): Promise<void> {
 
 export function track(event: AnalyticsEvent, properties?: EventProps): void {
   if (typeof window === "undefined" || !PUBLIC_KEY) return;
-  // posthog-js may be loading asynchronously when this is first called.
-  void Promise.resolve().then(() => {
+  // Lazy-init on first call so events fired on routes outside the dashboard
+  // layout (login / register / marketing) aren't dropped on the floor when
+  // <AnalyticsProvider> hasn't mounted yet. initBrowserAnalytics() guards
+  // against double-init internally.
+  void initBrowserAnalytics().then(() => {
     const inst = browserPosthog as { capture?: (e: string, p?: EventProps) => void } | null;
     inst?.capture?.(event, properties);
   });

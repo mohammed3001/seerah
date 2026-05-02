@@ -36,6 +36,18 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // Server-side guard against duplicate subscriptions. The UI hides the
+  // checkout CTA for prime users and shows a portal button instead, but a
+  // double-click race, the back button after a Stripe redirect, or a
+  // second tab can still hit this endpoint. Stripe doesn't enforce
+  // one-active-subscription-per-customer on its own, so we have to.
+  if (session.profile.plan === "prime" || session.profile.plan === "enterprise") {
+    return NextResponse.json(
+      { error: "already_subscribed", message: "you already have an active prime subscription" },
+      { status: 409 },
+    );
+  }
+
   let body: Body = {};
   try {
     body = (await request.json()) as Body;
