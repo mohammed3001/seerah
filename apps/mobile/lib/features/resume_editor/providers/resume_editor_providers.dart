@@ -1,0 +1,355 @@
+// =============================================================================
+// resume_editor_providers.dart
+// Riverpod providers wiring repository + AI service + editor state.
+//
+// Why no riverpod_generator?
+//   - We deferred code generation in PR-A. Using `Provider` and
+//     `StateNotifierProvider` directly keeps the diff readable, all of these
+//     are stateful enough that the generator wouldn't help much.
+// =============================================================================
+
+import "dart:async";
+
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:supabase_flutter/supabase_flutter.dart";
+
+import "../../../core/api/api_client.dart";
+import "../models/section_models.dart";
+import "../services/ai_service.dart";
+import "../services/resume_repository.dart";
+
+// -------- Singletons --------------------------------------------------------
+
+final resumeRepositoryProvider = Provider<ResumeRepository>((ref) {
+  return ResumeRepository(Supabase.instance.client);
+});
+
+final aiServiceProvider = Provider<AIService>((ref) {
+  return AIService(ref.watch(apiClientProvider));
+});
+
+// -------- Bundle fetch + state notifier -----------------------------------
+
+final resumeFullProvider = FutureProvider.family
+    .autoDispose<ResumeFull, String>((ref, resumeId) async {
+  final repo = ref.watch(resumeRepositoryProvider);
+  return repo.fetchFull(resumeId);
+});
+
+/// Holds the in-memory mirror of the currently-edited resume bundle, plus the
+/// active section and editor language. The notifier is created once per
+/// resumeId and disposed when the user leaves the editor.
+class EditorController extends StateNotifier<EditorState> {
+  EditorController({
+    required this.resumeId,
+    required ResumeFull initial,
+    required this.repository,
+  }) : super(EditorState(
+          bundle: initial,
+          activeSection: SectionKey.personal,
+          editorLang: initial.meta.language,
+          autosaveBusy: false,
+          lastSavedAt: DateTime.now(),
+        ));
+
+  final String resumeId;
+  final ResumeRepositoryBase repository;
+
+  // Per-section debouncers map. Key = "<table>:<id>" or "<table>:<resumeId>".
+  // Each entry holds the latest pending payload + a timer; we coalesce
+  // multiple keystrokes within DEBOUNCE_MS into one upsert.
+  final Map<String, _Pending> _pending = {};
+  Timer? _heartbeat;
+
+  static const Duration debounceDuration = Duration(milliseconds: 1500);
+  static const Duration heartbeatDuration = Duration(seconds: 30);
+
+  void setActiveSection(SectionKey section) {
+    state = state.copyWith(activeSection: section);
+  }
+
+  void setEditorLang(String lang) {
+    state = state.copyWith(editorLang: lang);
+  }
+
+  // -------- Saving primitives ----------------------------------------------
+
+  /// Queues a singleton upsert (personal_info / address). Patches accumulate
+  /// until the debounce fires, then a single upsert flushes the merged map.
+  void queueSingleton(
+    String table,
+    Map<String, dynamic> patch, {
+    required ResumeFull Function(ResumeFull) optimistic,
+  }) {
+    state = state.copyWith(bundle: optimistic(state.bundle));
+    _enqueue("$table:$resumeId", () async {
+      final merged = _drain("$table:$resumeId");
+      if (merged.isEmpty) return;
+      if (table == "personal_info") {
+        await repository.upsertPersonal(resumeId, merged);
+      } else {
+        await repository.upsertAddress(resumeId, merged);
+      }
+    }, patch);
+  }
+
+  /// Queues a row update (education / experience / etc).
+  void queueRowUpdate(
+    String table,
+    String rowId,
+    Map<String, dynamic> patch, {
+    required ResumeFull Function(ResumeFull) optimistic,
+  }) {
+    state = state.copyWith(bundle: optimistic(state.bundle));
+    _enqueue("$table:$rowId", () async {
+      final merged = _drain("$table:$rowId");
+      if (merged.isEmpty) return;
+      await repository.updateRow(table, rowId, merged);
+    }, patch);
+  }
+
+  /// Inserts a new row immediately (no debounce — user clicked "Add").
+  Future<String> addRow<T extends ListRow>({
+    required String table,
+    required List<T> currentList,
+    required Map<String, dynamic> initial,
+    required T Function(String id) buildLocalRow,
+    required ResumeFull Function(ResumeFull bundle, List<T> next) writeBack,
+  }) async {
+    final newId = await repository.insertRow(table, resumeId, {
+      "sort_order": currentList.length,
+      ...initial,
+    });
+    final next = [...currentList, buildLocalRow(newId)];
+    state = state.copyWith(bundle: writeBack(state.bundle, next));
+    return newId;
+  }
+
+  Future<void> removeRow<T extends ListRow>({
+    required String table,
+    required String rowId,
+    required List<T> currentList,
+    required ResumeFull Function(ResumeFull bundle, List<T> next) writeBack,
+  }) async {
+    final next =
+        currentList.where((r) => r.id != rowId).toList(growable: false);
+    state = state.copyWith(bundle: writeBack(state.bundle, next));
+    await repository.deleteRow(table, rowId);
+  }
+
+  Future<void> reorderRows<T extends ListRow>({
+    required String table,
+    required List<T> currentList,
+    required ResumeFull Function(ResumeFull bundle, List<T> next) writeBack,
+  }) async {
+    state = state.copyWith(bundle: writeBack(state.bundle, currentList));
+    await repository.reorderRows(table, currentList.map((r) => r.id).toList());
+  }
+
+  Future<void> updateMeta(Map<String, dynamic> patch) async {
+    await repository.updateResumeMeta(resumeId, patch);
+  }
+
+  // -------- Internal: debounce + flush ------------------------------------
+
+  void _enqueue(
+      String key, Future<void> Function() flush, Map<String, dynamic> patch) {
+    final existing = _pending.remove(key);
+    existing?.timer.cancel();
+    final mergedPayload = {
+      ...?existing?.payload,
+      ...patch,
+    };
+    _pending[key] = _Pending(
+      payload: mergedPayload,
+      timer: Timer(debounceDuration, () async {
+        try {
+          state = state.copyWith(autosaveBusy: true);
+          await flush();
+          state = state.copyWith(
+            autosaveBusy: false,
+            lastSavedAt: DateTime.now(),
+          );
+        } catch (_) {
+          // Surfacing errors is the screen's responsibility — toasts.
+          state = state.copyWith(autosaveBusy: false);
+          rethrow;
+        }
+      }),
+    );
+    _heartbeat ??= Timer.periodic(heartbeatDuration, (_) => flushAll());
+  }
+
+  Map<String, dynamic> _drain(String key) {
+    final entry = _pending.remove(key);
+    return entry?.payload ?? const {};
+  }
+
+  /// Force-flushes all pending writes. Called on a 30-second heartbeat AND
+  /// when the user leaves the editor.
+  Future<void> flushAll() async {
+    final futures = <Future<void>>[];
+    for (final key in _pending.keys.toList()) {
+      final entry = _pending.remove(key);
+      if (entry == null) continue;
+      entry.timer.cancel();
+      final parts = key.split(":");
+      if (parts.length < 2) continue;
+      final table = parts[0];
+      final id = parts.sublist(1).join(":");
+      if (table == "personal_info") {
+        futures.add(repository.upsertPersonal(resumeId, entry.payload));
+      } else if (table == "address") {
+        futures.add(repository.upsertAddress(resumeId, entry.payload));
+      } else {
+        futures.add(repository.updateRow(table, id, entry.payload));
+      }
+    }
+    if (futures.isNotEmpty) {
+      state = state.copyWith(autosaveBusy: true);
+      try {
+        await Future.wait(futures);
+      } finally {
+        state = state.copyWith(
+          autosaveBusy: false,
+          lastSavedAt: DateTime.now(),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _heartbeat?.cancel();
+    for (final p in _pending.values) {
+      p.timer.cancel();
+    }
+    _pending.clear();
+    // Best-effort flush; ignore errors — user is leaving anyway.
+    unawaited(flushAll());
+    super.dispose();
+  }
+}
+
+class _Pending {
+  _Pending({required this.payload, required this.timer});
+  Map<String, dynamic> payload;
+  Timer timer;
+}
+
+class EditorState {
+  const EditorState({
+    required this.bundle,
+    required this.activeSection,
+    required this.editorLang,
+    required this.autosaveBusy,
+    required this.lastSavedAt,
+  });
+
+  final ResumeFull bundle;
+  final SectionKey activeSection;
+  final String editorLang;
+  final bool autosaveBusy;
+  final DateTime lastSavedAt;
+
+  EditorState copyWith({
+    ResumeFull? bundle,
+    SectionKey? activeSection,
+    String? editorLang,
+    bool? autosaveBusy,
+    DateTime? lastSavedAt,
+  }) =>
+      EditorState(
+        bundle: bundle ?? this.bundle,
+        activeSection: activeSection ?? this.activeSection,
+        editorLang: editorLang ?? this.editorLang,
+        autosaveBusy: autosaveBusy ?? this.autosaveBusy,
+        lastSavedAt: lastSavedAt ?? this.lastSavedAt,
+      );
+}
+
+enum SectionKey {
+  personal,
+  address,
+  education,
+  experience,
+  skills,
+  languages,
+  courses,
+  projects,
+  references,
+  socialLinks,
+  hobbies,
+}
+
+extension SectionKeyMeta on SectionKey {
+  String get arabicLabel {
+    switch (this) {
+      case SectionKey.personal:
+        return "البيانات الشخصية";
+      case SectionKey.address:
+        return "العنوان الوطني";
+      case SectionKey.education:
+        return "المؤهلات الدراسية";
+      case SectionKey.experience:
+        return "الخبرات العملية";
+      case SectionKey.skills:
+        return "المهارات";
+      case SectionKey.languages:
+        return "اللغات";
+      case SectionKey.courses:
+        return "الدورات";
+      case SectionKey.projects:
+        return "المشاريع";
+      case SectionKey.references:
+        return "المعرّفون";
+      case SectionKey.socialLinks:
+        return "الروابط الاجتماعية";
+      case SectionKey.hobbies:
+        return "الهوايات";
+    }
+  }
+}
+
+// -------- Family provider for the controller ---------------------------------
+
+final editorControllerProvider = StateNotifierProvider.family
+    .autoDispose<EditorController, EditorState, _EditorArgs>((ref, args) {
+  return EditorController(
+    resumeId: args.resumeId,
+    initial: args.initial,
+    repository: ref.watch(resumeRepositoryProvider),
+  );
+});
+
+class _EditorArgs {
+  const _EditorArgs({required this.resumeId, required this.initial});
+  final String resumeId;
+  final ResumeFull initial;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _EditorArgs && other.resumeId == resumeId;
+  @override
+  int get hashCode => resumeId.hashCode;
+}
+
+EditorController readEditorController(
+  WidgetRef ref,
+  String resumeId,
+  ResumeFull initial,
+) =>
+    ref.read(editorControllerProvider(_EditorArgs(
+      resumeId: resumeId,
+      initial: initial,
+    )).notifier);
+
+EditorState watchEditorState(
+  WidgetRef ref,
+  String resumeId,
+  ResumeFull initial,
+) =>
+    ref.watch(editorControllerProvider(_EditorArgs(
+      resumeId: resumeId,
+      initial: initial,
+    )));
