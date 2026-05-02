@@ -148,6 +148,10 @@ async def _do_export(
                 template_id=body.template_id,
                 primary_color=body.primary_color,
                 mode=body.mode,
+                # Free-plan exports get a subtle Seerah.com footer; prime
+                # users get clean output. Source of truth is `body.plan`,
+                # which the proxy populates from the Supabase session.
+                watermark=body.plan == "free",
             )
         )
     except Exception as exc:  # noqa: BLE001 — surface to client as 502

@@ -3,6 +3,7 @@
 import { Crown, FileText, Loader2, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +29,8 @@ import {
   deleteResumeAction,
   duplicateResumeAction,
 } from "@/app/(dashboard)/dashboard/actions";
+import { UpgradeModal } from "@/components/billing/upgrade-modal";
+import { track } from "@/lib/analytics/posthog";
 import { relativeTimeAr } from "@/lib/dashboard/relative-time";
 
 interface ResumeRow {
@@ -67,6 +70,7 @@ export function ResumeList({ resumes: initial, maxResumes, plan }: Props) {
         toast.error(result.error);
         return;
       }
+      track("resume_created", { resume_id: result.id, method: "manual" });
       router.push(`/dashboard/resume/${result.id}`);
     });
   }
@@ -256,42 +260,30 @@ function UpgradeDialog({
   onOpenChange: (open: boolean) => void;
   plan: "free" | "prime" | "enterprise";
 }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Crown className="size-5 text-amber-500" />
-            ترقية الخطة
-          </DialogTitle>
-          <DialogDescription>
-            وصلت للحد الأقصى للسير الذاتية في خطتك الحالية.{" "}
-            {plan === "free"
-              ? "ترقَّ إلى برايم لإنشاء حتى 5 سير ذاتية بمزايا متقدمة."
-              : "تواصل معنا لرفع الحد الأقصى."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="rounded-card border border-border bg-secondary p-4">
-          <p className="font-semibold">برايم — Seerah Prime</p>
-          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-            <li>• حتى 5 سير ذاتية</li>
-            <li>• كل القوالب المميزة</li>
-            <li>• كتابة بالذكاء الاصطناعي بلا حدود عملية</li>
-            <li>• تحميل PDF عالي الجودة</li>
-          </ul>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            لاحقًا
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/subscription">
-              <Badge variant="gold">برايم</Badge>
-              ترقية الآن
-            </Link>
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  React.useEffect(() => {
+    if (open) track("upgrade_viewed", { source: "resume_limit", plan });
+  }, [open, plan]);
+  if (plan !== "free") {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="size-5 text-amber-500" />
+              تحتاج رفع الحد الأقصى
+            </DialogTitle>
+            <DialogDescription>
+              وصلت للحد الأقصى للسير الذاتية في باقتك الحالية. تواصل معنا لرفع الحد الأقصى.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              حسنًا
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  return <UpgradeModal open={open} onOpenChange={onOpenChange} feature="resumeLimit" />;
 }

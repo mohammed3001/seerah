@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { Button, Checkbox, FloatingInput, Label } from "@seerah/ui";
 
+import { track } from "@/lib/analytics/posthog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth";
 
@@ -55,6 +56,7 @@ export function RegisterForm() {
         toast.error(error.message);
         return;
       }
+      track("signup", { method: "password" });
       toast.success("تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد.");
       router.replace("/auth/login");
     } catch (err) {

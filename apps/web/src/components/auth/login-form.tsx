@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Button, FloatingInput } from "@seerah/ui";
 
+import { track } from "@/lib/analytics/posthog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
 
@@ -36,6 +37,7 @@ export function LoginForm() {
         toast.error("بيانات الدخول غير صحيحة. حاول مرة أخرى.");
         return;
       }
+      track("login", { method: "password" });
       toast.success("مرحبًا بعودتك");
       router.replace(next);
       router.refresh();
