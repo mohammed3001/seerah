@@ -46,19 +46,52 @@ class _TemplatesScreenState extends ConsumerState<TemplatesScreen> {
     // Fetch the current template_id + theme so the picker reflects what's
     // already saved. Reading directly via Supabase REST is safe because RLS
     // limits this to the user's own row.
-    final res = await Supabase.instance.client
-        .from("resumes")
-        .select("template_id, theme")
-        .eq("id", resumeId)
-        .maybeSingle();
-    if (!mounted || res == null) return;
-    final theme = (res["theme"] as Map?)?.cast<String, dynamic>() ?? const {};
-    setState(() {
-      _activeResumeId = resumeId;
-      _appliedTemplateId = res["template_id"] as String? ?? kDefaultTemplateId;
-      _accentColor = theme["primary_color"] as String?;
-      _mode = (theme["mode"] as String?) ?? "light";
-    });
+    //
+    // Devin Review on PR #15 caught that a network/Supabase failure would
+    // bubble out as an unhandled async exception and leave the picker
+    // permanently empty. We catch the failure, surface a snackbar, and
+    // still set _activeResumeId so the rest of the UI renders with safe
+    // defaults — the user can change template/mode/accent and the
+    // subsequent /api/resume/[id]/design call will write the persisted
+    // state regardless.
+    try {
+      final res = await Supabase.instance.client
+          .from("resumes")
+          .select("template_id, theme")
+          .eq("id", resumeId)
+          .maybeSingle();
+      if (!mounted) return;
+      final theme =
+          (res?["theme"] as Map?)?.cast<String, dynamic>() ?? const {};
+      setState(() {
+        _activeResumeId = resumeId;
+        _appliedTemplateId =
+            res?["template_id"] as String? ?? kDefaultTemplateId;
+        _accentColor = theme["primary_color"] as String?;
+        _mode = (theme["mode"] as String?) ?? "light";
+      });
+    } catch (err) {
+      if (!mounted) return;
+      // Fall back to the default template/light mode so the screen is
+      // still usable. We do not block the user from picking a new
+      // template just because the read failed.
+      setState(() {
+        _activeResumeId = resumeId;
+        _appliedTemplateId = kDefaultTemplateId;
+        _accentColor = null;
+        _mode = "light";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              "تعذّر قراءة إعدادات التصميم الحالية، تم تحميل الافتراضي."),
+          action: SnackBarAction(
+            label: "إعادة المحاولة",
+            onPressed: () => _hydrateForResume(resumeId),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _apply({

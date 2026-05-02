@@ -9,6 +9,7 @@
 // the resumes row (set by /api/resume/[id]/design).
 // =============================================================================
 
+import "dart:convert";
 import "dart:io";
 import "dart:typed_data";
 
@@ -146,7 +147,9 @@ class ExportService {
   }
 
   ExportError _statusError(int? status, Uint8List? bytes) {
-    final body = bytes == null ? "" : String.fromCharCodes(bytes);
+    // The server emits Arabic error messages; treat the body as UTF-8 so
+    // multi-byte sequences don't get rendered as garbled Latin-1.
+    final body = bytes == null ? "" : utf8.decode(bytes, allowMalformed: true);
     if (status == 429) {
       return ExportError(
         "quota_exceeded",
