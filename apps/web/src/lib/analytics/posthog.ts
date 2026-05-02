@@ -25,30 +25,60 @@ export type AnalyticsEvent =
 export type EventProps = Record<string, string | number | boolean | null | undefined>;
 
 let browserPosthog: unknown = null;
-let initialised = false;
+let initPromise: Promise<void> | null = null;
+let identifiedDistinctId: string | null = null;
+
+type PosthogClient = {
+  identify: (distinctId: string) => void;
+  capture: (event: string, properties?: EventProps) => void;
+};
 
 export async function initBrowserAnalytics(distinctId?: string): Promise<void> {
-  if (typeof window === "undefined" || !PUBLIC_KEY || initialised) return;
-  initialised = true;
-  const mod = (await import("posthog-js")) as typeof import("posthog-js");
-  mod.default.init(PUBLIC_KEY, {
-    api_host: HOST,
-    capture_pageview: false,
-    capture_pageleave: true,
-    persistence: "localStorage+cookie",
-    autocapture: false,
-  });
-  if (distinctId) mod.default.identify(distinctId);
-  browserPosthog = mod.default;
+  if (typeof window === "undefined" || !PUBLIC_KEY) return;
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        const mod = (await import("posthog-js")) as typeof import("posthog-js");
+        mod.default.init(PUBLIC_KEY, {
+          api_host: HOST,
+          capture_pageview: false,
+          capture_pageleave: true,
+          persistence: "localStorage+cookie",
+          autocapture: false,
+        });
+        browserPosthog = mod.default;
+      } catch {
+        // posthog-js failing to load (ad blocker / CSP / offline) must
+        // never crash the calling page. Swallow inside the IIFE so the
+        // cached initPromise resolves with browserPosthog still null —
+        // every subsequent track()/identify() then becomes a no-op.
+      }
+    })();
+  }
+  await initPromise;
+  // Run identify after init resolves so a later call from <AnalyticsProvider>
+  // with the user's id still fires even if the very first init was anonymous
+  // (e.g. triggered by track("login") on the auth page). We guard against
+  // re-identifying the same id so navigation doesn't spam PostHog.
+  if (distinctId && distinctId !== identifiedDistinctId) {
+    identifiedDistinctId = distinctId;
+    (browserPosthog as PosthogClient | null)?.identify(distinctId);
+  }
 }
 
 export function track(event: AnalyticsEvent, properties?: EventProps): void {
   if (typeof window === "undefined" || !PUBLIC_KEY) return;
-  // posthog-js may be loading asynchronously when this is first called.
-  void Promise.resolve().then(() => {
-    const inst = browserPosthog as { capture?: (e: string, p?: EventProps) => void } | null;
-    inst?.capture?.(event, properties);
-  });
+  // Lazy-init on first call so events fired on routes outside the dashboard
+  // layout (login / register / marketing) aren't dropped on the floor when
+  // <AnalyticsProvider> hasn't mounted yet. initBrowserAnalytics() guards
+  // against double-init internally.
+  void initBrowserAnalytics()
+    .then(() => {
+      (browserPosthog as PosthogClient | null)?.capture(event, properties);
+    })
+    .catch(() => {
+      // Analytics must never break the app — swallow.
+    });
 }
 
 /**
