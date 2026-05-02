@@ -15,6 +15,7 @@ import "package:share_plus/share_plus.dart";
 
 import "../../core/config/env.dart";
 import "../../shared/models/resume_summary.dart";
+import "../dashboard/providers/resumes_provider.dart";
 import "../templates/widgets/active_resume_picker.dart";
 import "services/export_service.dart";
 
@@ -76,6 +77,23 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   @override
   Widget build(BuildContext context) {
     final quotaAsync = ref.watch(exportQuotaProvider);
+    final resumesAsync = ref.watch(resumesProvider);
+
+    // Auto-pick the most-recent resume on first load — same pattern as
+    // TemplatesScreen. Without this, single-resume users could never
+    // surface the download / share / QR sections because the picker's
+    // onTap is null when there is only one item to switch to.
+    if (_active == null && resumesAsync.hasValue) {
+      final resumes = resumesAsync.value!;
+      if (resumes.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _active == null) {
+            setState(() => _active = resumes.first);
+          }
+        });
+      }
+    }
+
     final active = _active;
     final shareUrl = _shareUrl(active?.slug);
 

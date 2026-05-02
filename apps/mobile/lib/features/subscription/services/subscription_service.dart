@@ -84,7 +84,12 @@ class SubscriptionService {
   /// Stripe replaces `{CHECKOUT_SESSION_ID}` server-side with the actual id.
   static const String mobileSuccessUrl =
       "seerah://subscription/success?session_id={CHECKOUT_SESSION_ID}";
-  static const String mobileCancelUrl = "seerah://subscription/cancel";
+
+  /// Cancel just routes back to the subscription screen — there is no
+  /// dedicated `/cancel` view in the mobile router. (Devin Review caught
+  /// this: routing to a non-existent path showed GoRouter's default
+  /// "page not found" error after the user backed out of Stripe Checkout.)
+  static const String mobileCancelUrl = "seerah://subscription";
 
   Future<SubscriptionStatus> fetchStatus() async {
     try {

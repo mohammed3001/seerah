@@ -108,6 +108,10 @@ void main() {
       expect(sentBody?["cancel_url"], contains("seerah://"));
       expect(sentBody?["success_url"],
           contains("session_id={CHECKOUT_SESSION_ID}"));
+      // Cancel must route to an existing GoRouter path. seerah://subscription
+      // resolves to the subscription screen; seerah://subscription/cancel
+      // would 404 inside the router (Devin Review on PR #15).
+      expect(sentBody?["cancel_url"], "seerah://subscription");
     });
 
     test("maps 409 already_subscribed into SubscriptionError", () async {
