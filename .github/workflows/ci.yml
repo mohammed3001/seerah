@@ -198,12 +198,17 @@ jobs:
       - uses: subosito/flutter-action@v2
         if: steps.filter.outputs.changed == 'true'
         with:
-          flutter-version: "3.24.5"
+          flutter-version: "3.27.4"
           channel: stable
+          cache: true
 
       - name: Pub get
         if: steps.filter.outputs.changed == 'true'
         run: flutter pub get
+
+      - name: Format check
+        if: steps.filter.outputs.changed == 'true'
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         if: steps.filter.outputs.changed == 'true'
