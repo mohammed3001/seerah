@@ -89,15 +89,19 @@ async function assertAuthorized(): Promise<void> {
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
-  // Always pad to the longer length so comparing the byte arrays is constant
-  // time regardless of input lengths. timingSafeEqual requires equal-length
-  // buffers, hence the explicit padding here.
-  const max = Math.max(a.length, b.length);
-  const ab = Buffer.alloc(max);
-  const bb = Buffer.alloc(max);
-  ab.write(a, "utf8");
-  bb.write(b, "utf8");
-  // Returns false if either input had a different actual length than the
-  // other, in addition to detecting any byte mismatch.
-  return a.length === b.length && timingSafeEqual(ab, bb);
+  // Encode both strings to their full UTF-8 byte representation. JavaScript
+  // `.length` reports UTF-16 code units, which under-counts multi-byte
+  // characters — relying on it to size buffers can silently truncate input
+  // and let two distinct tokens collide. Buffer.from gives us the actual
+  // byte payload, and timingSafeEqual rejects mismatched lengths cleanly.
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ab.length !== bb.length) {
+    // Still call timingSafeEqual with same-length scratch buffers so the
+    // running time doesn't leak the relative byte length of the secret.
+    const dummy = Buffer.alloc(ab.length);
+    timingSafeEqual(ab, dummy);
+    return false;
+  }
+  return timingSafeEqual(ab, bb);
 }
