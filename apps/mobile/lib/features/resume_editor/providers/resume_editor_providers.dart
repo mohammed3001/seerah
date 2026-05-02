@@ -236,13 +236,22 @@ class EditorController extends StateNotifier<EditorState> {
     state = state.copyWith(autosaveBusy: true);
     try {
       await Future.wait(futures);
-    } finally {
       // Same race window: the user may navigate away during the await.
       if (mounted) {
         state = state.copyWith(
           autosaveBusy: false,
           lastSavedAt: DateTime.now(),
         );
+      }
+    } catch (_) {
+      // Match _enqueue's catch policy: callers are uncatchable contexts —
+      // the heartbeat (`Timer.periodic((_) => flushAll())`) drops the future,
+      // and `PopScope.onPopInvokedWithResult` doesn't surface async errors
+      // either. Rethrowing produces an unhandled async error and a spurious
+      // crash report. Clear the busy flag but DO NOT update `lastSavedAt` —
+      // the stale timestamp is the user's hint that the save didn't land.
+      if (mounted) {
+        state = state.copyWith(autosaveBusy: false);
       }
     }
   }

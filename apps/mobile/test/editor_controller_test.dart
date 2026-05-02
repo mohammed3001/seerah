@@ -175,6 +175,37 @@ void main() {
       expect(localRepo.callsCompleted, 1);
     });
 
+    test(
+        "REGRESSION: flushAll swallows repository errors and leaves lastSavedAt stale",
+        () async {
+      // Heartbeat + PopScope call flushAll() in contexts that can't catch
+      // async errors. flushAll must NOT propagate, and must NOT bump
+      // lastSavedAt on failure (the stale timestamp is the user's hint
+      // that the save didn't land).
+      final localRepo = _FailingRepository();
+      final localController = EditorController(
+        resumeId: "r1",
+        initial: bundle,
+        repository: localRepo,
+      );
+      final originalSavedAt = localController.state.lastSavedAt;
+      localController.queueSingleton(
+        "personal_info",
+        {"full_name": "M"},
+        optimistic: (b) =>
+            b.copyWith(personal: b.personal!.copyWith(fullName: "M")),
+      );
+
+      // Must not throw — caller is the heartbeat / PopScope, no catcher.
+      await localController.flushAll();
+
+      expect(localController.state.autosaveBusy, isFalse,
+          reason: "busy flag must be cleared even on error");
+      expect(localController.state.lastSavedAt, originalSavedAt,
+          reason:
+              "lastSavedAt must NOT advance when the repository write failed");
+    });
+
     test("REGRESSION: dispose() flushes pending edits instead of dropping them",
         () async {
       // User typed something within the debounce window, then the editor was
@@ -278,6 +309,45 @@ class _RecordingRepository implements ResumeRepositoryBase {
   }) async =>
       "stub";
 
+  @override
+  String publicAvatarUrl(String path) => "https://example/$path";
+}
+
+/// Repository that throws on every write, used to verify flushAll swallows
+/// errors and leaves `lastSavedAt` stale.
+class _FailingRepository implements ResumeRepositoryBase {
+  @override
+  Future<ResumeFull> fetchFull(String resumeId) => throw UnimplementedError();
+  @override
+  Future<void> upsertPersonal(
+          String resumeId, Map<String, dynamic> patch) async =>
+      throw Exception("network down");
+  @override
+  Future<void> upsertAddress(
+          String resumeId, Map<String, dynamic> patch) async =>
+      throw Exception("network down");
+  @override
+  Future<void> updateRow(
+          String table, String id, Map<String, dynamic> patch) async =>
+      throw Exception("network down");
+  @override
+  Future<String> insertRow(
+          String table, String resumeId, Map<String, dynamic> values) async =>
+      throw UnimplementedError();
+  @override
+  Future<void> deleteRow(String table, String id) async {}
+  @override
+  Future<void> reorderRows(String table, List<String> orderedIds) async {}
+  @override
+  Future<void> updateResumeMeta(
+      String resumeId, Map<String, dynamic> patch) async {}
+  @override
+  Future<String> uploadAvatar({
+    required String userId,
+    required String resumeId,
+    required File file,
+  }) async =>
+      "stub";
   @override
   String publicAvatarUrl(String path) => "https://example/$path";
 }
