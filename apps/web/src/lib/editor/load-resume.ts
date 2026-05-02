@@ -2,9 +2,11 @@ import "server-only";
 
 import { notFound } from "next/navigation";
 
-import type { Tables } from "@seerah/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Tables } from "@seerah/types";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getServiceRoleClient } from "@/lib/supabase/service-role";
 
 export interface LoadedResume {
   resume: Tables<"resumes">;
@@ -23,12 +25,26 @@ export interface LoadedResume {
 
 export async function loadResume(resumeId: string, userId: string): Promise<LoadedResume> {
   const supabase = await createSupabaseServerClient();
-  const { data: resume } = await supabase
-    .from("resumes")
-    .select("*")
-    .eq("id", resumeId)
-    .eq("user_id", userId)
-    .maybeSingle();
+  return loadResumeWith(supabase, resumeId, { userId });
+}
+
+/**
+ * Load a resume using a service-role client. Bypasses RLS — use only
+ * from internal routes that have already authorised the caller.
+ */
+export async function loadResumeForExport(resumeId: string): Promise<LoadedResume> {
+  const supabase = getServiceRoleClient();
+  return loadResumeWith(supabase, resumeId, {});
+}
+
+async function loadResumeWith(
+  supabase: SupabaseClient<Database>,
+  resumeId: string,
+  filter: { userId?: string },
+): Promise<LoadedResume> {
+  let resumeQuery = supabase.from("resumes").select("*").eq("id", resumeId);
+  if (filter.userId) resumeQuery = resumeQuery.eq("user_id", filter.userId);
+  const { data: resume } = await resumeQuery.maybeSingle();
   if (!resume) notFound();
 
   const [

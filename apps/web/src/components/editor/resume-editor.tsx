@@ -1,8 +1,8 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@seerah/ui";
 import * as React from "react";
 
+import { ResumeTabs } from "@/components/dashboard/resume-tabs";
 import type { LoadedResume } from "@/lib/editor/load-resume";
 
 import { AiChatWidget } from "./ai-chat-widget";
@@ -29,22 +29,8 @@ interface Props {
 export function ResumeEditor({ data }: Props) {
   return (
     <EditorProvider initial={data}>
-      <Tabs defaultValue="data" className="space-y-4">
-        <TabsList className="w-full justify-start gap-1 overflow-x-auto">
-          <TabsTrigger value="data">البيانات</TabsTrigger>
-          <TabsTrigger value="design">التصميم</TabsTrigger>
-          <TabsTrigger value="share">تحميل ومشاركة</TabsTrigger>
-        </TabsList>
-        <TabsContent value="data" className="m-0">
-          <EditorWorkspace />
-        </TabsContent>
-        <TabsContent value="design" className="m-0">
-          <ComingSoon title="التصميم" description="اختيار قالب وألوان السيرة" />
-        </TabsContent>
-        <TabsContent value="share" className="m-0">
-          <ComingSoon title="تحميل ومشاركة" description="تنزيل PDF/PNG ومشاركة رابط عام" />
-        </TabsContent>
-      </Tabs>
+      <ResumeTabs resumeId={data.resume.id} />
+      <EditorWorkspace />
       <AiPanel />
       <AiChatWidget />
     </EditorProvider>
@@ -95,14 +81,4 @@ function ActiveSection() {
     default:
       return null;
   }
-}
-
-function ComingSoon({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-card border border-dashed border-border bg-card p-12 text-center">
-      <h3 className="font-cairo text-lg font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      <p className="mt-3 text-xs text-muted-foreground">قريبًا — جاري التطوير</p>
-    </div>
-  );
 }
