@@ -188,14 +188,13 @@ export async function POST(request: Request): Promise<Response> {
       }
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        const customerId = typeof invoice.customer === "string"
-          ? invoice.customer
-          : (invoice.customer?.id ?? null);
-        if (!customerId) break;
-        const userId = await userIdFromCustomer(customerId);
-        if (!userId) break;
+        const subscriptionId = typeof invoice.subscription === "string"
+          ? invoice.subscription
+          : (invoice.subscription?.id ?? null);
+        // Only subscription invoices map to a row in `subscriptions` — one-off
+        // invoices have no row to update so we ack and move on.
+        if (!subscriptionId) break;
 
-        // Mark the most recent subscription past_due so the dashboard can warn.
         const admin = getServiceRoleClient();
         await admin
           .from("subscriptions")
@@ -204,7 +203,7 @@ export async function POST(request: Request): Promise<Response> {
             last_event_id: event.id,
             updated_at: new Date().toISOString(),
           })
-          .eq("stripe_customer_id", customerId);
+          .eq("stripe_subscription_id", subscriptionId);
         break;
       }
       default:

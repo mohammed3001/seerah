@@ -23,8 +23,12 @@ export function detectCountryFromHeaders(headers: HeadersLike): string | null {
   return null;
 }
 
+// Countries where Stripe has limited or no support and Paddle is the
+// preferred MENA fallback. Saudi Arabia is *not* in this list — Stripe
+// fully supports KSA (including Mada cards) and SA is the app's primary
+// market, so the subscription page should never warn SA users that Stripe
+// might not work for them.
 const PADDLE_PREFERRED = new Set([
-  "SA", // Saudi Arabia
   "IQ", // Iraq
   "YE", // Yemen
   "LY", // Libya

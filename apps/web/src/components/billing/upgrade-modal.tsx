@@ -26,6 +26,9 @@ import {
   DialogTitle,
 } from "@seerah/ui";
 
+import { useDashboardSession } from "@/components/dashboard/session-provider";
+import { pickCurrencyForCountry } from "@/lib/billing/currency";
+
 export type UpgradeFeature =
   | "templateLock"
   | "slugCustomization"
@@ -126,6 +129,13 @@ interface UpgradeModalProps {
   currency?: "sar" | "usd";
 }
 
+// Kept in sync with PRIME_PLAN in @/lib/stripe/server. Inlined here so the
+// browser bundle doesn't pull a server-only module.
+const PRICE_BY_CURRENCY = {
+  sar: { yearly: 149, label_yearly: "149 ر.س", label_monthly: "12.4 ر.س" },
+  usd: { yearly: 39, label_yearly: "$39", label_monthly: "≈ $3.25" },
+} as const;
+
 export function UpgradeModal({
   open,
   onOpenChange,
@@ -135,6 +145,13 @@ export function UpgradeModal({
 }: UpgradeModalProps) {
   const [loading, setLoading] = React.useState(false);
   const copy = COPY[feature];
+  const session = useDashboardSession();
+  // Currency precedence: explicit prop > profile.billing_country > USD default.
+  const resolvedCurrency =
+    currency ?? pickCurrencyForCountry(session.profile.billing_country);
+  const pricing = PRICE_BY_CURRENCY[resolvedCurrency];
+  const priceLabel = pricing.label_yearly;
+  const monthlyLabel = pricing.label_monthly;
 
   async function handleUpgrade() {
     setLoading(true);
@@ -142,7 +159,7 @@ export function UpgradeModal({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(currency ? { currency } : {}),
+        body: JSON.stringify({ currency: resolvedCurrency }),
       });
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
@@ -193,9 +210,11 @@ export function UpgradeModal({
         ) : null}
 
         <div className="rounded-card border border-border bg-secondary/40 p-4">
-          <p className="text-sm font-semibold">باقة برايم — 149 ر.س / سنة</p>
+          <p className="text-sm font-semibold">
+            باقة برايم — {priceLabel} / سنة
+          </p>
           <p className="text-xs text-muted-foreground">
-            ≈ 12.4 ر.س شهريًا · جرّبها مجانًا 7 أيام
+            ≈ {monthlyLabel} شهريًا · جرّبها مجانًا 7 أيام
           </p>
           <ul className="mt-3 space-y-1.5 text-sm">
             {copy.highlights.map((h) => (

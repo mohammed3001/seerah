@@ -66,22 +66,9 @@ export function resolvePriceId(currency: "sar" | "usd"): string {
   return id;
 }
 
-/** Pick the right currency for a billing country. SAR for KSA/MENA, USD elsewhere. */
-const SAR_COUNTRIES = new Set([
-  "SA", // Saudi Arabia
-  "AE", // UAE
-  "KW", // Kuwait
-  "QA", // Qatar
-  "BH", // Bahrain
-  "OM", // Oman
-  "JO", // Jordan
-  "EG", // Egypt
-]);
-
-export function pickCurrencyForCountry(country: string | null | undefined): "sar" | "usd" {
-  if (country && SAR_COUNTRIES.has(country.toUpperCase())) return "sar";
-  return "usd";
-}
+// Re-export the shared client-safe currency picker so server code can use a
+// single import surface.
+export { pickCurrencyForCountry } from "@/lib/billing/currency";
 
 export const PRIME_TRIAL_DAYS = 7;
 
