@@ -4,8 +4,30 @@ import * as React from "react";
 
 import type { LoadedResume } from "@/lib/editor/load-resume";
 import type { SectionKey } from "@/lib/editor/sections";
+import type { EnhanceFieldType } from "@/lib/ai/types";
 
 export type EditorLanguage = "ar" | "en";
+
+export type AIPanelTab = "enhance" | "generate" | "analyze" | "chat";
+
+export interface AIPanelOpenOptions {
+  tab?: AIPanelTab;
+  section?: SectionKey | null;
+  field?: string | null;
+  fieldType?: EnhanceFieldType;
+  currentText?: string;
+  onAccept?: (text: string, language: EditorLanguage) => void;
+}
+
+interface AIPanelState {
+  open: boolean;
+  tab: AIPanelTab;
+  section: SectionKey | null;
+  field: string | null;
+  fieldType: EnhanceFieldType | null;
+  currentText: string;
+  onAccept: ((text: string, language: EditorLanguage) => void) | null;
+}
 
 interface EditorState {
   data: LoadedResume;
@@ -18,13 +40,24 @@ interface EditorState {
   setPreviewLang: (lang: EditorLanguage) => void;
   previewZoom: 0.5 | 0.75 | 1;
   setPreviewZoom: (zoom: 0.5 | 0.75 | 1) => void;
-  /** AI auto-fill panel state. */
-  aiPanel: { open: boolean; section: SectionKey | null; field: string | null };
-  openAiPanel: (section: SectionKey, field?: string | null) => void;
+  /** AI assistant drawer state. */
+  aiPanel: AIPanelState;
+  openAiPanel: (options?: AIPanelOpenOptions) => void;
+  setAiPanelTab: (tab: AIPanelTab) => void;
   closeAiPanel: () => void;
 }
 
 const EditorContext = React.createContext<EditorState | null>(null);
+
+const INITIAL_AI_PANEL: AIPanelState = {
+  open: false,
+  tab: "enhance",
+  section: null,
+  field: null,
+  fieldType: null,
+  currentText: "",
+  onAccept: null,
+};
 
 export function EditorProvider({
   initial,
@@ -42,21 +75,28 @@ export function EditorProvider({
     (initial.resume.language as EditorLanguage) ?? "ar",
   );
   const [previewZoom, setPreviewZoom] = React.useState<0.5 | 0.75 | 1>(0.75);
-  const [aiPanel, setAiPanel] = React.useState<EditorState["aiPanel"]>({
-    open: false,
-    section: null,
-    field: null,
-  });
+  const [aiPanel, setAiPanel] = React.useState<AIPanelState>(INITIAL_AI_PANEL);
 
   const openAiPanel = React.useCallback(
-    (section: SectionKey, field: string | null = null) =>
-      setAiPanel({ open: true, section, field }),
+    (options: AIPanelOpenOptions = {}) =>
+      setAiPanel((prev) => ({
+        open: true,
+        tab: options.tab ?? prev.tab ?? "enhance",
+        section: options.section ?? null,
+        field: options.field ?? null,
+        fieldType: options.fieldType ?? null,
+        currentText: options.currentText ?? "",
+        onAccept: options.onAccept ?? null,
+      })),
     [],
   );
-  const closeAiPanel = React.useCallback(
-    () => setAiPanel({ open: false, section: null, field: null }),
+
+  const setAiPanelTab = React.useCallback(
+    (tab: AIPanelTab) => setAiPanel((prev) => ({ ...prev, tab })),
     [],
   );
+
+  const closeAiPanel = React.useCallback(() => setAiPanel(INITIAL_AI_PANEL), []);
 
   const value: EditorState = {
     data,
@@ -71,6 +111,7 @@ export function EditorProvider({
     setPreviewZoom,
     aiPanel,
     openAiPanel,
+    setAiPanelTab,
     closeAiPanel,
   };
 

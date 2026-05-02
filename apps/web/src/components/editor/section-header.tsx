@@ -36,7 +36,7 @@ export function SectionHeader({ section, title, description, showAi = true }: Pr
             variant="outline"
             size="sm"
             className="border-accent/40 text-accent hover:bg-accent/5"
-            onClick={() => openAiPanel(section)}
+            onClick={() => openAiPanel({ tab: "generate", section })}
           >
             <Sparkles className="size-4" />
             اكتب بالذكاء الاصطناعي

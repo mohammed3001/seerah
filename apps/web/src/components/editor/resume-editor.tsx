@@ -5,6 +5,7 @@ import * as React from "react";
 
 import type { LoadedResume } from "@/lib/editor/load-resume";
 
+import { AiChatWidget } from "./ai-chat-widget";
 import { AiPanel } from "./ai-panel";
 import { EditorProvider, useEditor } from "./editor-context";
 import { PreviewPane } from "./preview-pane";
@@ -45,6 +46,7 @@ export function ResumeEditor({ data }: Props) {
         </TabsContent>
       </Tabs>
       <AiPanel />
+      <AiChatWidget />
     </EditorProvider>
   );
 }
