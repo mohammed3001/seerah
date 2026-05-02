@@ -8,6 +8,9 @@ that through the same vision pipeline.
 
 from __future__ import annotations
 
+import base64
+import binascii
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from ..auth import require_internal_token
@@ -17,6 +20,37 @@ from ..schemas import ErrorResponse, SmartFillRequest, SmartFillResponse
 from ._common import coerce_str, enforce_rate_limit, upstream_error
 
 router = APIRouter(prefix="/ai", tags=["ai"], dependencies=[Depends(require_internal_token)])
+
+# Common image format magic bytes. Order matters because some prefixes are
+# overlapping (RIFF for WEBP must be checked alongside the trailing tag).
+_IMAGE_MAGIC: tuple[tuple[bytes, str], ...] = (
+    (b"\x89PNG\r\n\x1a\n", "image/png"),
+    (b"\xff\xd8\xff", "image/jpeg"),
+    (b"GIF87a", "image/gif"),
+    (b"GIF89a", "image/gif"),
+)
+
+
+def _sniff_image_mime(b64: str, *, default: str = "image/png") -> str:
+    """Detect MIME type from the first bytes of a base64-encoded image.
+
+    OpenAI Vision rejects ``data:image/png`` URLs whose payload is actually
+    JPEG/WEBP, so we sniff the magic bytes rather than hard-coding a single
+    type. Falls back to ``default`` if the input is too short or otherwise
+    unrecognisable.
+    """
+    try:
+        # Decode only the first ~32 bytes — enough for any magic-byte check.
+        head = base64.b64decode(b64[:64], validate=False)
+    except (binascii.Error, ValueError):
+        return default
+    for prefix, mime in _IMAGE_MAGIC:
+        if head.startswith(prefix):
+            return mime
+    # WEBP: "RIFF" + 4-byte length + "WEBP".
+    if head.startswith(b"RIFF") and head[8:12] == b"WEBP":
+        return "image/webp"
+    return default
 
 
 @router.post("/smart-fill", response_model=SmartFillResponse)
@@ -49,7 +83,10 @@ async def smart_fill(req: SmartFillRequest, response: Response) -> SmartFillResp
     response.headers["X-RateLimit-Remaining"] = str(rate.remaining)
     response.headers["X-RateLimit-Reset"] = str(rate.reset_at)
 
-    mime = "application/pdf" if req.file_type == "pdf" else "image/png"
+    if req.file_type == "pdf":
+        mime = "application/pdf"
+    else:
+        mime = _sniff_image_mime(req.uploaded_file_base64)
     data_url = f"data:{mime};base64,{req.uploaded_file_base64}"
     attachments = [{"type": "image_url", "image_url": {"url": data_url}}]
 

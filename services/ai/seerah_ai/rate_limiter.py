@@ -16,6 +16,7 @@ not calendar day).
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from dataclasses import dataclass
@@ -23,6 +24,8 @@ from dataclasses import dataclass
 import httpx
 
 from .config import get_settings
+
+_logger = logging.getLogger(__name__)
 
 WINDOW_SECONDS = 24 * 60 * 60
 
@@ -131,9 +134,19 @@ class RateLimiter:
         count_after = _result_int(result[2])
 
         if count_after > limit:
-            # Roll back: remove the entry we just added. Best-effort; even if
-            # this fails the entry will expire after WINDOW_SECONDS.
-            await self._client.pipeline([["ZREM", key, member]])
+            # Roll back: remove the entry we just added. Genuinely best-effort
+            # — if Upstash is briefly unreachable here we must NOT propagate
+            # the exception, because the caller's intended response is a 429
+            # with a friendly bilingual body, not a 500. The just-added entry
+            # will simply expire after WINDOW_SECONDS even if ZREM never
+            # lands.
+            try:
+                await self._client.pipeline([["ZREM", key, member]])
+            except Exception:  # noqa: BLE001 - intentional swallow, see comment
+                _logger.warning(
+                    "rate_limiter: rollback ZREM failed; entry will expire naturally",
+                    exc_info=True,
+                )
             return RateLimitResult(
                 allowed=False,
                 limit=limit,

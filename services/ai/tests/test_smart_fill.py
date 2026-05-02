@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import base64
+
 from fastapi.testclient import TestClient
+
+from seerah_ai.routes.smart_fill import _sniff_image_mime
 
 from .conftest import FakeOpenAIClient
 
@@ -68,3 +72,38 @@ def test_smart_fill_extracts_data(
     assert body["confidence_scores"]["personal"] == 0.92
     assert body["confidence_scores"]["education"] == 1.0
     assert "experience" not in body["confidence_scores"]
+
+
+def _b64(data: bytes) -> str:
+    return base64.b64encode(data).decode("ascii")
+
+
+def test_sniff_image_mime_detects_png() -> None:
+    payload = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+    assert _sniff_image_mime(_b64(payload)) == "image/png"
+
+
+def test_sniff_image_mime_detects_jpeg() -> None:
+    payload = b"\xff\xd8\xff\xe0" + b"\x00" * 16
+    assert _sniff_image_mime(_b64(payload)) == "image/jpeg"
+
+
+def test_sniff_image_mime_detects_webp() -> None:
+    # RIFF<size>WEBP header
+    payload = b"RIFF" + b"\x00\x00\x00\x00" + b"WEBP" + b"\x00" * 16
+    assert _sniff_image_mime(_b64(payload)) == "image/webp"
+
+
+def test_sniff_image_mime_detects_gif() -> None:
+    payload = b"GIF89a" + b"\x00" * 16
+    assert _sniff_image_mime(_b64(payload)) == "image/gif"
+
+
+def test_sniff_image_mime_falls_back_on_unknown() -> None:
+    payload = b"\x00\x01\x02\x03" + b"\x00" * 16
+    assert _sniff_image_mime(_b64(payload)) == "image/png"
+
+
+def test_sniff_image_mime_handles_invalid_base64() -> None:
+    # Non-base64 garbage must not raise.
+    assert _sniff_image_mime("not!!base64", default="image/jpeg") == "image/jpeg"
