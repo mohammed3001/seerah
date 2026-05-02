@@ -71,8 +71,11 @@ export async function enhanceTextAction(input: {
   language: Language;
   resume_context?: Record<string, unknown> | null;
 }): Promise<ActionResult<EnhanceTextResponse> | ActionFailure> {
+  // Auth resolution must run outside try/catch — getDashboardSession() may
+  // call Next's redirect(), which works by throwing a NEXT_REDIRECT error.
+  // Catching it here would silently turn the redirect into a generic 500.
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.enhanceText({ caller, ...input });
     return { ok: true, data, rate_limit };
   } catch (err) {
@@ -87,8 +90,8 @@ export async function generateSectionAction(input: {
   resume_context?: Record<string, unknown> | null;
   language: Language;
 }): Promise<ActionResult<GenerateSectionResponse> | ActionFailure> {
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.generateSection({
       caller,
       ...input,
@@ -103,8 +106,8 @@ export async function analyzeResumeAction(input: {
   resume_data: Record<string, unknown>;
   language: Language;
 }): Promise<ActionResult<AnalyzeResumeResponse> | ActionFailure> {
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.analyzeResume({ caller, ...input });
     return { ok: true, data, rate_limit };
   } catch (err) {
@@ -118,8 +121,8 @@ export async function smartFillAction(input: {
   linkedin_url?: string | null;
   language: Language;
 }): Promise<ActionResult<SmartFillResponse> | ActionFailure> {
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.smartFill({ caller, ...input });
     return { ok: true, data, rate_limit };
   } catch (err) {
@@ -132,8 +135,8 @@ export async function suggestSkillsAction(input: {
   experience_descriptions: string[];
   language: Language;
 }): Promise<ActionResult<SuggestSkillsResponse> | ActionFailure> {
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.suggestSkills({ caller, ...input });
     return { ok: true, data, rate_limit };
   } catch (err) {
@@ -146,8 +149,8 @@ export async function improveForJobAction(input: {
   resume_data: Record<string, unknown>;
   language: Language;
 }): Promise<ActionResult<ImproveForJobResponse> | ActionFailure> {
+  const caller = await resolveCaller();
   try {
-    const caller = await resolveCaller();
     const { data, rate_limit } = await aiServer.improveForJob({ caller, ...input });
     return { ok: true, data, rate_limit };
   } catch (err) {
