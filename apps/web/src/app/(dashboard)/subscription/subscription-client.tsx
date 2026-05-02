@@ -9,6 +9,7 @@ import {
   Star,
   X as XIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -85,6 +86,7 @@ export function SubscriptionClient({
   hasCustomer,
   currentSubscription,
 }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = React.useState<"checkout" | "portal" | null>(null);
   const [openFaq, setOpenFaq] = React.useState<number | null>(0);
 
@@ -107,6 +109,14 @@ export function SubscriptionClient({
       });
       if (!res.ok) {
         const err = (await res.json().catch(() => ({}))) as { error?: string };
+        if (err.error === "already_subscribed") {
+          // Stale tab — another tab finished checkout. Refresh the server
+          // component so the user sees the post-subscribe UI (portal
+          // button + plan badge) instead of the buy CTA.
+          toast.error("أنت مشترك بالفعل في باقة برايم. أدِر اشتراكك من بوابة العميل.");
+          router.refresh();
+          return;
+        }
         toast.error(
           err.error === "stripe_not_configured"
             ? "الدفع غير مفعّل بعد. تواصل مع الدعم."
