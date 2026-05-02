@@ -64,6 +64,35 @@ async def test_rate_limiter_blocks_and_rolls_back_on_overflow(
 
 
 @pytest.mark.asyncio
+async def test_rate_limiter_swallows_rollback_failure(
+    monkeypatch: Any,
+) -> None:
+    """When the post-overflow rollback ZREM fails, the limiter must still
+    return a clean ``allowed=False`` result rather than propagating the
+    exception (which would surface as a 500 to the user instead of a 429)."""
+
+    class FlakyUpstash(FakeUpstash):
+        async def pipeline(
+            self, commands: list[list[Any]], *, client: Any = None
+        ) -> list[dict[str, Any]]:
+            # Delegate to the base; it records `commands` in `self.calls`.
+            if commands and commands[0][0] == "ZREM":
+                self.calls.append(commands)
+                raise RuntimeError("upstash unreachable")
+            return await super().pipeline(commands, client=client)
+
+    fake = FlakyUpstash(count_after=11)
+    limiter = RateLimiter(client=fake)  # type: ignore[arg-type]
+    monkeypatch.setattr(limiter, "_configured", True)
+    # Should NOT raise — must degrade to a normal 429-equivalent result.
+    result = await limiter.check_and_record("user-1", "free")
+    assert not result.allowed
+    assert result.remaining == 0
+    assert len(fake.calls) == 2
+    assert fake.calls[1][0][0] == "ZREM"
+
+
+@pytest.mark.asyncio
 async def test_rate_limiter_prime_has_higher_limit(monkeypatch: Any) -> None:
     fake = FakeUpstash(count_after=51)  # 50 prior + 1 new
     limiter = RateLimiter(client=fake)  # type: ignore[arg-type]
