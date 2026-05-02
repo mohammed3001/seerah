@@ -161,7 +161,14 @@ export function PersonalSection() {
                     field: "bio",
                     fieldType: "bio",
                     currentText: localized.bio ?? "",
-                    onAccept: (text) => setLocalized("bio", text),
+                    // Forward `lang` so accepting the English result writes
+                    // to form.en.bio even when the editor was opened in
+                    // Arabic mode (and vice versa).
+                    onAccept: (text, lang) => {
+                      const target =
+                        (form[lang] as Record<string, string> | undefined) ?? {};
+                      update(lang, { ...target, bio: text } as PersonalRow["ar"]);
+                    },
                   })
                 }
               >
