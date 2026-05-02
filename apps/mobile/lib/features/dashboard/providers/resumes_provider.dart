@@ -12,7 +12,7 @@ final resumesProvider = FutureProvider<List<ResumeSummary>>((ref) async {
   final res = await Supabase.instance.client
       .from("resumes")
       .select(
-        "id, user_id, title, slug, language, template_key, completion_score, updated_at",
+        "id, user_id, title, slug, language, template_id, completion_score, updated_at",
       )
       .order("updated_at", ascending: false)
       .limit(50);
@@ -39,7 +39,7 @@ Future<String> createResume({
         "user_id": user.id,
         "title": title,
         "language": language,
-        "template_key": "template_clean_modern",
+        "template_id": "template_clean_modern",
       })
       .select("id")
       .single();

@@ -9,7 +9,7 @@ class ResumeSummary {
   final String? title;
   final String? slug;
   final String language;
-  final String templateKey;
+  final String templateId;
   final int? completionScore;
   final DateTime updatedAt;
 
@@ -19,7 +19,7 @@ class ResumeSummary {
     required this.title,
     required this.slug,
     required this.language,
-    required this.templateKey,
+    required this.templateId,
     required this.completionScore,
     required this.updatedAt,
   });
@@ -31,7 +31,7 @@ class ResumeSummary {
       title: json["title"] as String?,
       slug: json["slug"] as String?,
       language: (json["language"] as String?) ?? "ar",
-      templateKey: (json["template_key"] as String?) ?? "template_clean_modern",
+      templateId: (json["template_id"] as String?) ?? "template_clean_modern",
       completionScore: (json["completion_score"] as num?)?.toInt(),
       updatedAt: DateTime.parse(json["updated_at"] as String),
     );

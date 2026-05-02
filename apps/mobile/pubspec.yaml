@@ -49,6 +49,8 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_pdfview: ^1.4.0+1
   local_auth: ^2.3.0
+  path_provider: ^2.1.5
+  app_links: ^6.3.2
 
   # ------- Models / serialization ------------------------------------------
   freezed_annotation: ^2.4.4
