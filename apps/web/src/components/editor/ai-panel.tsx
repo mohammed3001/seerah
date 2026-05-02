@@ -1,63 +1,41 @@
 "use client";
 
-import { Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+/**
+ * 4-tab right-drawer AI assistant. Each tab calls a distinct AI service
+ * endpoint and returns shaped data.
+ *
+ *  1. تحسين النص (enhance) — rewrite the focused field bilingually
+ *  2. توليد تلقائي (generate) — generate structured section items from prose
+ *  3. تحليل السيرة (analyze) — score + improvements + ATS + keywords
+ *  4. محادثة (chat) — streaming SSE chat with full resume context
+ *
+ * The drawer is openable from per-field "✦ AI" buttons (which provide
+ * `onAccept` callbacks for direct write-back) or from the section header
+ * (which opens with the section pre-selected).
+ */
+
+import { Sparkles, X } from "lucide-react";
 import * as React from "react";
-import { toast } from "sonner";
 
-import { Button, Label, Textarea, ToggleGroup, ToggleGroupItem } from "@seerah/ui";
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@seerah/ui";
 
-import { useEditor } from "@/components/editor/editor-context";
-import { aiGenerate, type AiGenerateResponse } from "@/lib/editor/ai-client";
-import { sectionByKey } from "@/lib/editor/sections";
+import { useEditor } from "./editor-context";
+import { AnalyzeTab } from "./ai/analyze-tab";
+import { ChatTab } from "./ai/chat-tab";
+import { EnhanceTab } from "./ai/enhance-tab";
+import { GenerateTab } from "./ai/generate-tab";
+import { RateLimitBar } from "./ai/rate-limit-bar";
+import type { RateLimitInfo } from "@/lib/ai/types";
 
 export function AiPanel() {
-  const { aiPanel, closeAiPanel, editorLang } = useEditor();
-  const [prompt, setPrompt] = React.useState("");
-  const [language, setLanguage] = React.useState<"ar" | "en">(editorLang);
-  const [loading, setLoading] = React.useState(false);
-  const [result, setResult] = React.useState<AiGenerateResponse | null>(null);
+  const { aiPanel, closeAiPanel, setAiPanelTab } = useEditor();
+  const [rateLimit, setRateLimit] = React.useState<RateLimitInfo | null>(null);
 
   React.useEffect(() => {
-    if (!aiPanel.open) {
-      setPrompt("");
-      setResult(null);
-    }
+    if (!aiPanel.open) setRateLimit(null);
   }, [aiPanel.open]);
 
-  if (!aiPanel.open || !aiPanel.section) return null;
-  const section = sectionByKey[aiPanel.section];
-
-  async function generate() {
-    if (!prompt.trim()) {
-      toast.error("اكتب وصفًا للذكاء الاصطناعي");
-      return;
-    }
-    setLoading(true);
-    setResult(null);
-    try {
-      const r = await aiGenerate({
-        section: section.key,
-        field: aiPanel.field,
-        prompt: prompt.trim(),
-        language,
-      });
-      setResult(r);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "تعذّر الاتصال بخدمة الذكاء الاصطناعي");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function accept() {
-    if (!result) return;
-    // Copy generated text to clipboard for now — section editors handle their
-    // own field assignment via the open AI panel context. Future iteration:
-    // wire a dispatch event keyed on aiPanel.field.
-    void navigator.clipboard?.writeText(result.text).catch(() => {});
-    toast.success("تم نسخ النص — الصقه في الحقل المطلوب");
-    closeAiPanel();
-  }
+  if (!aiPanel.open) return null;
 
   return (
     <>
@@ -67,8 +45,9 @@ export function AiPanel() {
         onClick={closeAiPanel}
       />
       <aside
-        className="fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col border-s border-border bg-background shadow-card-dark"
+        className="fixed inset-y-0 end-0 z-50 flex w-full max-w-[400px] flex-col border-s border-border bg-background shadow-card-dark"
         style={{ animation: "slide-in-end 220ms cubic-bezier(0.16, 1, 0.3, 1)" }}
+        aria-label="مساعد الذكاء الاصطناعي"
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
@@ -76,8 +55,8 @@ export function AiPanel() {
               <Sparkles className="size-4" />
             </span>
             <div>
-              <p className="text-sm font-semibold">الكتابة بالذكاء الاصطناعي</p>
-              <p className="text-xs text-muted-foreground">{section.label}</p>
+              <p className="text-sm font-semibold">مساعد الذكاء الاصطناعي</p>
+              <p className="text-xs text-muted-foreground">سيرة بالذكاء — gpt-4o-mini</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={closeAiPanel} aria-label="إغلاق">
@@ -85,58 +64,37 @@ export function AiPanel() {
           </Button>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-          <div className="space-y-2">
-            <Label>صف بإيجاز ما تريد كتابته</Label>
-            <Textarea
-              rows={4}
-              placeholder={
-                section.key === "personal"
-                  ? "مثال: مهندس برمجيات بخبرة 5 سنوات في React وNode.js…"
-                  : "اكتب وصفًا واضحًا حتى ينتج نتائج أدق"
-              }
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>لغة الإخراج</Label>
-            <ToggleGroup type="single" value={language} onValueChange={(v) => v && setLanguage(v as "ar" | "en")}>
-              <ToggleGroupItem value="ar">العربية</ToggleGroupItem>
-              <ToggleGroupItem value="en">English</ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <Button type="button" onClick={() => void generate()} disabled={loading} size="lg" className="w-full">
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            توليد النص
-          </Button>
+        <Tabs
+          value={aiPanel.tab}
+          onValueChange={(v) =>
+            setAiPanelTab(v as "enhance" | "generate" | "analyze" | "chat")
+          }
+          className="flex flex-1 flex-col overflow-hidden"
+        >
+          <TabsList className="m-3 grid grid-cols-4">
+            <TabsTrigger value="enhance">تحسين</TabsTrigger>
+            <TabsTrigger value="generate">توليد</TabsTrigger>
+            <TabsTrigger value="analyze">تحليل</TabsTrigger>
+            <TabsTrigger value="chat">محادثة</TabsTrigger>
+          </TabsList>
 
-          {result ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>النتيجة</Label>
-                {typeof result.tokens === "number" ? (
-                  <span className="text-[11px] text-muted-foreground">
-                    رموز مستخدمة: {result.tokens}
-                  </span>
-                ) : null}
-              </div>
-              <Textarea
-                rows={10}
-                value={result.text}
-                onChange={(e) => setResult({ ...result, text: e.target.value })}
-                dir={result.language === "ar" ? "rtl" : "ltr"}
-              />
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => void generate()} disabled={loading}>
-                  <RefreshCw className="size-4" />
-                  إعادة توليد
-                </Button>
-                <Button onClick={accept}>قبول ونسخ</Button>
-              </div>
-            </div>
-          ) : null}
-        </div>
+          <RateLimitBar rateLimit={rateLimit} className="mx-3" />
+
+          <div className="flex-1 overflow-y-auto px-5 pb-5">
+            <TabsContent value="enhance" className="mt-3">
+              <EnhanceTab onRateLimit={setRateLimit} />
+            </TabsContent>
+            <TabsContent value="generate" className="mt-3">
+              <GenerateTab onRateLimit={setRateLimit} />
+            </TabsContent>
+            <TabsContent value="analyze" className="mt-3">
+              <AnalyzeTab onRateLimit={setRateLimit} />
+            </TabsContent>
+            <TabsContent value="chat" className="mt-3 flex h-full flex-col">
+              <ChatTab onRateLimit={setRateLimit} />
+            </TabsContent>
+          </div>
+        </Tabs>
       </aside>
     </>
   );

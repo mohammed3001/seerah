@@ -154,7 +154,16 @@ export function PersonalSection() {
                 variant="ghost"
                 size="sm"
                 className="text-accent"
-                onClick={() => openAiPanel("personal", "bio")}
+                onClick={() =>
+                  openAiPanel({
+                    tab: "enhance",
+                    section: "personal",
+                    field: "bio",
+                    fieldType: "bio",
+                    currentText: localized.bio ?? "",
+                    onAccept: (text) => setLocalized("bio", text),
+                  })
+                }
               >
                 <Sparkles className="size-3.5" /> اكتب بالذكاء الاصطناعي
               </Button>
