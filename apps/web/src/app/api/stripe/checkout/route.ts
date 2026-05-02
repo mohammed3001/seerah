@@ -81,10 +81,7 @@ export async function POST(request: Request): Promise<Response> {
       .update({ stripe_customer_id: customerId, billing_country: country })
       .eq("id", session.userId);
   } else if (country && country !== session.profile.billing_country) {
-    await admin
-      .from("profiles")
-      .update({ billing_country: country })
-      .eq("id", session.userId);
+    await admin.from("profiles").update({ billing_country: country }).eq("id", session.userId);
   }
 
   const origin =

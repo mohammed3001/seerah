@@ -31,6 +31,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { trackServer } from "@/lib/analytics/posthog";
+import { sendEmail } from "@/lib/email/send";
 import { getStripe, getStripeConfig } from "@/lib/stripe/server";
 import { getServiceRoleClient } from "@/lib/supabase/service-role";
 
@@ -67,6 +68,26 @@ async function userIdFromCustomer(customerId: string): Promise<string | null> {
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
   return data?.id ?? null;
+}
+
+interface EmailRecipient {
+  email: string;
+  locale: "ar" | "en";
+}
+
+async function getRecipient(userId: string): Promise<EmailRecipient | null> {
+  const admin = getServiceRoleClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("email, locale")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!data?.email) return null;
+  return { email: data.email, locale: data.locale ?? "ar" };
+}
+
+function appOrigin(): string {
+  return process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com";
 }
 
 async function userIdFromMetadata(
@@ -157,15 +178,36 @@ export async function POST(request: Request): Promise<Response> {
         );
         if (!userId) break;
 
-        const subId = typeof session.subscription === "string"
-          ? session.subscription
-          : session.subscription.id;
+        const subId =
+          typeof session.subscription === "string" ? session.subscription : session.subscription.id;
         const sub = await getStripe().subscriptions.retrieve(subId);
         await persistSubscription(userId, sub, event.id);
         await trackServer(userId, "upgrade_completed", {
           subscription_id: sub.id,
           currency: session.currency ?? null,
         });
+
+        const recipient = await getRecipient(userId);
+        if (recipient) {
+          // amount_total is in the smallest currency unit (cents / halalas).
+          const amount = (session.amount_total ?? 0) / 100;
+          const currency = (session.currency?.toLowerCase() === "sar" ? "sar" : "usd") as
+            | "sar"
+            | "usd";
+          await sendEmail({
+            template: "subscription_confirmed",
+            to: recipient.email,
+            userId,
+            props: {
+              appUrl: appOrigin(),
+              amount,
+              currency,
+              trialEnd: toIso(sub.trial_end),
+              nextBillingAt: toIso(sub.current_period_end),
+              locale: recipient.locale,
+            },
+          });
+        }
         break;
       }
       case "customer.subscription.created":
@@ -183,14 +225,28 @@ export async function POST(request: Request): Promise<Response> {
             subscription_id: sub.id,
             cancel_at_period_end: sub.cancel_at_period_end,
           });
+          const recipient = await getRecipient(userId);
+          if (recipient) {
+            await sendEmail({
+              template: "subscription_cancelled",
+              to: recipient.email,
+              userId,
+              props: {
+                appUrl: appOrigin(),
+                endsAt: toIso(sub.current_period_end),
+                locale: recipient.locale,
+              },
+            });
+          }
         }
         break;
       }
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = typeof invoice.subscription === "string"
-          ? invoice.subscription
-          : (invoice.subscription?.id ?? null);
+        const subscriptionId =
+          typeof invoice.subscription === "string"
+            ? invoice.subscription
+            : (invoice.subscription?.id ?? null);
         // Only subscription invoices map to a row in `subscriptions` — one-off
         // invoices have no row to update so we ack and move on.
         if (!subscriptionId) break;
@@ -209,6 +265,21 @@ export async function POST(request: Request): Promise<Response> {
         );
         if (!userId) break;
         await persistSubscription(userId, sub, event.id);
+
+        const recipient = await getRecipient(userId);
+        if (recipient) {
+          // next_payment_attempt is unix seconds; null when Stripe has given up.
+          await sendEmail({
+            template: "payment_failed",
+            to: recipient.email,
+            userId,
+            props: {
+              appUrl: appOrigin(),
+              nextRetryAt: toIso(invoice.next_payment_attempt),
+              locale: recipient.locale,
+            },
+          });
+        }
         break;
       }
       default:

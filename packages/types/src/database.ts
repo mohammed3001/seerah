@@ -29,6 +29,9 @@ type ProfilesRow = {
   billing_country: string | null;
   referral_code: string | null;
   referred_by: string | null;
+  marketing_emails_enabled: boolean;
+  unsubscribe_token: string;
+  locale: "ar" | "en";
   created_at: string;
   updated_at: string;
 };
@@ -233,6 +236,18 @@ type ResumeViewsRow = {
   viewed_at: string;
 };
 
+type EmailLogRow = {
+  id: string;
+  user_id: string | null;
+  to_email: string;
+  template: string;
+  provider_message_id: string | null;
+  status: "queued" | "sent" | "failed" | "skipped";
+  error: string | null;
+  metadata: Json;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -342,6 +357,12 @@ export type Database = {
         Row: ResumeViewsRow;
         Insert: Partial<ResumeViewsRow> & { resume_id: string };
         Update: Partial<ResumeViewsRow>;
+        Relationships: [];
+      };
+      email_log: {
+        Row: EmailLogRow;
+        Insert: Partial<EmailLogRow> & { to_email: string; template: string };
+        Update: Partial<EmailLogRow>;
         Relationships: [];
       };
     };
