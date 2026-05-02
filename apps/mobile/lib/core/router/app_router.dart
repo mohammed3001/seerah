@@ -47,6 +47,50 @@ Future<void> markOnboardingSeen() async {
   await box.put(_onboardingSeenKey, true);
 }
 
+/// Pure routing-rule resolver. Returns the path to redirect to, or `null`
+/// to stay put.
+///
+/// Order matters here. The naïve formulation
+///   1) !seen && !onboarding   -> /onboarding
+///   2) !signedIn && !auth     -> /auth/login
+///   3) signedIn && (auth || onboarding) -> /
+/// loops infinitely when a user is signed-in but the onboarding flag is
+/// missing (fresh install with a cached Supabase session, or PKCE
+/// deep-link sign-in before onboarding completed). Rule 3 sends them off
+/// `/onboarding`, then rule 1 sends them right back. GoRouter's default
+/// `redirectLimit=5` would crash the app.
+///
+/// Fix: the "kick signed-in user off onboarding" rule must require that
+/// onboarding has actually been completed. Auth routes are *deliberately*
+/// exempt from forced onboarding so a returning user who taps "لدي حساب"
+/// can sign in directly without first sitting through three intro pages.
+String? resolveRedirect({
+  required String location,
+  required bool loggedIn,
+  required bool seenOnboarding,
+}) {
+  final isOnboarding = location == Routes.onboarding;
+  final isAuthRoute = location.startsWith("/auth/");
+
+  if (!seenOnboarding && !isOnboarding && !isAuthRoute) {
+    return Routes.onboarding;
+  }
+
+  if (!loggedIn && !isAuthRoute && !isOnboarding) {
+    return Routes.login;
+  }
+
+  if (loggedIn && isAuthRoute) {
+    return Routes.dashboard;
+  }
+
+  if (loggedIn && isOnboarding && seenOnboarding) {
+    return Routes.dashboard;
+  }
+
+  return null;
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Re-evaluate the redirect when auth state changes (sign-in, sign-out,
   // and *every token refresh* — Supabase emits a new event ~hourly). We
@@ -64,27 +108,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: Routes.dashboard,
     refreshListenable: notifier,
-    redirect: (context, state) {
-      final loggedIn = ref.read(isSignedInProvider);
-      final loc = state.matchedLocation;
-
-      final isOnboarding = loc == Routes.onboarding;
-      final isAuthRoute = loc.startsWith("/auth/");
-
-      if (!_hasSeenOnboarding() && !isOnboarding && !isAuthRoute) {
-        return Routes.onboarding;
-      }
-
-      if (!loggedIn && !isAuthRoute && !isOnboarding) {
-        return Routes.login;
-      }
-
-      if (loggedIn && (isAuthRoute || isOnboarding)) {
-        return Routes.dashboard;
-      }
-
-      return null;
-    },
+    redirect: (context, state) => resolveRedirect(
+      location: state.matchedLocation,
+      loggedIn: ref.read(isSignedInProvider),
+      seenOnboarding: _hasSeenOnboarding(),
+    ),
     routes: [
       GoRoute(
         path: Routes.onboarding,
