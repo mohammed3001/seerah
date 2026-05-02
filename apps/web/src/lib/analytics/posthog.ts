@@ -37,15 +37,22 @@ export async function initBrowserAnalytics(distinctId?: string): Promise<void> {
   if (typeof window === "undefined" || !PUBLIC_KEY) return;
   if (!initPromise) {
     initPromise = (async () => {
-      const mod = (await import("posthog-js")) as typeof import("posthog-js");
-      mod.default.init(PUBLIC_KEY, {
-        api_host: HOST,
-        capture_pageview: false,
-        capture_pageleave: true,
-        persistence: "localStorage+cookie",
-        autocapture: false,
-      });
-      browserPosthog = mod.default;
+      try {
+        const mod = (await import("posthog-js")) as typeof import("posthog-js");
+        mod.default.init(PUBLIC_KEY, {
+          api_host: HOST,
+          capture_pageview: false,
+          capture_pageleave: true,
+          persistence: "localStorage+cookie",
+          autocapture: false,
+        });
+        browserPosthog = mod.default;
+      } catch {
+        // posthog-js failing to load (ad blocker / CSP / offline) must
+        // never crash the calling page. Swallow inside the IIFE so the
+        // cached initPromise resolves with browserPosthog still null —
+        // every subsequent track()/identify() then becomes a no-op.
+      }
     })();
   }
   await initPromise;
@@ -65,9 +72,13 @@ export function track(event: AnalyticsEvent, properties?: EventProps): void {
   // layout (login / register / marketing) aren't dropped on the floor when
   // <AnalyticsProvider> hasn't mounted yet. initBrowserAnalytics() guards
   // against double-init internally.
-  void initBrowserAnalytics().then(() => {
-    (browserPosthog as PosthogClient | null)?.capture(event, properties);
-  });
+  void initBrowserAnalytics()
+    .then(() => {
+      (browserPosthog as PosthogClient | null)?.capture(event, properties);
+    })
+    .catch(() => {
+      // Analytics must never break the app — swallow.
+    });
 }
 
 /**
