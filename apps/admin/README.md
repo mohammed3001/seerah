@@ -37,6 +37,36 @@ The script:
 After bootstrap, additional admins (super_admin, support_agent,
 template_manager) are added through the Settings → Admin team panel.
 
+## Login flow (PR-A2)
+
+1. **Email + password** — submitted on `/login`. Failed attempts increment
+   `admin_users.failed_login_attempts`; after 5 in a row the account is
+   locked for 30 minutes.
+2. **TOTP** — on success, the operator is redirected to `/2fa/verify`
+   (or `/2fa/setup` for accounts created via the panel without a secret
+   yet).
+3. **Session** — once the TOTP code passes, an `admin_sessions` row is
+   created and the browser receives an httpOnly cookie. Only the SHA-256
+   of the cookie token is persisted, so a database leak does not surrender
+   live sessions. Sessions expire after 2 hours of inactivity.
+4. **IP allowlist** — every request (including `/login`) is filtered by
+   `admin_ip_allowlist`. While the table is empty *or* has no `is_active`
+   rows, all source IPs are allowed (fail-safe so the first operator
+   doesn't lock themselves out). Add at least one CIDR via Settings to
+   enforce the gate.
+5. **Audit log** — every login attempt, TOTP enrollment, and logout is
+   written to `admin_audit_log` with the source IP and user-agent.
+
+## Recovery
+
+- **Lost TOTP device:** another `super_admin` can clear `totp_secret` and
+  `totp_verified_at` on the affected row from the Settings → Admin team
+  panel; the operator will be prompted to re-enroll on next login.
+- **All super_admins locked out:** rotate `SUPABASE_SERVICE_ROLE_KEY`,
+  then run `pnpm bootstrap` after manually deleting the bricked rows from
+  `admin_users` via psql. The bootstrap script refuses to insert if
+  *any* admin row exists, so you must clear the table first.
+
 ## Required environment
 
 Copy `apps/admin/.env.local.example` to `apps/admin/.env.local` and fill:

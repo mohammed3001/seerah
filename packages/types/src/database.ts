@@ -32,6 +32,10 @@ type ProfilesRow = {
   marketing_emails_enabled: boolean;
   unsubscribe_token: string;
   locale: "ar" | "en";
+  is_disabled: boolean;
+  disabled_reason: string | null;
+  disabled_at: string | null;
+  last_seen_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -184,7 +188,10 @@ type TemplatesRow = {
   category: string;
   tags: string[];
   sort_order: number;
+  description_ar: string | null;
+  description_en: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 type SubscriptionsRow = {
@@ -214,6 +221,9 @@ type SupportTicketsRow = {
   attachment_url: string | null;
   status: "open" | "in_progress" | "resolved" | "closed";
   admin_notes: string | null;
+  assigned_to: string | null;
+  priority: "low" | "normal" | "high" | "urgent";
+  last_admin_reply_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -224,6 +234,9 @@ type AiUsageRow = {
   resume_id: string | null;
   action_type: string | null;
   tokens_used: number | null;
+  cost_estimate_usd: number | null;
+  is_error: boolean;
+  error_message: string | null;
   created_at: string;
 };
 
@@ -245,6 +258,105 @@ type EmailLogRow = {
   status: "queued" | "sent" | "failed" | "skipped";
   error: string | null;
   metadata: Json;
+  created_at: string;
+};
+
+type AdminUsersRow = {
+  id: string;
+  email: string;
+  password_hash: string;
+  role: "super_admin" | "support_agent" | "template_manager";
+  totp_secret: string | null;
+  totp_verified_at: string | null;
+  is_active: boolean;
+  last_login_at: string | null;
+  last_login_ip: string | null;
+  failed_login_attempts: number;
+  locked_until: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AdminSessionsRow = {
+  id: string;
+  admin_id: string;
+  token_hash: string;
+  ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+  last_seen_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+};
+
+type AdminAuditLogRow = {
+  id: string;
+  admin_id: string | null;
+  admin_email: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Json;
+  ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+type AdminIpAllowlistRow = {
+  id: string;
+  cidr: string;
+  label: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+};
+
+type AdminNotesRow = {
+  id: string;
+  admin_id: string | null;
+  admin_email: string | null;
+  target_type: "user" | "resume" | "ticket";
+  target_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type AppSettingsRow = {
+  key: string;
+  value: Json;
+  updated_by: string | null;
+  updated_at: string;
+};
+
+type FeaturedResumesRow = {
+  resume_id: string;
+  sort_order: number;
+  featured_by: string | null;
+  featured_at: string;
+};
+
+type AnnouncementsRow = {
+  id: string;
+  title_ar: string | null;
+  title_en: string | null;
+  body_ar: string | null;
+  body_en: string | null;
+  severity: "info" | "warning" | "critical";
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AiRateLimitOverridesRow = {
+  user_id: string;
+  daily_limit: number;
+  reason: string | null;
+  admin_id: string | null;
+  expires_at: string | null;
   created_at: string;
 };
 
@@ -365,6 +477,60 @@ export type Database = {
         Update: Partial<EmailLogRow>;
         Relationships: [];
       };
+      admin_users: {
+        Row: AdminUsersRow;
+        Insert: Partial<AdminUsersRow> & { email: string; password_hash: string };
+        Update: Partial<AdminUsersRow>;
+        Relationships: [];
+      };
+      admin_sessions: {
+        Row: AdminSessionsRow;
+        Insert: Partial<AdminSessionsRow> & { admin_id: string; token_hash: string; expires_at: string };
+        Update: Partial<AdminSessionsRow>;
+        Relationships: [];
+      };
+      admin_audit_log: {
+        Row: AdminAuditLogRow;
+        Insert: Partial<AdminAuditLogRow> & { action: string };
+        Update: Partial<AdminAuditLogRow>;
+        Relationships: [];
+      };
+      admin_ip_allowlist: {
+        Row: AdminIpAllowlistRow;
+        Insert: Partial<AdminIpAllowlistRow> & { cidr: string };
+        Update: Partial<AdminIpAllowlistRow>;
+        Relationships: [];
+      };
+      admin_notes: {
+        Row: AdminNotesRow;
+        Insert: Partial<AdminNotesRow> & { target_type: "user" | "resume" | "ticket"; target_id: string; body: string };
+        Update: Partial<AdminNotesRow>;
+        Relationships: [];
+      };
+      app_settings: {
+        Row: AppSettingsRow;
+        Insert: Partial<AppSettingsRow> & { key: string; value: Json };
+        Update: Partial<AppSettingsRow>;
+        Relationships: [];
+      };
+      featured_resumes: {
+        Row: FeaturedResumesRow;
+        Insert: Partial<FeaturedResumesRow> & { resume_id: string };
+        Update: Partial<FeaturedResumesRow>;
+        Relationships: [];
+      };
+      announcements: {
+        Row: AnnouncementsRow;
+        Insert: Partial<AnnouncementsRow>;
+        Update: Partial<AnnouncementsRow>;
+        Relationships: [];
+      };
+      ai_rate_limit_overrides: {
+        Row: AiRateLimitOverridesRow;
+        Insert: Partial<AiRateLimitOverridesRow> & { user_id: string; daily_limit: number };
+        Update: Partial<AiRateLimitOverridesRow>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -375,6 +541,27 @@ export type Database = {
       generate_unique_slug: {
         Args: { p_name: string };
         Returns: string;
+      };
+      log_admin_action: {
+        Args: {
+          p_admin_id: string | null;
+          p_admin_email: string | null;
+          p_action: string;
+          p_target_type: string | null;
+          p_target_id: string | null;
+          p_metadata: Json;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: string;
+      };
+      get_public_setting: {
+        Args: { p_key: string };
+        Returns: Json;
+      };
+      bootstrap_first_admin: {
+        Args: { p_email: string; p_password_hash: string; p_totp_secret: string };
+        Returns: string | null;
       };
     };
     Enums: Record<string, never>;

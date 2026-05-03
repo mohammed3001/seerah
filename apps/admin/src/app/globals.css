@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --admin-accent: 247 90% 67%; /* #635BFF */
+    --admin-sidebar: 222 47% 11%; /* #0f172a */
+  }
+
+  /* Logical-property friendlier defaults for RTL — Tailwind's default is
+     fine, but we lock body direction so individual children that opt out
+     of RTL (LTR fields like email/code inputs) work cleanly via `dir="ltr"`. */
+  html,
+  body {
+    direction: rtl;
+  }
+
+  /* Avoid Chromium's autofill yellow on the dark login form. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f8fafc;
+    box-shadow: 0 0 0 1000px rgb(15 23 42) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
