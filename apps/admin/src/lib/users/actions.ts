@@ -126,15 +126,14 @@ export async function sendPasswordResetEmail(
   const appUrl = process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com";
   const redirectTo = `${appUrl.replace(/\/$/, "")}/auth/reset-password`;
 
-  // generateLink does not actually send the mail — Supabase delivers via its
-  // configured SMTP.  In production this is wired to the project's SMTP
-  // (see Supabase Auth settings).  The admin doesn't need to provide
-  // RESEND_API_KEY for this path.
-  const { error } = await supabase.auth.admin.generateLink({
-    type: "recovery",
-    email: parsed.data.email,
-    options: { redirectTo },
-  });
+  // resetPasswordForEmail actually triggers Supabase to send the recovery
+  // email via its configured SMTP.  generateLink (admin) only generates the
+  // URL — it does NOT send anything, and we'd silently leave the admin
+  // believing the mail shipped.
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    { redirectTo },
+  );
 
   if (error) return ERR(`تعذّر إرسال رابط إعادة التعيين: ${error.message}`);
 
