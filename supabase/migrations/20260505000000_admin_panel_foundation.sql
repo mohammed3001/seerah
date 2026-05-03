@@ -382,6 +382,14 @@ declare
   v_existing int;
   v_id uuid;
 begin
+  -- Serialise concurrent calls so the count-then-insert pattern is atomic.
+  -- Without this, two concurrent invocations under READ COMMITTED could both
+  -- see count(*)=0 and both insert a super_admin row with different emails,
+  -- creating two operators where the contract promises one.  The lock is held
+  -- to commit, so the second caller waits until the first row is visible
+  -- (and then trips the count check).
+  lock table public.admin_users in exclusive mode;
+
   select count(*) into v_existing from public.admin_users;
   if v_existing > 0 then
     return null;
