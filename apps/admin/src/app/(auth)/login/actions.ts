@@ -94,9 +94,22 @@ export async function loginAction(
 
   if (!admin || !matched || !admin.is_active) {
     if (admin && !matched) {
-      const nextAttempts = admin.failed_login_attempts + 1;
-      const update: { failed_login_attempts: number; locked_until?: string } = {
+      // If a previous lockout has just expired, the stale counter (which
+      // was left at MAX_FAILED_LOGINS) would re-lock the account on the
+      // very first wrong attempt — giving the admin only one shot per
+      // 30-minute window forever.  Treat an expired lockout as a fresh
+      // start so we increment from 0, not from MAX_FAILED_LOGINS.
+      const lockoutExpired =
+        admin.locked_until !== null &&
+        new Date(admin.locked_until).getTime() <= Date.now();
+      const previousAttempts = lockoutExpired ? 0 : admin.failed_login_attempts;
+      const nextAttempts = previousAttempts + 1;
+      const update: {
+        failed_login_attempts: number;
+        locked_until: string | null;
+      } = {
         failed_login_attempts: nextAttempts,
+        locked_until: lockoutExpired ? null : admin.locked_until,
       };
       if (nextAttempts >= MAX_FAILED_LOGINS) {
         update.locked_until = new Date(Date.now() + LOCKOUT_MINUTES * 60_000).toISOString();
@@ -107,6 +120,18 @@ export async function loginAction(
         adminEmail: admin.email,
         action: "admin.login.failed",
         metadata: { attempts: nextAttempts, locked: nextAttempts >= MAX_FAILED_LOGINS },
+        ip,
+        userAgent,
+      });
+    } else if (admin && !admin.is_active) {
+      // Right password against a deactivated admin account.  Recording
+      // this as `unknown_email` would hide a high-signal event from the
+      // audit trail (someone has the credentials of an admin we already
+      // disabled).
+      await logAdminAction({
+        adminId: admin.id,
+        adminEmail: admin.email,
+        action: "admin.login.inactive_account",
         ip,
         userAgent,
       });
