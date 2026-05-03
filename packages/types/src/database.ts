@@ -563,6 +563,26 @@ export type Database = {
         Args: { p_email: string; p_password_hash: string; p_totp_secret: string };
         Returns: string | null;
       };
+      admin_stats_plan_distribution: {
+        Args: Record<string, never>;
+        Returns: { plan: string; count: number }[];
+      };
+      admin_stats_template_usage: {
+        Args: { p_limit: number | null };
+        Returns: { template_id: string; count: number }[];
+      };
+      admin_stats_signups_daily: {
+        Args: { p_from: string; p_to: string };
+        Returns: { day: string; count: number }[];
+      };
+      admin_stats_ai_usage_daily: {
+        Args: { p_from: string; p_to: string };
+        Returns: { day: string; count: number }[];
+      };
+      admin_stats_subscriptions_monthly: {
+        Args: { p_from: string; p_to: string };
+        Returns: { month: string; count: number }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

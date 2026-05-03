@@ -16,6 +16,7 @@ import type {
 
 const DAY_WINDOW = 30;
 const MONTH_WINDOW = 12;
+const TEMPLATE_USAGE_LIMIT = 8;
 
 function pctChange(current: number, prior: number): number | null {
   if (prior === 0) {
@@ -48,10 +49,11 @@ function emptyMonthlyWindow(months: number): SlicePoint[] {
 }
 
 /**
- * Builds the full dashboard snapshot.  Runs ~10 small Supabase queries in
- * parallel; each is service-role so RLS doesn't apply.  All counts are
- * exact (head + count: "exact"), not estimated, so cards never show "100+"
- * for small instances.
+ * Builds the full dashboard snapshot.  Counts use `head: true + count: exact`,
+ * which is exact even past the 1000-row PostgREST ceiling.  All distribution
+ * and time-series data uses `admin_stats_*` SECURITY DEFINER RPCs that do the
+ * GROUP BY in Postgres — so the response is bounded by the number of buckets,
+ * never the underlying row count.
  */
 export async function getDashboardData(): Promise<DashboardData> {
   const supabase = getServiceRoleClient();
@@ -60,9 +62,11 @@ export async function getDashboardData(): Promise<DashboardData> {
   const yesterdayStart = subDays(todayStart, 1);
   const monthStart = startOfMonth(now);
   const lastMonthStart = subMonths(monthStart, 1);
-  const thirtyDaysAgo = subDays(todayStart, DAY_WINDOW - 1);
-  const sixtyDaysAgo = subDays(todayStart, DAY_WINDOW * 2 - 1);
-  const twelveMonthsAgo = subMonths(monthStart, MONTH_WINDOW - 1);
+  const thirtyDaysStart = subDays(todayStart, DAY_WINDOW - 1);
+  const sixtyDaysStart = subDays(todayStart, DAY_WINDOW * 2 - 1);
+  const thirtyDayWindowEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+  const twelveMonthsStart = subMonths(monthStart, MONTH_WINDOW - 1);
+  const twelveMonthWindowEnd = new Date(monthStart.getTime() + 32 * 24 * 60 * 60 * 1000);
 
   const [
     totalUsersRes,
@@ -74,11 +78,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     aiUsersYesterdayRes,
     monthRevenueRes,
     lastMonthRevenueRes,
-    signupsLast60Res,
-    plansRes,
+    signupsCurrentRes,
+    signupsPriorRes,
+    planDistRes,
     templateUsageRes,
-    aiUsageLast30Res,
-    monthRevenueWindowRes,
+    aiUsageDailyRes,
+    monthlySubsRes,
     recentSignupsRes,
     recentTicketsRes,
     recentSubscriptionsRes,
@@ -109,36 +114,36 @@ export async function getDashboardData(): Promise<DashboardData> {
       .lt("created_at", todayStart.toISOString()),
     supabase
       .from("subscriptions")
-      .select("currency, stripe_price_id, created_at")
+      .select("id", { count: "exact", head: true })
       .eq("provider", "stripe")
       .eq("status", "active")
       .gte("created_at", monthStart.toISOString()),
     supabase
       .from("subscriptions")
-      .select("currency, stripe_price_id, created_at")
+      .select("id", { count: "exact", head: true })
       .eq("provider", "stripe")
       .eq("status", "active")
       .gte("created_at", lastMonthStart.toISOString())
       .lt("created_at", monthStart.toISOString()),
-    supabase
-      .from("profiles")
-      .select("created_at")
-      .gte("created_at", sixtyDaysAgo.toISOString())
-      .order("created_at", { ascending: true }),
-    supabase.from("profiles").select("plan"),
-    supabase.from("resumes").select("template_id"),
-    supabase
-      .from("ai_usage")
-      .select("created_at")
-      .gte("created_at", thirtyDaysAgo.toISOString())
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("subscriptions")
-      .select("created_at, currency")
-      .eq("provider", "stripe")
-      .eq("status", "active")
-      .gte("created_at", twelveMonthsAgo.toISOString())
-      .order("created_at", { ascending: true }),
+    // Daily signup buckets — server-side GROUP BY to avoid 1000-row truncation.
+    supabase.rpc("admin_stats_signups_daily", {
+      p_from: thirtyDaysStart.toISOString(),
+      p_to: thirtyDayWindowEnd.toISOString(),
+    }),
+    supabase.rpc("admin_stats_signups_daily", {
+      p_from: sixtyDaysStart.toISOString(),
+      p_to: thirtyDaysStart.toISOString(),
+    }),
+    supabase.rpc("admin_stats_plan_distribution"),
+    supabase.rpc("admin_stats_template_usage", { p_limit: TEMPLATE_USAGE_LIMIT }),
+    supabase.rpc("admin_stats_ai_usage_daily", {
+      p_from: thirtyDaysStart.toISOString(),
+      p_to: thirtyDayWindowEnd.toISOString(),
+    }),
+    supabase.rpc("admin_stats_subscriptions_monthly", {
+      p_from: twelveMonthsStart.toISOString(),
+      p_to: twelveMonthWindowEnd.toISOString(),
+    }),
     supabase
       .from("profiles")
       .select("id, email, full_name, plan, created_at")
@@ -163,65 +168,54 @@ export async function getDashboardData(): Promise<DashboardData> {
   const primeUsers = primeUsersRes.count ?? 0;
   const aiUsersToday = aiUsersTodayRes.count ?? 0;
   const aiUsersYesterday = aiUsersYesterdayRes.count ?? 0;
+  const monthSubs = monthRevenueRes.count ?? 0;
+  const lastMonthSubs = lastMonthRevenueRes.count ?? 0;
 
-  // Revenue is computed from price-id-keyed lookup since we don't store
-  // amount_paid on the subscription row.  PR-Admin-C2 will add a Stripe
-  // API call for true revenue; for now we show subscriber-count-derived
-  // revenue using a default monthly amount.
+  // Revenue is computed from active-subscription count × monthly price since
+  // we don't store amount_paid on the subscription row.  PR-Admin-C2 wires
+  // the real Stripe API for line-item-accurate revenue.
   const PRICE_PRIME_USD_PER_MONTH = 9.99;
-  const monthRevenueUsd = (monthRevenueRes.data?.length ?? 0) * PRICE_PRIME_USD_PER_MONTH;
-  const lastMonthRevenueUsd =
-    (lastMonthRevenueRes.data?.length ?? 0) * PRICE_PRIME_USD_PER_MONTH;
+  const monthRevenueUsd = monthSubs * PRICE_PRIME_USD_PER_MONTH;
+  const lastMonthRevenueUsd = lastMonthSubs * PRICE_PRIME_USD_PER_MONTH;
 
-  // ── New users by day, last 30 days ──────────────────────────────────────
+  // ── Daily signups, last 30 days ────────────────────────────────────────
   const newUsersByDay = emptyDailyWindow(DAY_WINDOW);
   const dayIndex = new Map(newUsersByDay.map((p) => [p.date, p]));
   let signupsCurrentWindow = 0;
+  for (const row of signupsCurrentRes.data ?? []) {
+    const point = dayIndex.get(row.day);
+    if (point) point.count = Number(row.count);
+    signupsCurrentWindow += Number(row.count);
+  }
   let signupsPriorWindow = 0;
-  for (const row of signupsLast60Res.data ?? []) {
-    const created = new Date(row.created_at);
-    const key = dateKey(created);
-    const point = dayIndex.get(key);
-    if (point) point.count++;
-    if (created >= thirtyDaysAgo) signupsCurrentWindow++;
-    else signupsPriorWindow++;
+  for (const row of signupsPriorRes.data ?? []) {
+    signupsPriorWindow += Number(row.count);
   }
 
   // ── Plan distribution ──────────────────────────────────────────────────
-  const planCounts = new Map<string, number>();
-  for (const row of plansRes.data ?? []) {
-    const key = row.plan ?? "free";
-    planCounts.set(key, (planCounts.get(key) ?? 0) + 1);
-  }
-  const planDistribution: SlicePoint[] = Array.from(planCounts.entries())
-    .map(([label, value]) => ({ label, value }))
+  const planDistribution: SlicePoint[] = (planDistRes.data ?? [])
+    .map((row) => ({ label: row.plan ?? "free", value: Number(row.count) }))
     .sort((a, b) => b.value - a.value);
 
-  // ── Template usage ─────────────────────────────────────────────────────
-  const templateCounts = new Map<string, number>();
-  for (const row of templateUsageRes.data ?? []) {
-    const key = row.template_id;
-    templateCounts.set(key, (templateCounts.get(key) ?? 0) + 1);
-  }
-  const templateUsage: SlicePoint[] = Array.from(templateCounts.entries())
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 8);
+  // ── Template usage (top N) ─────────────────────────────────────────────
+  const templateUsage: SlicePoint[] = (templateUsageRes.data ?? [])
+    .map((row) => ({ label: row.template_id, value: Number(row.count) }))
+    .sort((a, b) => b.value - a.value);
 
   // ── AI activity, last 30 days ──────────────────────────────────────────
   const aiActivityByDay = emptyDailyWindow(DAY_WINDOW);
   const aiIndex = new Map(aiActivityByDay.map((p) => [p.date, p]));
-  for (const row of aiUsageLast30Res.data ?? []) {
-    const point = aiIndex.get(dateKey(new Date(row.created_at)));
-    if (point) point.count++;
+  for (const row of aiUsageDailyRes.data ?? []) {
+    const point = aiIndex.get(row.day);
+    if (point) point.count = Number(row.count);
   }
 
   // ── Monthly revenue, last 12 months ────────────────────────────────────
   const monthlyRevenueUsd = emptyMonthlyWindow(MONTH_WINDOW);
   const monthIndex = new Map(monthlyRevenueUsd.map((p) => [p.label, p]));
-  for (const row of monthRevenueWindowRes.data ?? []) {
-    const point = monthIndex.get(format(new Date(row.created_at), "yyyy-MM"));
-    if (point) point.value += PRICE_PRIME_USD_PER_MONTH;
+  for (const row of monthlySubsRes.data ?? []) {
+    const point = monthIndex.get(row.month);
+    if (point) point.value = Number(row.count) * PRICE_PRIME_USD_PER_MONTH;
   }
 
   // ── Recent activity feed ───────────────────────────────────────────────
