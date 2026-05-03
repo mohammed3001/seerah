@@ -9,6 +9,7 @@ import {
   PENDING_TTL_SECONDS,
   PUBLIC_PREFIXES,
   SESSION_COOKIE,
+  SESSION_TTL_SECONDS,
 } from "@/lib/auth/constants";
 import { sha256Hex } from "@/lib/auth/crypto";
 import { verifyPendingToken } from "@/lib/auth/pending";
@@ -144,15 +145,36 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Bump last_seen_at if the row hasn't been touched in 60 s. Avoids hot
-  // writes when an admin clicks through many pages quickly.
+  const response = NextResponse.next();
+
+  // Sliding-window inactivity timeout.  We push expires_at + cookie maxAge
+  // forward by a full TTL on every request, so a session only dies after
+  // SESSION_TTL_SECONDS of idleness — matches the README's "2 hours of
+  // inactivity" contract.  We also bump last_seen_at as an audit signal.
+  //
+  // To avoid hot writes when an admin rapid-clicks through pages, we only
+  // touch the row when last_seen_at is older than 60 s.  We still refresh
+  // the cookie on every request (it's cheap and free of DB I/O), so the
+  // browser cookie won't accidentally pre-expire while the DB row hasn't
+  // been bumped yet.
+  const now = Date.now();
   const lastSeen = new Date(session.last_seen_at).getTime();
-  if (Date.now() - lastSeen > 60_000) {
+  const newExpiresAt = new Date(now + SESSION_TTL_SECONDS * 1000).toISOString();
+
+  if (now - lastSeen > 60_000) {
     await client
       .from("admin_sessions")
-      .update({ last_seen_at: new Date().toISOString() })
+      .update({ last_seen_at: new Date(now).toISOString(), expires_at: newExpiresAt })
       .eq("id", session.id);
   }
 
-  return NextResponse.next();
+  response.cookies.set(SESSION_COOKIE, sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS,
+  });
+
+  return response;
 }

@@ -33,6 +33,8 @@ import * as OTPAuth from "otpauth";
 import path from "node:path";
 import qrcode from "qrcode-terminal";
 
+import { BCRYPT_COST } from "../src/lib/auth/password";
+
 // Load env from apps/admin/.env.local first, then repo root .env, in that
 // order.  Subsequent files do NOT override earlier ones (Next.js convention).
 const HERE = path.resolve(__dirname, "..");
@@ -91,7 +93,7 @@ function readEnv(): BootstrapEnv {
 async function main(): Promise<void> {
   const env = readEnv();
 
-  const passwordHash = await bcrypt.hash(env.password, 12);
+  const passwordHash = await bcrypt.hash(env.password, BCRYPT_COST);
 
   // 160-bit secret, SHA1, 30s window — Authy / Google Authenticator default.
   const totpSecret = new OTPAuth.Secret({ size: 20 });
