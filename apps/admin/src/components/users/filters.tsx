@@ -51,7 +51,12 @@ export function UsersFilters({ countries, perPage }: UsersFiltersProps) {
       onSubmit={(e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const next = new URLSearchParams();
+        // Preserve URL params not controlled by this form (sort, dir).
+        // Re-set only the form-owned keys from the FormData.
+        const next = new URLSearchParams(params.toString());
+        for (const key of ["q", "plan", "status", "country", "from", "to", "perPage"]) {
+          next.delete(key);
+        }
         for (const [k, v] of formData.entries()) {
           if (typeof v === "string" && v.length > 0) next.set(k, v);
         }
