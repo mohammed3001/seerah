@@ -81,14 +81,11 @@ export async function listAudit(filters: AuditListFilters): Promise<AuditListRes
   const { data, error, count } = await query;
   if (error) throw new Error(`Failed to list audit log: ${error.message}`);
 
-  // Distinct actions for the dropdown.  We pull only 200 rows (1000 unique
-  // codes would be a lot already) and de-dupe in memory — not worth a CTE.
-  const { data: actionRows } = await supabase
-    .from("admin_audit_log")
-    .select("action")
-    .order("action", { ascending: true })
-    .limit(200);
-  const knownActions = Array.from(new Set((actionRows ?? []).map((r) => r.action))).sort();
+  // Distinct actions for the dropdown — server-side `SELECT DISTINCT` so a
+  // single hot action with thousands of rows can't hide rarer ones.  See
+  // migration 20260506000000_admin_dashboard_aggregates.sql.
+  const { data: actionRows } = await supabase.rpc("admin_distinct_audit_actions");
+  const knownActions = (actionRows ?? []).map((r) => r.action);
 
   return {
     rows: (data ?? []) as AuditRow[],

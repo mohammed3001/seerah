@@ -583,6 +583,10 @@ export type Database = {
         Args: { p_from: string; p_to: string };
         Returns: { month: string; count: number }[];
       };
+      admin_distinct_audit_actions: {
+        Args: Record<string, never>;
+        Returns: { action: string }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

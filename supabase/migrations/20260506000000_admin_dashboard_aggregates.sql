@@ -125,3 +125,24 @@ $$;
 
 revoke all on function public.admin_stats_subscriptions_monthly(timestamptz, timestamptz)
   from public;
+
+-- ---------- distinct audit actions -----------------------------------------
+-- The /audit page populates the action filter dropdown from this list.  A
+-- plain SELECT … LIMIT 200 truncates by row, not by distinct value, so a
+-- single hot action with >200 rows can hide every other action.  This RPC
+-- returns true distinct values, ordered, capped at 500 (well above any
+-- realistic admin action vocabulary).
+create or replace function public.admin_distinct_audit_actions()
+returns table (action text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select distinct action
+  from admin_audit_log
+  order by action
+  limit 500;
+$$;
+
+revoke all on function public.admin_distinct_audit_actions() from public;
