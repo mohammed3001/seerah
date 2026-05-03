@@ -63,9 +63,12 @@ export interface DashboardData {
   generatedAt: string;
 }
 
-/** Used by chart x-axis labels to format YYYY-MM-DD nicely. */
+/** Used by chart x-axis labels to format YYYY-MM-DD nicely.
+ *  We append `T00:00:00` so the date is parsed as local midnight rather than
+ *  UTC midnight; otherwise `new Date("2026-05-03")` is UTC and renders as
+ *  "2 May" for any client in a negative UTC offset. */
 export function formatDayLabel(iso: string): string {
-  return format(new Date(iso), "d MMM");
+  return format(new Date(`${iso}T00:00:00`), "d MMM");
 }
 
 /** YYYY-MM → 'يناير ٢٠٢٦' style label.  date-fns has no AR locale built-in
