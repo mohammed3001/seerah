@@ -57,8 +57,36 @@ export async function loginAction(
     return { ok: false, message: "حدث خطأ غير متوقع. حاول مرّة أخرى." };
   }
 
-  // Always run bcrypt to avoid leaking user existence via timing.
+  // The lockout check MUST happen before the bcrypt comparison.  If we
+  // checked it after, an attacker could distinguish a correct password from
+  // a wrong one during the lockout window — correct passwords would fall
+  // through to a "locked" message while wrong ones would hit the generic
+  // "incorrect" branch.  That difference would leak the password and
+  // defeat the brute-force protection entirely.
+  //
+  // We still always run bcrypt below (against the real hash on hit, against
+  // a fixed dummy hash on miss) so that response time is constant whether
+  // the email exists or not.  A dummy bcrypt is also run when an account is
+  // locked, again for timing parity.
   const dummyHash = "$2a$10$cJZb6gvxQ.bgF2YkU8w/F.hOQwpxGzOEyB7jdEpQp.B7p8s7xqpVu";
+  const lockedUntil = admin?.locked_until ? new Date(admin.locked_until).getTime() : 0;
+  const isLocked = lockedUntil > Date.now();
+
+  if (isLocked) {
+    // Constant-time response regardless of whether the password is right.
+    await bcrypt.compare(parsed.data.password, dummyHash);
+    await logAdminAction({
+      adminId: admin?.id ?? null,
+      adminEmail: admin?.email ?? parsed.data.email.toLowerCase(),
+      action: "admin.login.locked_attempt",
+      ip,
+      userAgent,
+    });
+    // Deliberately the same wording as a regular failure: revealing the
+    // exact unlock time would also confirm the account exists.
+    return { ok: false, message: "البريد الإلكتروني أو كلمة المرور غير صحيحة." };
+  }
+
   const matched = admin
     ? await bcrypt.compare(parsed.data.password, admin.password_hash)
     : await bcrypt.compare(parsed.data.password, dummyHash);
@@ -91,13 +119,6 @@ export async function loginAction(
       });
     }
     return { ok: false, message: "البريد الإلكتروني أو كلمة المرور غير صحيحة." };
-  }
-
-  if (admin.locked_until && new Date(admin.locked_until).getTime() > Date.now()) {
-    return {
-      ok: false,
-      message: `الحساب مغلق مؤقتًا حتى ${new Date(admin.locked_until).toLocaleString("ar-SA")} بسبب محاولات دخول فاشلة متكررة.`,
-    };
   }
 
   // Reset failed-login counter on success.

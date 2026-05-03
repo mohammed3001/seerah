@@ -314,48 +314,48 @@ type AdminIpAllowlistRow = {
 type AdminNotesRow = {
   id: string;
   admin_id: string | null;
+  admin_email: string | null;
   target_type: "user" | "resume" | "ticket";
   target_id: string;
   body: string;
   created_at: string;
+  updated_at: string;
 };
 
 type AppSettingsRow = {
   key: string;
   value: Json;
-  description: string | null;
   updated_by: string | null;
   updated_at: string;
 };
 
 type FeaturedResumesRow = {
-  id: string;
   resume_id: string;
-  position: number;
-  caption_ar: string | null;
-  caption_en: string | null;
-  pinned_by: string | null;
-  pinned_at: string;
+  sort_order: number;
+  featured_by: string | null;
+  featured_at: string;
 };
 
 type AnnouncementsRow = {
   id: string;
+  title_ar: string | null;
+  title_en: string | null;
+  body_ar: string | null;
+  body_en: string | null;
   severity: "info" | "warning" | "critical";
-  message_ar: string;
-  message_en: string | null;
   is_active: boolean;
   starts_at: string | null;
   ends_at: string | null;
   created_by: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 type AiRateLimitOverridesRow = {
-  id: string;
   user_id: string;
   daily_limit: number;
   reason: string | null;
-  created_by: string | null;
+  admin_id: string | null;
   expires_at: string | null;
   created_at: string;
 };
@@ -521,7 +521,7 @@ export type Database = {
       };
       announcements: {
         Row: AnnouncementsRow;
-        Insert: Partial<AnnouncementsRow> & { message_ar: string };
+        Insert: Partial<AnnouncementsRow>;
         Update: Partial<AnnouncementsRow>;
         Relationships: [];
       };
