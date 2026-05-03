@@ -151,6 +151,13 @@ export async function loginAction(
     userAgent,
   });
 
-  const target = admin.totp_secret ? "/2fa/verify" : "/2fa/setup";
+  // Send fully-enrolled admins to the verify page; everyone else (no secret
+  // yet OR a half-finished enrollment where the secret was persisted but
+  // the first 6-digit code was never confirmed) goes back to /2fa/setup.
+  // The setup page reuses the existing secret when one is present, so we
+  // don't churn QR codes — but it also re-shows the QR + base32 fallback
+  // so an admin who lost the secret mid-enrollment can still complete it.
+  const target =
+    admin.totp_secret && admin.totp_verified_at ? "/2fa/verify" : "/2fa/setup";
   redirect(target);
 }
