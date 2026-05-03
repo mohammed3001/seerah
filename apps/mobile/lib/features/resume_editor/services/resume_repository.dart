@@ -24,6 +24,15 @@ import "../models/section_models.dart";
 /// implement a recording fake without dragging in Supabase.
 abstract class ResumeRepositoryBase {
   Future<ResumeFull> fetchFull(String resumeId);
+
+  /// Returns the raw bundled JSON exactly as the offline cache would
+  /// store it. Implementations should fan-out the same set of queries as
+  /// [fetchFull] without doing any deserialization. The default
+  /// implementation throws — a fake repository in tests can stay
+  /// unaware of this method until the test exercises the cache path.
+  Future<Map<String, dynamic>> fetchFullJson(String resumeId) =>
+      throw UnimplementedError("fetchFullJson is only used by the cache");
+
   Future<void> updateResumeMeta(String resumeId, Map<String, dynamic> patch);
   Future<void> upsertPersonal(String resumeId, Map<String, dynamic> patch);
   Future<void> upsertAddress(String resumeId, Map<String, dynamic> patch);
@@ -49,6 +58,15 @@ class ResumeRepository implements ResumeRepositoryBase {
 
   @override
   Future<ResumeFull> fetchFull(String resumeId) async {
+    final json = await fetchFullJson(resumeId);
+    return ResumeFull.fromBundleJson(json);
+  }
+
+  /// Wire-format used by the offline cache. Mirrors [fetchFull] but does
+  /// no deserialisation so the cache layer can persist the raw JSON
+  /// exactly as Supabase returned it.
+  @override
+  Future<Map<String, dynamic>> fetchFullJson(String resumeId) async {
     final futures = await Future.wait([
       _client.from("resumes").select().eq("id", resumeId).maybeSingle(),
       _client
@@ -108,35 +126,24 @@ class ResumeRepository implements ResumeRepositoryBase {
     if (resumeRow == null) {
       throw const _NotFound("السيرة غير موجودة");
     }
-    final personalRow = futures[1] as Map<String, dynamic>?;
-    final addressRow = futures[2] as Map<String, dynamic>?;
 
-    return ResumeFull(
-      meta: ResumeMeta.fromJson(resumeRow),
-      personal: personalRow == null ? null : PersonalInfo.fromJson(personalRow),
-      address: addressRow == null ? null : Address.fromJson(addressRow),
-      education: _list<Education>(futures[3], Education.fromJson),
-      experience: _list<Experience>(futures[4], Experience.fromJson),
-      skills: _list<Skill>(futures[5], Skill.fromJson),
-      languages: _list<LanguageItem>(futures[6], LanguageItem.fromJson),
-      courses: _list<Course>(futures[7], Course.fromJson),
-      projects: _list<Project>(futures[8], Project.fromJson),
-      references: _list<ReferenceItem>(futures[9], ReferenceItem.fromJson),
-      socialLinks: _list<SocialLink>(futures[10], SocialLink.fromJson),
-      hobbies: _list<Hobby>(futures[11], Hobby.fromJson),
-    );
+    return {
+      "resume": resumeRow,
+      "personal_info": futures[1],
+      "address": futures[2],
+      "education": _asList(futures[3]),
+      "experience": _asList(futures[4]),
+      "skills": _asList(futures[5]),
+      "languages": _asList(futures[6]),
+      "courses": _asList(futures[7]),
+      "projects": _asList(futures[8]),
+      "references": _asList(futures[9]),
+      "social_links": _asList(futures[10]),
+      "hobbies": _asList(futures[11]),
+    };
   }
 
-  List<T> _list<T>(
-    Object? raw,
-    T Function(Map<String, dynamic>) ctor,
-  ) {
-    if (raw is! List) return const [];
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .map(ctor)
-        .toList(growable: false);
-  }
+  List<dynamic> _asList(Object? raw) => raw is List ? raw : const <dynamic>[];
 
   // -------- Resume meta ------------------------------------------------------
 

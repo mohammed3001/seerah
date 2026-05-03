@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 
 import "../../core/router/app_router.dart";
+import "offline_banner.dart";
 
 /// Bottom-navigation shell used by every authenticated tab.
 ///
@@ -31,7 +32,16 @@ class AppShell extends StatelessWidget {
     final loc = GoRouterState.of(context).matchedLocation;
     final selectedIndex = _items.indexWhere((i) => i.path == loc);
     return Scaffold(
-      body: child,
+      body: Column(
+        children: [
+          // The banner has zero height when online, so we don't pay for an
+          // extra layout pass on the happy path. It's above the body
+          // (rather than overlaid via Stack) so the editor's keyboard /
+          // bottom-sheet logic doesn't fight with a translucent overlay.
+          const OfflineBanner(),
+          Expanded(child: child),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
         onDestinationSelected: (i) => context.go(_items[i].path),
