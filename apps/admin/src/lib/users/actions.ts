@@ -60,9 +60,11 @@ async function requireAdmin(
 const changePlanSchema = z.object({
   userId: z.string().uuid(),
   plan: z.enum(["free", "prime", "enterprise"]),
+  // <input type="date" /> submits an empty string when blank, which is the
+  // expected case (label says "اختياري").  Don't enforce min(1) — that would
+  // fire before .optional()/.nullable() and reject the empty submission.
   expiresAt: z
     .string()
-    .min(1)
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
@@ -320,10 +322,15 @@ export async function deleteUserAdminNote(
   if (!parsed.success) return ERR("بيانات غير صالحة.");
 
   const supabase = getServiceRoleClient();
+  // Scope the DELETE to the user we're acting on so a support_agent can't
+  // delete a note attached to a different user / resume / ticket by passing
+  // an arbitrary noteId in the form.
   const { error } = await supabase
     .from("admin_notes")
     .delete()
-    .eq("id", parsed.data.noteId);
+    .eq("id", parsed.data.noteId)
+    .eq("target_type", "user")
+    .eq("target_id", parsed.data.userId);
 
   if (error) return ERR(`تعذّر حذف الملاحظة: ${error.message}`);
 
