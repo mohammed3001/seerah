@@ -64,6 +64,11 @@ export default async function UserDetailPage({ params }: PageProps) {
   const canDestroy = ctx.admin.role === "super_admin";
   const resendOn = isResendConfigured();
 
+  // Public resumes are served by apps/web — admin domain has no /:slug route.
+  const publicAppUrl = (
+    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com"
+  ).replace(/\/$/, "");
+
   return (
     <>
       <Topbar
@@ -179,7 +184,7 @@ export default async function UserDetailPage({ params }: PageProps) {
                         </p>
                       </div>
                       <a
-                        href={`/${r.slug}`}
+                        href={`${publicAppUrl}/${r.slug}`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50"
