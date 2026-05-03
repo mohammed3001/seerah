@@ -587,6 +587,46 @@ export type Database = {
         Args: Record<string, never>;
         Returns: { action: string }[];
       };
+      admin_user_resume_counts: {
+        Args: { p_user_ids: string[] };
+        Returns: { user_id: string; count: number }[];
+      };
+      admin_user_ai_counts: {
+        Args: { p_user_ids: string[]; p_from: string; p_to: string };
+        Returns: { user_id: string; count: number }[];
+      };
+      admin_distinct_user_countries: {
+        Args: Record<string, never>;
+        Returns: { country: string }[];
+      };
+      admin_user_ai_breakdown: {
+        Args: { p_user_id: string; p_from: string; p_to: string };
+        Returns: { action_type: string; count: number; total_tokens: number }[];
+      };
+      admin_set_user_disabled: {
+        Args: {
+          p_user_id: string;
+          p_disabled: boolean;
+          p_reason: string;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: boolean;
+      };
+      admin_set_user_plan: {
+        Args: {
+          p_user_id: string;
+          p_plan: string;
+          p_expires_at: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
