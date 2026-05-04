@@ -146,7 +146,14 @@ async function loadCountsFromDb(): Promise<DbCounts> {
     { count: trialingCount },
     { count: newThisMonth },
     { count: canceledThisMonth },
-    { count: activeBefore30 },
+    // Subs that were *live* at the start of the 30-day window: created
+    // before then, AND either still in a live status today, or canceled
+    // during the window itself (i.e. were active at t-30d, churned since).
+    // This is a better proxy for "active 30 days ago" than counting all
+    // subscriptions created before the cutoff (which would include
+    // subs canceled long before the window even started).
+    { count: stillActiveFromBefore },
+    { count: canceledInWindowFromBefore },
     { count: canceledLast30 },
   ] = await Promise.all([
     supabase
@@ -169,7 +176,14 @@ async function loadCountsFromDb(): Promise<DbCounts> {
     supabase
       .from("subscriptions")
       .select("id", { count: "exact", head: true })
-      .lte("created_at", thirtyDaysAgoIso),
+      .lte("created_at", thirtyDaysAgoIso)
+      .in("status", ["active", "trialing", "past_due", "unpaid"]),
+    supabase
+      .from("subscriptions")
+      .select("id", { count: "exact", head: true })
+      .lte("created_at", thirtyDaysAgoIso)
+      .eq("status", "canceled")
+      .gte("canceled_at", thirtyDaysAgoIso),
     supabase
       .from("subscriptions")
       .select("id", { count: "exact", head: true })
@@ -177,7 +191,8 @@ async function loadCountsFromDb(): Promise<DbCounts> {
       .gte("canceled_at", thirtyDaysAgoIso),
   ]);
 
-  const denom = activeBefore30 ?? 0;
+  const denom =
+    (stillActiveFromBefore ?? 0) + (canceledInWindowFromBefore ?? 0);
   const churn_rate =
     denom > 0 ? (canceledLast30 ?? 0) / denom : null;
 
