@@ -228,6 +228,17 @@ type SupportTicketsRow = {
   updated_at: string;
 };
 
+type SupportTicketMessagesRow = {
+  id: string;
+  ticket_id: string;
+  author_type: "user" | "admin";
+  author_id: string;
+  body: string;
+  attachment_url: string | null;
+  is_internal: boolean;
+  created_at: string;
+};
+
 type AiUsageRow = {
   id: string;
   user_id: string | null;
@@ -457,6 +468,17 @@ export type Database = {
         Row: SupportTicketsRow;
         Insert: Partial<SupportTicketsRow> & { subject: string; message: string };
         Update: Partial<SupportTicketsRow>;
+        Relationships: [];
+      };
+      support_ticket_messages: {
+        Row: SupportTicketMessagesRow;
+        Insert: Partial<SupportTicketMessagesRow> & {
+          ticket_id: string;
+          author_type: "user" | "admin";
+          author_id: string;
+          body: string;
+        };
+        Update: Partial<SupportTicketMessagesRow>;
         Relationships: [];
       };
       ai_usage: {
@@ -771,6 +793,78 @@ export type Database = {
       admin_stats_subscriptions_summary: {
         Args: Record<string, never>;
         Returns: { status: string; count: number }[];
+      };
+      admin_support_reply: {
+        Args: {
+          p_ticket_id: string;
+          p_body: string;
+          p_is_internal: boolean;
+          p_attachment_url: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: string;
+      };
+      admin_support_change_status: {
+        Args: {
+          p_ticket_id: string;
+          p_status: "open" | "in_progress" | "resolved" | "closed";
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_support_assign: {
+        Args: {
+          p_ticket_id: string;
+          p_assignee: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_support_set_priority: {
+        Args: {
+          p_ticket_id: string;
+          p_priority: "low" | "normal" | "high" | "urgent";
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_support_bulk_status: {
+        Args: {
+          p_ticket_ids: string[];
+          p_status: "open" | "in_progress" | "resolved" | "closed";
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: number;
+      };
+      admin_support_bulk_assign: {
+        Args: {
+          p_ticket_ids: string[];
+          p_assignee: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: number;
+      };
+      admin_distinct_support_assignees: {
+        Args: Record<string, never>;
+        Returns: { id: string; email: string; role: string }[];
       };
     };
     Enums: Record<string, never>;

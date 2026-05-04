@@ -21,6 +21,10 @@ import {
   type SupportTicketReceivedProps,
 } from "./templates/support-ticket-received";
 import {
+  renderSupportTicketReplied,
+  type SupportTicketRepliedProps,
+} from "./templates/support-ticket-replied";
+import {
   renderSupportTicketResolved,
   type SupportTicketResolvedProps,
 } from "./templates/support-ticket-resolved";
@@ -33,6 +37,7 @@ export type EmailTemplate =
   | "subscription_expiring"
   | "subscription_cancelled"
   | "support_ticket_received"
+  | "support_ticket_replied"
   | "support_ticket_resolved";
 
 /**
@@ -76,6 +81,8 @@ function render(template: EmailTemplate, props: unknown): RenderedTemplate {
       return renderSubscriptionCancelled(props as SubscriptionCancelledProps);
     case "support_ticket_received":
       return renderSupportTicketReceived(props as SupportTicketReceivedProps);
+    case "support_ticket_replied":
+      return renderSupportTicketReplied(props as SupportTicketRepliedProps);
     case "support_ticket_resolved":
       return renderSupportTicketResolved(props as SupportTicketResolvedProps);
   }
