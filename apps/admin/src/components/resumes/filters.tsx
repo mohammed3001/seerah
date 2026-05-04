@@ -218,7 +218,11 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
           <button
             type="button"
             onClick={() => {
+              // Preserve perPage on reset so the admin's page-size choice
+              // doesn't silently revert to the default.  Same pattern as
+              // users/filters.tsx.
               const next = new URLSearchParams();
+              next.set("perPage", String(perPage));
               update(next);
             }}
             className={cn(
