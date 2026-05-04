@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils/cn";
 
+import { ICON_MAP } from "./icon-map";
 import type { NavSection } from "./nav-config";
 
 interface SidebarProps {
@@ -36,7 +37,7 @@ export function Sidebar({ sections, adminEmail, adminRole }: SidebarProps) {
 
       <nav className="flex-1 space-y-1 px-3">
         {sections.map((section) => {
-          const Icon = section.icon;
+          const Icon = ICON_MAP[section.iconKey];
           const active =
             section.href === "/"
               ? pathname === "/"
