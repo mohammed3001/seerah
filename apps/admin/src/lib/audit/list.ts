@@ -68,7 +68,12 @@ export async function listAudit(filters: AuditListFilters): Promise<AuditListRes
   if (filters.action) query = query.eq("action", filters.action);
   if (filters.adminEmail) query = query.eq("admin_email", filters.adminEmail);
   if (filters.from) query = query.gte("created_at", filters.from);
-  if (filters.to) query = query.lte("created_at", filters.to);
+  if (filters.to) {
+    // `<input type="date">` returns "YYYY-MM-DD"; Postgres casts that to
+    // midnight UTC, which would exclude any row created during the
+    // selected day.  Anchor the upper bound to end-of-day UTC instead.
+    query = query.lte("created_at", `${filters.to}T23:59:59.999Z`);
+  }
 
   if (filters.q) {
     // Search across email, action, target_id (PostgREST `or` filter).

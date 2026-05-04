@@ -52,7 +52,12 @@ export async function listUsers(filters: UserListFilters): Promise<UserListResul
   if (filters.status === "disabled") query = query.eq("is_disabled", true);
   if (filters.status === "active") query = query.eq("is_disabled", false);
   if (filters.from) query = query.gte("created_at", filters.from);
-  if (filters.to) query = query.lte("created_at", filters.to);
+  if (filters.to) {
+    // `<input type="date">` returns "YYYY-MM-DD"; Postgres casts that to
+    // midnight UTC, which would exclude any row created during the
+    // selected day.  Anchor the upper bound to end-of-day UTC instead.
+    query = query.lte("created_at", `${filters.to}T23:59:59.999Z`);
+  }
 
   if (filters.q) {
     // Search across email and full_name; we strip PostgREST `or` separators
