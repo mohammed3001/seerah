@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { createTemplate, type ActionState } from "@/lib/templates/actions";
 import {
@@ -35,11 +35,19 @@ export function CreateTemplateModal() {
     setCommittedId(null);
   }
 
-  // Auto-close after a successful creation so the page reload reveals the
-  // new card.  Only re-fires when ok flips true (state object is reference
-  // -stable across re-renders for the same action result).
+  // Auto-close after a *fresh* successful creation.  useActionState keeps
+  // the last result around forever, so a naive `if (state?.ok)` would
+  // close the modal again the next time the admin reopens it.  Track the
+  // last state we already acted on by reference so only a brand-new
+  // success object triggers the close.
+  const handledStateRef = useRef<ActionState | undefined>(undefined);
   useEffect(() => {
-    if (state?.ok && open) {
+    if (
+      state?.ok &&
+      open &&
+      state !== handledStateRef.current
+    ) {
+      handledStateRef.current = state;
       const t = setTimeout(close, 800);
       return () => clearTimeout(t);
     }
