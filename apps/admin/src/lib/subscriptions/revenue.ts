@@ -141,20 +141,25 @@ async function loadCountsFromDb(): Promise<DbCounts> {
   thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
   const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
 
+  // The cohort for monthly churn is "subs that were live at t-30d".
+  // Both numerator and denominator must come from that cohort, otherwise
+  // a sub created and canceled inside the same 30-day window can land in
+  // the numerator but never in the denominator — which can push churn
+  // above 100%.
+  //
+  //   denom    = stillActiveFromBefore (lived through the whole window)
+  //            + canceledInWindowFromBefore (lived at t-30d, churned since)
+  //   numer    = canceledInWindowFromBefore   (the churn slice of denom)
+  //
+  // We deliberately don't count all `canceled_at >= t-30d` rows here:
+  // that double-counts the "born and died inside the window" cohort.
   const [
     { count: activeCount },
     { count: trialingCount },
     { count: newThisMonth },
     { count: canceledThisMonth },
-    // Subs that were *live* at the start of the 30-day window: created
-    // before then, AND either still in a live status today, or canceled
-    // during the window itself (i.e. were active at t-30d, churned since).
-    // This is a better proxy for "active 30 days ago" than counting all
-    // subscriptions created before the cutoff (which would include
-    // subs canceled long before the window even started).
     { count: stillActiveFromBefore },
     { count: canceledInWindowFromBefore },
-    { count: canceledLast30 },
   ] = await Promise.all([
     supabase
       .from("subscriptions")
@@ -184,17 +189,12 @@ async function loadCountsFromDb(): Promise<DbCounts> {
       .lte("created_at", thirtyDaysAgoIso)
       .eq("status", "canceled")
       .gte("canceled_at", thirtyDaysAgoIso),
-    supabase
-      .from("subscriptions")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "canceled")
-      .gte("canceled_at", thirtyDaysAgoIso),
   ]);
 
   const denom =
     (stillActiveFromBefore ?? 0) + (canceledInWindowFromBefore ?? 0);
   const churn_rate =
-    denom > 0 ? (canceledLast30 ?? 0) / denom : null;
+    denom > 0 ? (canceledInWindowFromBefore ?? 0) / denom : null;
 
   return {
     active_count: activeCount ?? 0,
