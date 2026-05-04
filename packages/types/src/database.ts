@@ -663,6 +663,85 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_template_pricing: {
+        Args: {
+          p_template_id: string;
+          p_is_premium: boolean;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_set_template_active: {
+        Args: {
+          p_template_id: string;
+          p_is_active: boolean;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_update_template_metadata: {
+        Args: {
+          p_template_id: string;
+          p_name: string | null;
+          p_name_ar: string | null;
+          p_description_en: string | null;
+          p_description_ar: string | null;
+          p_category: string | null;
+          p_tags: string[] | null;
+          p_thumbnail_url: string | null;
+          p_preview_url: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_reorder_templates: {
+        Args: {
+          p_template_ids: string[];
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_create_template: {
+        Args: {
+          p_id: string;
+          p_name: string;
+          p_name_ar: string | null;
+          p_description_en: string | null;
+          p_description_ar: string | null;
+          p_category: string | null;
+          p_is_premium: boolean | null;
+          p_tags: string[] | null;
+          p_thumbnail_url: string | null;
+          p_preview_url: string | null;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: string;
+      };
+      admin_delete_template: {
+        Args: {
+          p_template_id: string;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
