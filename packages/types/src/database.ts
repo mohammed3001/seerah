@@ -627,6 +627,42 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_distinct_resume_templates: {
+        Args: Record<string, never>;
+        Returns: { id: string; name: string; name_ar: string | null }[];
+      };
+      admin_set_resume_template: {
+        Args: {
+          p_resume_id: string;
+          p_template_id: string;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_set_resume_featured: {
+        Args: {
+          p_resume_id: string;
+          p_featured: boolean;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_delete_resume: {
+        Args: {
+          p_resume_id: string;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
