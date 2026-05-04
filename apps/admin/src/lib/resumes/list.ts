@@ -28,8 +28,19 @@ const ALLOWED_SORT_KEYS: readonly ResumeSortKey[] = SORT_KEYS;
  * easier to reason about and bounded by `perPage`, never by the underlying
  * `profiles` table size.
  *
- * The "featured" flag is satisfied via a single `featured_resumes` lookup
- * for the page slice.
+ * Featured filter
+ * ---------------
+ * The `featured_resumes` table is bounded (curation list, dozens to a few
+ * hundred rows at most), so we resolve all featured IDs up-front and push
+ * the filter into the main resumes query as `.in('id', ids)` (or `not('id',
+ * 'in', ids)` for the inverse).  This way:
+ *
+ *   1. PostgREST returns exactly `perPage` rows per page (no client-side
+ *      under-filling), and
+ *   2. the `count` returned by PostgREST already reflects every active
+ *      filter — including featured — so pagination math is correct even
+ *      when the admin combines featured with template/language/date/
+ *      completion/search filters.
  */
 export async function listResumes(
   filters: ResumeListFilters,
@@ -62,6 +73,23 @@ export async function listResumes(
     name_ar: t.name_ar,
   }));
 
+  // ---- Featured ID set (resolved up-front) -------------------------------
+  // We always need this set to:
+  //   - hydrate the `is_featured` flag on the page rows, and
+  //   - (optionally) constrain the resumes query when `filters.featured`
+  //     is set.
+  // Bounded by the curation list size, not the resumes table.
+  const { data: allFeaturedRows, error: featuredAllErr } = await supabase
+    .from("featured_resumes")
+    .select("resume_id");
+  if (featuredAllErr) {
+    throw new Error(
+      `Failed to load featured set: ${featuredAllErr.message}`,
+    );
+  }
+  const allFeaturedIds = (allFeaturedRows ?? []).map((r) => r.resume_id);
+  const featuredSet = new Set<string>(allFeaturedIds);
+
   // ---- Page of resumes ----------------------------------------------------
   let query = supabase
     .from("resumes")
@@ -82,6 +110,20 @@ export async function listResumes(
   }
   if (filters.from) query = query.gte("created_at", filters.from);
   if (filters.to) query = query.lte("created_at", filters.to);
+
+  // Push featured filter into the DB query so pagination + count compose
+  // correctly with all other filters.
+  if (filters.featured === "featured") {
+    if (allFeaturedIds.length === 0) {
+      return { rows: [], total: 0, page, perPage, templates };
+    }
+    query = query.in("id", allFeaturedIds);
+  } else if (filters.featured === "not_featured") {
+    if (allFeaturedIds.length > 0) {
+      // PostgREST `not.in.(...)` syntax via the typed helper.
+      query = query.not("id", "in", `(${allFeaturedIds.join(",")})`);
+    }
+  }
 
   if (filters.q) {
     // Strip PostgREST `or` separators from user input — same defensive
@@ -153,58 +195,13 @@ export async function listResumes(
     }
   }
 
-  // ---- Featured flag for the page slice ----------------------------------
-  const resumeIds = baseRows.map((r) => r.id);
-  const featuredSet = new Set<string>();
-  if (resumeIds.length > 0) {
-    const { data: featuredRows, error: featuredErr } = await supabase
-      .from("featured_resumes")
-      .select("resume_id")
-      .in("resume_id", resumeIds);
-    if (featuredErr) {
-      throw new Error(`Failed to load featured flags: ${featuredErr.message}`);
-    }
-    for (const f of featuredRows ?? []) featuredSet.add(f.resume_id);
-  }
-
-  // ---- Apply post-query "featured" filter --------------------------------
-  // We could push this into the Postgres query via an RPC, but a server-side
-  // filter on the page slice is fine: it only excludes rows the admin
-  // already requested.  When `featured` is set we adjust `totalAfterFilter`
-  // so the pagination UI reports a sensible "X of Y" — otherwise it would
-  // show the unfiltered total and over-count `lastPage`.
-  //
-  // For `featured=featured` we use the bounded `featured_resumes` count
-  // directly (a few hundred rows at most).  For `featured=not_featured` we
-  // approximate by subtracting that featured total from the unfiltered
-  // count.  This is "approximate" only because filters that depend on
-  // featured-status drift could in theory desync, but in practice the
-  // featured table is the single source of truth, so the subtraction is
-  // accurate.
-  let filtered: ResumeListRow[];
-  let totalAfterFilter = count ?? 0;
-  if (filters.featured) {
-    const wantFeatured = filters.featured === "featured";
-    filtered = baseRows
-      .filter((r) => featuredSet.has(r.id) === wantFeatured)
-      .map((r) => toRow(r, templates, userMap, featuredSet));
-    const { count: fc } = await supabase
-      .from("featured_resumes")
-      .select("resume_id", { count: "exact", head: true });
-    if (wantFeatured) {
-      totalAfterFilter = fc ?? filtered.length;
-    } else {
-      // Subtract featured rows from the unfiltered count so pagination
-      // reflects the not-featured slice the admin actually sees.
-      totalAfterFilter = Math.max(0, (count ?? 0) - (fc ?? 0));
-    }
-  } else {
-    filtered = baseRows.map((r) => toRow(r, templates, userMap, featuredSet));
-  }
+  const rows: ResumeListRow[] = baseRows.map((r) =>
+    toRow(r, templates, userMap, featuredSet),
+  );
 
   return {
-    rows: filtered,
-    total: totalAfterFilter,
+    rows,
+    total: count ?? 0,
     page,
     perPage,
     templates,
