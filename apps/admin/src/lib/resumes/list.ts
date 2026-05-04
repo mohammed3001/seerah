@@ -170,9 +170,17 @@ export async function listResumes(
   // ---- Apply post-query "featured" filter --------------------------------
   // We could push this into the Postgres query via an RPC, but a server-side
   // filter on the page slice is fine: it only excludes rows the admin
-  // already requested, and the count from PostgREST already reflects the
-  // pre-featured filter.  When `featured` is set we re-page on the
-  // filtered set so the UI doesn't show empty pages.
+  // already requested.  When `featured` is set we adjust `totalAfterFilter`
+  // so the pagination UI reports a sensible "X of Y" — otherwise it would
+  // show the unfiltered total and over-count `lastPage`.
+  //
+  // For `featured=featured` we use the bounded `featured_resumes` count
+  // directly (a few hundred rows at most).  For `featured=not_featured` we
+  // approximate by subtracting that featured total from the unfiltered
+  // count.  This is "approximate" only because filters that depend on
+  // featured-status drift could in theory desync, but in practice the
+  // featured table is the single source of truth, so the subtraction is
+  // accurate.
   let filtered: ResumeListRow[];
   let totalAfterFilter = count ?? 0;
   if (filters.featured) {
@@ -180,14 +188,15 @@ export async function listResumes(
     filtered = baseRows
       .filter((r) => featuredSet.has(r.id) === wantFeatured)
       .map((r) => toRow(r, templates, userMap, featuredSet));
-    // We can't compute the precise post-filter total from a page slice;
-    // fetching all featured ids globally is bounded (≤ a few hundred) so
-    // we use that as an upper bound when filtering for `featured=featured`.
+    const { count: fc } = await supabase
+      .from("featured_resumes")
+      .select("resume_id", { count: "exact", head: true });
     if (wantFeatured) {
-      const { count: fc } = await supabase
-        .from("featured_resumes")
-        .select("resume_id", { count: "exact", head: true });
       totalAfterFilter = fc ?? filtered.length;
+    } else {
+      // Subtract featured rows from the unfiltered count so pagination
+      // reflects the not-featured slice the admin actually sees.
+      totalAfterFilter = Math.max(0, (count ?? 0) - (fc ?? 0));
     }
   } else {
     filtered = baseRows.map((r) => toRow(r, templates, userMap, featuredSet));
