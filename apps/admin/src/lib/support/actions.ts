@@ -60,11 +60,20 @@ const replySchema = z.object({
     .string()
     .min(1, "الرسالة فارغة")
     .max(8000, "الرسالة طويلة جدًا (الحدّ ٨٠٠٠ حرفًا)"),
+  // formData.get() returns null for missing checkbox / hidden fields,
+  // so the schema must accept both null and undefined before the
+  // transform turns it into a boolean.
   isInternal: z
     .string()
     .optional()
+    .nullable()
     .transform((v) => v === "on" || v === "true"),
-  attachmentUrl: z.string().url().optional().or(z.literal("")),
+  attachmentUrl: z
+    .string()
+    .url()
+    .optional()
+    .nullable()
+    .or(z.literal("")),
 });
 
 export async function replyToTicket(
@@ -123,7 +132,16 @@ const statusValues = ["open", "in_progress", "resolved", "closed"] as const;
 const changeStatusSchema = z.object({
   ticketId: z.string().uuid(),
   status: z.enum(statusValues),
-  resolutionNote: z.string().max(2000).optional().or(z.literal("")),
+  // The resolutionNote textarea is only rendered when the next status
+  // is "resolved", so any other transition leaves the field absent —
+  // formData.get() returns null in that case, which .optional() alone
+  // would reject.
+  resolutionNote: z
+    .string()
+    .max(2000)
+    .optional()
+    .nullable()
+    .or(z.literal("")),
 });
 
 export async function changeTicketStatus(
@@ -174,9 +192,13 @@ export async function changeTicketStatus(
 
 const assignSchema = z.object({
   ticketId: z.string().uuid(),
+  // .nullable() before .transform() so a missing form field
+  // (formData.get() → null) is treated as "unassign" instead of
+  // failing validation outright.
   assignee: z
     .string()
     .optional()
+    .nullable()
     .transform((v) => (v && v.length > 0 ? v : null))
     .pipe(z.string().uuid().nullable()),
 });
@@ -326,9 +348,11 @@ const bulkAssignSchema = z.object({
     .min(1, "اختر تذاكر أولًا")
     .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
     .pipe(z.array(z.string().uuid()).min(1)),
+  // Same null-tolerance as assignSchema.
   assignee: z
     .string()
     .optional()
+    .nullable()
     .transform((v) => (v && v.length > 0 ? v : null))
     .pipe(z.string().uuid().nullable()),
 });
