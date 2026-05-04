@@ -742,6 +742,36 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_extend_subscription: {
+        Args: {
+          p_subscription_id: string;
+          p_new_period_end: string;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_cancel_subscription_local: {
+        Args: {
+          p_subscription_id: string;
+          p_at_period_end: boolean;
+          p_admin_id: string;
+          p_admin_email: string;
+          p_ip: string | null;
+          p_user_agent: string | null;
+        };
+        Returns: undefined;
+      };
+      admin_distinct_sub_statuses: {
+        Args: Record<string, never>;
+        Returns: { status: string }[];
+      };
+      admin_stats_subscriptions_summary: {
+        Args: Record<string, never>;
+        Returns: { status: string; count: number }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
