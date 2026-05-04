@@ -44,7 +44,7 @@ export const NAV_SECTIONS: NavSection[] = [
     href: "/resumes",
     label: "السير الذاتية",
     icon: FileText,
-    roles: ["super_admin"],
+    roles: ["super_admin", "template_manager"],
   },
   {
     href: "/templates",
