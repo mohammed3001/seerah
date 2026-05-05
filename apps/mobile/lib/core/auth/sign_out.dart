@@ -12,20 +12,37 @@
 // signed in on the same device before reconnecting.  The outbox docstring
 // already promised this would happen — this file makes the promise true.
 //
-// Operations performed (in order):
-//   1. Clear the offline outbox (queued mutations).  Done first because
-//      a queued mutation that drains under user B's session would
+// Operation order — DO NOT REORDER WITHOUT READING THIS NOTE
+// ----------------------------------------------------------
+//   1. Wipe offline outbox (queued mutations).  Done first because a
+//      queued mutation that drains under user B's session would
 //      authenticate against B's Supabase token and write into B's rows.
-//   2. Clear the resume cache (Hive bundle of user A's resumes).  Stops
+//   2. Wipe resume cache (Hive bundle of user A's resumes).  Stops
 //      user B from briefly seeing user A's resumes during the first
 //      dashboard fetch.
-//   3. Reset the in-memory biometric gate so the next session re-prompts.
-//   4. Disable the biometric opt-in toggle (per-device, per-account
+//   3. End the gotrue session.  MUST run before steps 4 and 5 because
+//      the router (see `resolveRedirect` in `core/router/app_router.dart`)
+//      watches `biometricEnrolledProvider` and `biometricGateProvider`,
+//      and flipping either while `loggedIn` is still true races the auth
+//      listener with disastrous redirect outcomes:
+//        - On the lock screen, the rule
+//            `loggedIn && isLock && !biometricEnrolled` (line 120)
+//          redirects to `/dashboard`.  If signOut later fails, the user
+//          ends up on the dashboard with a still-valid session AND the
+//          biometric lock disabled.  Devin Review caught this in PR #36.
+//        - On the dashboard, resetting the gate to `false` triggers
+//            `loggedIn && biometricEnrolled && !unlocked && !isLock` (113)
+//          and bounces back to the lock screen — visible flash even on
+//          the success path.
+//   4. Reset the in-memory biometric gate so the next session re-prompts.
+//   5. Disable the biometric opt-in toggle (per-device, per-account
 //      preference; we don't want B to inherit A's choice).
-//   5. Tear down the Supabase session.  Done last so any earlier failure
-//      leaves the user technically still authenticated and able to retry
-//      sign-out — better than half-cleared state where the local boxes
-//      are wiped but the gotrue session lingers.
+//
+// If step 3 fails, steps 4 and 5 are skipped and we return `false` so
+// the caller can show a retry toast.  Local data is still wiped — that's
+// acceptable because the user can re-fetch from the server, and we'd
+// rather over-wipe than leave a half-cleared state where the gotrue
+// session lingers next to fresh-looking caches.
 // =============================================================================
 
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -50,28 +67,37 @@ Future<void> wipeLocalUserData() async {
 }
 
 /// Sign the current user out and wipe every per-user artifact from local
-/// storage.  Safe to call multiple times — every step is idempotent.
+/// storage.  Returns `true` on full success, `false` if the gotrue
+/// signOut failed — in that case the biometric lock and toggle are kept
+/// intact so the next launch still gates access.
 ///
-/// Errors from individual steps are swallowed (best-effort wipe).  We
-/// would rather end up signed-out with a stale Hive entry than leave the
-/// user signed-in because step 3 of 5 threw.
-Future<void> signOutAndWipe(WidgetRef ref) async {
+/// Safe to call multiple times — every step is idempotent.
+Future<bool> signOutAndWipe(WidgetRef ref) async {
   // Steps 1 + 2: drop queued mutations and cached bundles.
   await wipeLocalUserData();
 
-  // Step 3: reset the in-memory unlock gate.
+  // Step 3: end the gotrue session.  Done BEFORE the biometric
+  // mutations so a partial failure can't strand the user with a valid
+  // session and a disabled lock — see ordering note at the top of file.
+  try {
+    await Supabase.instance.client.auth.signOut();
+  } catch (_) {
+    return false;
+  }
+
+  // Step 4: reset the in-memory unlock gate.  Now safe because
+  // `loggedIn` has flipped false; the router will route on the
+  // !loggedIn rule (`/auth/login`) instead of the lock-screen rule.
   try {
     ref.read(biometricGateProvider.notifier).reset();
   } catch (_) {}
 
-  // Step 4: clear the biometric opt-in toggle.
+  // Step 5: clear the biometric opt-in toggle so the next user who
+  // signs in on this device does not inherit the previous user's
+  // preference.
   try {
     await ref.read(biometricEnrolledProvider.notifier).setEnabled(false);
   } catch (_) {}
 
-  // Step 5: end the gotrue session.  Done last so an earlier failure
-  // doesn't leave us in a "wiped but still authenticated" state.
-  try {
-    await Supabase.instance.client.auth.signOut();
-  } catch (_) {}
+  return true;
 }

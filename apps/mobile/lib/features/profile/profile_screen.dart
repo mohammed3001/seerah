@@ -92,8 +92,16 @@ class ProfileScreen extends ConsumerWidget {
               // before tearing down the gotrue session, so the next user
               // who logs in on this device cannot see the previous
               // user's data and queued offline edits don't replay under
-              // their session.
-              await signOutAndWipe(ref);
+              // their session.  See `signOutAndWipe` docstring for why
+              // ordering matters.
+              final ok = await signOutAndWipe(ref);
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("تعذّر تسجيل الخروج. حاول مرة أخرى."),
+                  ),
+                );
+              }
             },
           ),
         ],

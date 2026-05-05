@@ -67,16 +67,33 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen> {
   }
 
   Future<void> _signOut() async {
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     // Wipe every per-user Hive artifact (outbox + resume cache) before
-    // tearing down the gotrue session — see `signOutAndWipe` for the
-    // ordering rationale and why each step is best-effort.
-    await signOutAndWipe(ref);
+    // tearing down the gotrue session — see `signOutAndWipe` for why
+    // ordering matters (TL;DR: signOut first, biometric mutations
+    // after, otherwise the router would briefly redirect to /dashboard
+    // with a still-valid session).
+    final ok = await signOutAndWipe(ref);
     if (!mounted) return;
-    // Lift the gate so the auth listener inside the router redirects to
-    // /auth/login.  Without this the redirect would still land us back
-    // here because the gate stays closed across signOut.
-    ref.read(biometricGateProvider.notifier).unlock();
+    if (!ok) {
+      // Keep the lock screen up so the user can retry — biometric
+      // protection stays in place because step 5 of the helper
+      // skipped the toggle clear.
+      setState(() {
+        _busy = false;
+        _error = "تعذّر تسجيل الخروج. حاول مرة أخرى.";
+      });
+      return;
+    }
+    // signOut succeeded → currentSession is null → the router's
+    // !loggedIn rule (`/auth/login`) wins and redirects automatically.
+    // No manual gate.unlock() — see Devin Review on PR #36 for the bug
+    // that fix introduced (clearing the gate while still loggedIn would
+    // race the auth listener and bounce to /dashboard via
+    // `loggedIn && isLock && !biometricEnrolled`).
   }
 
   @override
