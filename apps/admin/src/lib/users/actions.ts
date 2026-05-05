@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { deleteUserStorageArtifacts } from "@seerah/api/security";
+
 import { logAdminAction } from "../audit";
 import { getCurrentAdmin } from "../auth/current";
 import { sendDirectEmail } from "../email";
@@ -236,8 +238,13 @@ export async function deleteUserAccount(
   }
 
   const supabase = getServiceRoleClient();
-  // Auth deletion cascades to profiles via `on delete cascade`.  Resumes,
-  // subscriptions, etc. cascade in turn.
+  // Audit F3: storage cleanup must happen BEFORE auth.admin.deleteUser.
+  // Once the user row is gone we lose the userId binding the storage
+  // policies use to authorise deletion (and the user-scoped client
+  // can't run anyway).  Storage failures are non-fatal — the audit log
+  // captures the counts so an operator can sweep manually if needed.
+  const storage = await deleteUserStorageArtifacts(supabase, parsed.data.userId);
+
   const { error } = await supabase.auth.admin.deleteUser(parsed.data.userId);
 
   if (error) return ERR(`تعذّر حذف الحساب: ${error.message}`);
@@ -248,7 +255,12 @@ export async function deleteUserAccount(
     action: "admin.user.deleted",
     targetType: "user",
     targetId: parsed.data.userId,
-    metadata: { email: parsed.data.email },
+    metadata: {
+      email: parsed.data.email,
+      storage_avatars_deleted: storage.avatars,
+      storage_attachments_deleted: storage.attachments,
+      storage_errors: storage.errors.length > 0 ? storage.errors : undefined,
+    },
     ip: guard.ip,
     userAgent: guard.userAgent,
   });

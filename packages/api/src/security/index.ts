@@ -6,5 +6,6 @@
  * Edge Runtime middleware.
  */
 
+export * from "./account-deletion";
 export * from "./image-validation";
 export * from "./password-policy";
