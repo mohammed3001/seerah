@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 
 import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { exportFromService } from "@/lib/pdf/server";
+import { assertSameOrigin } from "@/lib/security/origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -21,6 +22,9 @@ interface ClientBody {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const session = await getDashboardSession();
 
   let body: ClientBody;

@@ -19,6 +19,7 @@
 import { NextResponse } from "next/server";
 
 import { getDashboardSession } from "@/lib/dashboard/get-session";
+import { assertSameOrigin } from "@/lib/security/origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TEMPLATE_BY_ID, type TemplateId } from "@/templates";
 
@@ -42,6 +43,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   let session;
   try {
     session = await getDashboardSession();

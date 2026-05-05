@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { getAIServiceConfig } from "@/lib/ai/server";
 import type { ChatMessage, Language } from "@/lib/ai/types";
+import { assertSameOrigin } from "@/lib/security/origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,9 @@ interface ChatRouteBody {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const session = await getDashboardSession();
 
   let body: ChatRouteBody;

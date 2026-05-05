@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 
 import { detectCountryFromHeaders } from "@/lib/billing/country";
 import { getDashboardSession } from "@/lib/dashboard/get-session";
+import { assertSameOrigin } from "@/lib/security/origin";
 import {
   PRIME_TRIAL_DAYS,
   getStripe,
@@ -60,6 +61,9 @@ function safeRedirect(
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   let session;
   try {
     session = await getDashboardSession();

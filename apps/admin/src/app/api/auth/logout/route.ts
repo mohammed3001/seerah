@@ -5,6 +5,7 @@ import { logAdminAction } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth/current";
 import { destroyCurrentSession } from "@/lib/auth/session";
 import { extractClientIp } from "@/lib/ip";
+import { assertSameOrigin } from "@/lib/security/origin";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,9 @@ async function performLogout() {
 }
 
 export async function POST(request: NextRequest) {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   await performLogout();
   return NextResponse.redirect(new URL("/login", request.url), { status: 303 });
 }

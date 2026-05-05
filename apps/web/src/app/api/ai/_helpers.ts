@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { AIServiceError, aiServer } from "@/lib/ai/server";
 import type { AIResult, RateLimitInfo } from "@/lib/ai/types";
+import { assertSameOrigin } from "@/lib/security/origin";
 
 interface OkBody<T> {
   data: T;
@@ -29,6 +30,9 @@ export async function handleAIRoute<TInput, TOutput>(
   request: Request,
   caller: (input: TInput, callerArg: { user_id: string; plan: "free" | "prime" | "enterprise" }) => Promise<AIResult<TOutput>>,
 ): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   // getDashboardSession may call Next's redirect() (which throws
   // NEXT_REDIRECT). Resolve it BEFORE the try/catch around aiServer so
   // the redirect propagates instead of being swallowed.
