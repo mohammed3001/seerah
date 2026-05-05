@@ -73,6 +73,16 @@ export function PersonalSection() {
 
   async function handleAvatarUpload(file: File) {
     if (!file) return;
+    // Client-side size guard.  The server action enforces the same
+    // limit authoritatively, but Next.js applies its own
+    // `bodySizeLimit` (6 MB) BEFORE the action runs and rejects
+    // larger payloads with HTTP 413 — which surfaces as a thrown
+    // promise from the action call.  Catching it here gives the user
+    // a helpful Arabic message instead of a silent failure.
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب ألا يتجاوز 4MB");
+      return;
+    }
     setSavingAvatar(true);
     try {
       const fd = new FormData();
@@ -84,6 +94,11 @@ export function PersonalSection() {
       }
       update("avatar_path", result.path);
       toast.success(result.message);
+    } catch {
+      // Defensive: handles 413 from the framework body-size limit and
+      // any transport error so we never leave the user with a stuck
+      // spinner and no feedback.
+      toast.error("تعذّر رفع الصورة، تأكد من أن حجمها أقل من 4MB.");
     } finally {
       setSavingAvatar(false);
     }
