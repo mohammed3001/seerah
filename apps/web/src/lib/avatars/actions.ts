@@ -34,12 +34,13 @@ export interface UploadAvatarResult {
 export async function uploadAvatarAction(
   formData: FormData,
 ): Promise<UploadAvatarResult> {
-  let session;
-  try {
-    session = await getDashboardSession();
-  } catch {
-    return { ok: false, message: "يجب تسجيل الدخول أولاً." };
-  }
+  // Auth resolution must run OUTSIDE try/catch — getDashboardSession()
+  // calls Next's redirect() for unauthenticated users, which works by
+  // throwing a NEXT_REDIRECT error.  Catching it would swallow the
+  // redirect and silently turn it into a generic "log in first" toast.
+  // We also do not want to hide non-redirect failures (e.g. a Supabase
+  // outage) behind the same toast — let them surface naturally.
+  const session = await getDashboardSession();
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
