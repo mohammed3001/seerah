@@ -1,7 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
-
 import { validatePassword } from "@seerah/api/security";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -65,21 +63,22 @@ export async function signupAction(
 
   const supabase = await createSupabaseServerClient();
 
-  // Build the email-callback URL from the request's own host so the
-  // confirmation link round-trips back to the same deployment, even
-  // when NEXT_PUBLIC_APP_URL is not set.
-  const hdrs = await headers();
-  const proto = hdrs.get("x-forwarded-proto") ?? "https";
-  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
-  const appUrl =
-    process.env["NEXT_PUBLIC_APP_URL"] || (host ? `${proto}://${host}` : null);
+  // Email-callback URL must come from a trusted source — Request
+  // headers like `x-forwarded-host` are attacker-controlled and would
+  // let a malicious caller smuggle the confirmation link onto
+  // `https://evil.com/auth/callback`, leaking the auth token fragment
+  // off-domain.  Hardcoded fallback matches the convention used in
+  // `api/stripe/webhook/route.ts` and `support/actions.ts`.  Supabase's
+  // redirect-URL allowlist is a second layer of defence; we don't
+  // rely on it being correctly configured.
+  const appUrl = process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com";
 
   const { error } = await supabase.auth.signUp({
     email,
     password: input.password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: appUrl ? `${appUrl}/auth/callback` : undefined,
+      emailRedirectTo: `${appUrl}/auth/callback`,
     },
   });
 
