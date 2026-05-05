@@ -328,6 +328,14 @@ export interface ValidatePasswordOptions {
    * the "name-as-password" anti-pattern at signup time.
    */
   email?: string;
+  /**
+   * Override the default length floor.  Useful for surfaces that need
+   * a higher bar than user-facing signup — admin bootstrap, for
+   * example, requires 12+ characters because super_admin is the most
+   * privileged account in the system.  Values below
+   * `MIN_PASSWORD_LENGTH` are clamped up.
+   */
+  minLength?: number;
 }
 
 /**
@@ -342,11 +350,15 @@ export function validatePassword(
 ): PasswordPolicyError[] {
   const errors: PasswordPolicyError[] = [];
 
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  const minLength = Math.max(
+    MIN_PASSWORD_LENGTH,
+    options.minLength ?? MIN_PASSWORD_LENGTH,
+  );
+  if (password.length < minLength) {
     errors.push({
       code: "too_short",
-      messageAr: `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`,
-      messageEn: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
+      messageAr: `كلمة المرور يجب أن تكون ${minLength} أحرف على الأقل`,
+      messageEn: `Password must be at least ${minLength} characters long`,
     });
   }
 

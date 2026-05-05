@@ -75,11 +75,16 @@ function readEnv(): BootstrapEnv {
     throw new Error(`ADMIN_BOOTSTRAP_EMAIL is not a valid email address.`);
   }
 
-  // Apply the shared password policy (length, complexity, common-password
-  // list) — same rules as user-facing signup.  Admin passwords must clear
-  // the same floor; the real defence is bcrypt + TOTP, but a Lock1 / Pass1
-  // bootstrap password would still leak through the policy gap.
-  const policyErrors = validatePassword(password!, { email: email! });
+  // Apply the shared password policy (complexity, common-password list)
+  // with a *raised* 12-character length floor — super_admin is the most
+  // privileged account in the system, so it gets a higher bar than user
+  // signup (8 chars).  The real defence is bcrypt + TOTP, but a Lock1 /
+  // Pass1 bootstrap password would still leak through the policy gap.
+  const ADMIN_MIN_PASSWORD_LENGTH = 12;
+  const policyErrors = validatePassword(password!, {
+    email: email!,
+    minLength: ADMIN_MIN_PASSWORD_LENGTH,
+  });
   if (policyErrors.length > 0) {
     const reasons = policyErrors.map((e) => e.messageEn).join("; ");
     throw new Error(`ADMIN_BOOTSTRAP_PASSWORD rejected by policy: ${reasons}`);
