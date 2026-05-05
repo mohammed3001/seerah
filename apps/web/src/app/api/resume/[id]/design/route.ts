@@ -87,9 +87,17 @@ export async function POST(
     );
   }
 
-  // Premium template gate — mirror the server action's policy. Without this
-  // check a free user could PATCH the column directly via their session and
-  // get a premium template into the export pipeline.
+  // Premium / active template gate — mirror the server action's policy.
+  // Without this check a free user could PATCH the column directly via
+  // their session and get a premium template into the export pipeline,
+  // or pin a resume to a template the admin has deactivated.
+  //
+  // Two layers (matching `applyTemplate` server action — see its
+  // docstring for the rationale):
+  //   1. In-code registry rejects ids without a renderable component.
+  //   2. DB row enforces live `is_active` and `is_premium` so admin
+  //      toggles take effect without a code deploy.
+  let templateMeta: { id: TemplateId } | null = null;
   if (body.template_id) {
     const meta = TEMPLATE_BY_ID[body.template_id as TemplateId];
     if (!meta) {
@@ -98,17 +106,7 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (meta.is_premium && session.profile.plan === "free") {
-      return NextResponse.json(
-        {
-          error: "premium_required",
-          message_ar: "هذا التصميم متاح للمشتركين فقط.",
-          message_en: "This template requires a Prime subscription.",
-          template_id: meta.id,
-        },
-        { status: 402 },
-      );
-    }
+    templateMeta = meta;
   }
 
   if (
@@ -123,6 +121,43 @@ export async function POST(
   }
 
   const supabase = await createSupabaseServerClient();
+
+  // DB-side template gate — runs only when the request is changing the
+  // template.  RLS already filters templates to is_active = true, so a
+  // missing row here means the template is either unknown to the DB or
+  // deactivated; either way we reject with a single message.
+  if (templateMeta) {
+    const { data: tpl, error: tplError } = await supabase
+      .from("templates")
+      .select("is_premium, is_active")
+      .eq("id", templateMeta.id)
+      .maybeSingle();
+    if (tplError) {
+      return NextResponse.json({ error: tplError.message }, { status: 500 });
+    }
+    if (!tpl || !tpl.is_active) {
+      return NextResponse.json(
+        {
+          error: "template_unavailable",
+          message_ar: "هذا التصميم غير متاح حاليًا.",
+          message_en: "This template is currently unavailable.",
+          template_id: templateMeta.id,
+        },
+        { status: 400 },
+      );
+    }
+    if (tpl.is_premium && session.profile.plan === "free") {
+      return NextResponse.json(
+        {
+          error: "premium_required",
+          message_ar: "هذا التصميم متاح للمشتركين فقط.",
+          message_en: "This template requires a Prime subscription.",
+          template_id: templateMeta.id,
+        },
+        { status: 402 },
+      );
+    }
+  }
 
   // Ownership check + read current theme so we can merge instead of replace.
   const { data: row, error: readError } = await supabase
