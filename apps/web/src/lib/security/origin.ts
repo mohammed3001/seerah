@@ -26,7 +26,7 @@ import { NextResponse } from "next/server";
  *   - Any route called by another internal service via bearer token (the
  *     bearer-token check is the gate; Origin will not be set).
  */
-function buildAllowedOrigins(): Set<string> {
+function buildConfiguredOrigins(): Set<string> {
   const set = new Set<string>();
   const appUrl = process.env["NEXT_PUBLIC_APP_URL"];
   if (appUrl) set.add(appUrl.replace(/\/$/, ""));
@@ -46,11 +46,28 @@ function buildAllowedOrigins(): Set<string> {
   return set;
 }
 
-let cachedAllowed: Set<string> | null = null;
+let cachedConfigured: Set<string> | null = null;
 
-function getAllowedOrigins(): Set<string> {
-  if (cachedAllowed === null) cachedAllowed = buildAllowedOrigins();
-  return cachedAllowed;
+function getConfiguredOrigins(): Set<string> {
+  if (cachedConfigured === null) cachedConfigured = buildConfiguredOrigins();
+  return cachedConfigured;
+}
+
+/**
+ * Build the request's own origin from the URL Next.js gives us.  This
+ * is the deployed host as Next sees it (which already accounts for the
+ * x-forwarded-host header set by Vercel/the load balancer).  Allowing
+ * same-host always is safe by construction — same-origin POSTs cannot
+ * be forged by a different attacker site, and we still reject any
+ * Origin that doesn't match the request's host.
+ */
+function selfOriginFromRequest(req: Request): string | null {
+  try {
+    const u = new URL(req.url);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -79,7 +96,16 @@ export function assertSameOrigin(req: Request): NextResponse | null {
   const origin = req.headers.get("origin");
   if (!origin) return null; // Native client / server-to-server: no CSRF risk.
 
-  const allowed = getAllowedOrigins();
+  // Same-origin requests are always allowed regardless of env config.
+  // This protects against the operator forgetting to set
+  // NEXT_PUBLIC_APP_URL: an empty allowlist would otherwise reject every
+  // browser POST since Chrome 76 / Firefox 70 send `Origin` on
+  // same-origin POSTs too.  Cross-origin attackers cannot spoof this
+  // because their `Origin` will not equal the request's actual host.
+  const self = selfOriginFromRequest(req);
+  if (self && origin === self) return null;
+
+  const allowed = getConfiguredOrigins();
   if (!allowed.has(origin)) {
     return NextResponse.json(
       { error: "invalid_origin", code: "INVALID_ORIGIN" },

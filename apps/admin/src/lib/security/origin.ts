@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
  * cross-origin-protected by Next.js itself; this helper exists for the
  * route handlers we own.
  */
-function buildAllowedOrigins(): Set<string> {
+function buildConfiguredOrigins(): Set<string> {
   const set = new Set<string>();
   const adminUrl = process.env["ADMIN_APP_URL"];
   if (adminUrl) set.add(adminUrl.replace(/\/$/, ""));
@@ -24,11 +24,25 @@ function buildAllowedOrigins(): Set<string> {
   return set;
 }
 
-let cachedAllowed: Set<string> | null = null;
+let cachedConfigured: Set<string> | null = null;
 
-function getAllowedOrigins(): Set<string> {
-  if (cachedAllowed === null) cachedAllowed = buildAllowedOrigins();
-  return cachedAllowed;
+function getConfiguredOrigins(): Set<string> {
+  if (cachedConfigured === null) cachedConfigured = buildConfiguredOrigins();
+  return cachedConfigured;
+}
+
+/**
+ * The request's own origin, derived from the URL Next.js routes to us.
+ * Always allowed — same-origin POSTs cannot be forged by a different
+ * site, and a foreign Origin will never match the request's actual host.
+ */
+function selfOriginFromRequest(req: Request): string | null {
+  try {
+    const u = new URL(req.url);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -43,7 +57,14 @@ export function assertSameOrigin(req: Request): NextResponse | null {
   const origin = req.headers.get("origin");
   if (!origin) return null; // server-to-server / non-browser caller
 
-  const allowed = getAllowedOrigins();
+  // Always allow the request's own origin so the guard never fails
+  // closed when `ADMIN_APP_URL` is unset.  Modern browsers send Origin
+  // on same-origin POSTs (Chrome 76+, Firefox 70+); an empty allowlist
+  // would otherwise 403 every legitimate admin form submission.
+  const self = selfOriginFromRequest(req);
+  if (self && origin === self) return null;
+
+  const allowed = getConfiguredOrigins();
   if (!allowed.has(origin)) {
     return NextResponse.json(
       { error: "invalid_origin", code: "INVALID_ORIGIN" },
