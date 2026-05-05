@@ -17,7 +17,9 @@
     "SENTRY_DSN",
     "NEXT_PUBLIC_POSTHOG_KEY",
     "NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_APP_NAME"
+    "NEXT_PUBLIC_APP_NAME",
+    "ADMIN_APP_URL",
+    "WEB_APP_URL"
   ],
   "tasks": {
     "build": {
