@@ -65,7 +65,13 @@ async function purgeBucketPrefix(
   // List() max page size is 1000.  Loop until the page is short.
   const PAGE_SIZE = 1000;
   let offset = 0;
-  for (;;) {
+  // Hard ceiling to guarantee termination even if list/remove return
+  // unexpected shapes (e.g. a bucket policy change starts hiding rows
+  // from list but not from remove).  At PAGE_SIZE=1000 this caps
+  // sweep work per user at 1M files, which is far above any
+  // legitimate avatar/attachment count.
+  const MAX_ITERATIONS = 1000;
+  for (let iter = 0; iter < MAX_ITERATIONS; iter += 1) {
     const { data, error } = await supabase.storage
       .from(bucket)
       .list(userId, { limit: PAGE_SIZE, offset });
@@ -78,11 +84,17 @@ async function purgeBucketPrefix(
     const { error: removeErr } = await supabase.storage.from(bucket).remove(paths);
     if (removeErr) {
       errors.push(`[${bucket}] remove failed: ${removeErr.message}`);
+      // Advance past the failing window so the next iteration tries
+      // a fresh page instead of looping on the same un-removable items.
+      offset += PAGE_SIZE;
     } else {
+      // On success the deleted entries are gone from the bucket, so
+      // the next `list()` call from the SAME offset returns what was
+      // previously the *next* page — if we advance offset here we
+      // skip an entire page of files (Devin Review on PR #32).
       removed += paths.length;
     }
     if (data.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
   }
   return { removed, errors };
 }
