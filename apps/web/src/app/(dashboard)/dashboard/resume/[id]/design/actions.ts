@@ -14,6 +14,29 @@ const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
  * Apply a template to a resume. Premium templates are gated to prime/enterprise
  * accounts — free users get a friendly upgrade error instead of a successful
  * write so the UI can prompt them.
+ *
+ * Two layers of validation:
+ *
+ *   1. **Code registry** (`TEMPLATE_BY_ID`).  This is the only place that
+ *      knows how to render a template — every entry has a React component
+ *      attached.  A template id that isn't in code can never produce
+ *      output, so we reject it early with a clear "unknown" message.
+ *
+ *   2. **DB row** (`public.templates`).  Admins flex pricing
+ *      (`is_premium`) and visibility (`is_active`) via the admin panel.
+ *      The DB is the source of truth for those two flags — the
+ *      `is_premium` field on the in-code registry is just a build-time
+ *      hint shown in the picker.  Reading them server-side here means
+ *      an admin can deactivate or re-price a template without a code
+ *      deploy, and a malicious request that posts a deactivated id is
+ *      rejected even if the client UI hasn't refreshed.
+ *
+ * RLS on the user-bound supabase client filters templates to
+ * `is_active = true`, so a query for a deactivated template returns
+ * null — that's the same path as a fully unknown DB row.  We surface
+ * a single "currently unavailable" message for both because the
+ * distinction doesn't matter to the user (and we don't want to leak
+ * the existence of soft-deleted templates).
  */
 export async function applyTemplate(
   resumeId: string,
@@ -22,10 +45,19 @@ export async function applyTemplate(
   const session = await getDashboardSession();
   const meta = TEMPLATE_BY_ID[templateId as TemplateId];
   if (!meta) return { error: "تصميم غير معروف" };
-  if (meta.is_premium && session.profile.plan === "free") {
+  const supabase = await createSupabaseServerClient();
+  const { data: dbRow, error: lookupError } = await supabase
+    .from("templates")
+    .select("is_premium, is_active")
+    .eq("id", meta.id)
+    .maybeSingle();
+  if (lookupError) return { error: lookupError.message };
+  if (!dbRow || !dbRow.is_active) {
+    return { error: "هذا التصميم غير متاح حاليًا." };
+  }
+  if (dbRow.is_premium && session.profile.plan === "free") {
     return { error: "هذا التصميم متاح للمشتركين فقط" };
   }
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("resumes")
     .update({ template_id: meta.id })

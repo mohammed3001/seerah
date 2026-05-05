@@ -1,0 +1,263 @@
+/**
+ * Sample resume used by the developer-only template gallery at
+ * `/dashboard/dev/templates`.  Every section is populated with realistic
+ * bilingual content so the gallery can stress-test long names, RTL/LTR
+ * mixing, date ranges, and multiple section items per template — the
+ * common axes where layout bugs hide.
+ *
+ * Pure data — no DB access — so the gallery can render in production
+ * builds (the route itself still gates on `NODE_ENV !== "production"`).
+ */
+
+import type { LoadedResume } from "@/lib/editor/load-resume";
+
+const RESUME_ID = "00000000-0000-0000-0000-000000000001";
+const USER_ID = "00000000-0000-0000-0000-000000000000";
+const NOW = "2025-01-01T00:00:00Z";
+
+export function buildSampleResume(): LoadedResume {
+  return {
+    resume: {
+      id: RESUME_ID,
+      user_id: USER_ID,
+      title: "نموذج معاينة",
+      slug: "preview",
+      template_id: "template_clean_modern",
+      language: "ar",
+      is_public: false,
+      password_hash: null,
+      hide_from_search: false,
+      completion_score: 100,
+      custom_url: null,
+      views_count: 0,
+      theme: { mode: "light", primary_color: "#0F172A" },
+      section_order: [],
+      section_labels: {},
+      hidden_fields: [],
+      show_education_first: false,
+      custom_sections: [],
+      created_at: NOW,
+      updated_at: NOW,
+    },
+    personal: {
+      id: "p1",
+      resume_id: RESUME_ID,
+      full_name: "محمد عبدالله السبيعي",
+      job_title: "مهندس برمجيات أول",
+      bio:
+        "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء، شغوف بهندسة جودة الكود وقياس الأداء.",
+      email: "mohammed@example.com",
+      phone: "555 123 4567",
+      phone_country_code: "+966",
+      website: "https://example.com",
+      city: "الرياض",
+      country: "المملكة العربية السعودية",
+      nationality: "سعودي",
+      date_of_birth: "1992-04-12",
+      gender: "male",
+      marital_status: "married",
+      health_status: "healthy",
+      military_service: "yes",
+      avatar_path: null,
+      ar: {
+        full_name: "محمد عبدالله السبيعي",
+        job_title: "مهندس برمجيات أول",
+        bio:
+          "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء.",
+        city: "الرياض",
+        country: "المملكة العربية السعودية",
+        nationality: "سعودي",
+      },
+      en: {
+        full_name: "Mohammed Abdullah Al-Subaie",
+        job_title: "Senior Software Engineer",
+        bio:
+          "Senior software engineer with 10+ years building distributed web systems and high-performance services.",
+        city: "Riyadh",
+        country: "Saudi Arabia",
+        nationality: "Saudi",
+      },
+    },
+    education: [
+      {
+        id: "e1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        institution: "جامعة الملك سعود",
+        degree: "بكالوريوس",
+        field_of_study: "علوم الحاسب",
+        start_date: "2010-09-01",
+        end_date: "2014-06-01",
+        description:
+          "تخرّج بمرتبة الشرف الأولى — مشروع التخرج: محرّك بحث للمحتوى العربي.",
+        ar: {
+          institution: "جامعة الملك سعود",
+          degree: "بكالوريوس",
+          field_of_study: "علوم الحاسب",
+        },
+        en: {
+          institution: "King Saud University",
+          degree: "Bachelor",
+          field_of_study: "Computer Science",
+        },
+      },
+    ],
+    experience: [
+      {
+        id: "x1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        company: "أرامكو الرقمية",
+        job_title: "قائد فريق هندسة الواجهة",
+        start_date: "2022-03-01",
+        end_date: null,
+        is_current: true,
+        description:
+          "قيادة فريق من ٨ مهندسين، إعادة تصميم منظومة الواجهة بـNext.js وتقليل وقت التحميل ٤٠٪.",
+        ar: {
+          company: "أرامكو الرقمية",
+          job_title: "قائد فريق هندسة الواجهة",
+        },
+        en: { company: "Aramco Digital", job_title: "Frontend Engineering Lead" },
+      },
+      {
+        id: "x2",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 1,
+        company: "STC Pay",
+        job_title: "مهندس برمجيات",
+        start_date: "2018-06-01",
+        end_date: "2022-02-28",
+        is_current: false,
+        description:
+          "بناء بنية المدفوعات وتكامل بوابات البنوك وتحسين زمن استجابة الـAPI من ٣٢٠ms إلى ٧٠ms.",
+        ar: { company: "STC Pay", job_title: "مهندس برمجيات" },
+        en: { company: "STC Pay", job_title: "Software Engineer" },
+      },
+    ],
+    courses: [
+      {
+        id: "c1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        name: "هندسة المنظومات الموزّعة",
+        institution: "كورسيرا",
+        start_date: "2023-01-01",
+        end_date: "2023-05-01",
+        is_current: false,
+        description: "شهادة متقدمة من جامعة Illinois.",
+        ar: { name: "هندسة المنظومات الموزّعة", institution: "كورسيرا" },
+        en: { name: "Distributed Systems Engineering", institution: "Coursera" },
+      },
+    ],
+    skills: [
+      { id: "s1", resume_id: RESUME_ID, is_visible: true, sort_order: 0, name: "TypeScript", level: "expert" },
+      { id: "s2", resume_id: RESUME_ID, is_visible: true, sort_order: 1, name: "React / Next.js", level: "expert" },
+      { id: "s3", resume_id: RESUME_ID, is_visible: true, sort_order: 2, name: "PostgreSQL", level: "advanced" },
+      { id: "s4", resume_id: RESUME_ID, is_visible: true, sort_order: 3, name: "Kubernetes", level: "advanced" },
+      { id: "s5", resume_id: RESUME_ID, is_visible: true, sort_order: 4, name: "Go", level: "good" },
+      { id: "s6", resume_id: RESUME_ID, is_visible: true, sort_order: 5, name: "Python", level: "intermediate" },
+    ],
+    projects: [
+      {
+        id: "j1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        name: "مكتبة UI عربية",
+        url: "https://github.com/example/ar-ui",
+        start_date: "2024-01-01",
+        end_date: null,
+        is_current: true,
+        description:
+          "مكتبة مكوّنات React جاهزة لـRTL تستخدمها أكثر من ١٢ شركة محلية.",
+        ar: { name: "مكتبة UI عربية" },
+        en: { name: "Arabic UI Toolkit" },
+      },
+    ],
+    references: [
+      {
+        id: "r1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        name: "د. سارة المطيري",
+        email: "sara@example.com",
+        phone: "555 222 3333",
+        phone_country_code: "+966",
+        description: "مديرة الهندسة السابقة في STC Pay.",
+        ar: { name: "د. سارة المطيري", description: "مديرة الهندسة السابقة." },
+        en: { name: "Dr. Sara Al-Mutairi", description: "Former engineering director." },
+      },
+    ],
+    languages: [
+      {
+        id: "l1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        language_name: "العربية",
+        fluency: "native",
+        is_sign_language: false,
+      },
+      {
+        id: "l2",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 1,
+        language_name: "English",
+        fluency: "full",
+        is_sign_language: false,
+      },
+    ],
+    links: [
+      {
+        id: "n1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        url: "https://linkedin.com/in/example",
+        link_type: "linkedin",
+      },
+      {
+        id: "n2",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 1,
+        url: "https://github.com/example",
+        link_type: "github",
+      },
+    ],
+    hobbies: [
+      {
+        id: "h1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        name: "القراءة",
+        ar: { name: "القراءة" },
+        en: { name: "Reading" },
+      },
+      {
+        id: "h2",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 1,
+        name: "الجري",
+        ar: { name: "الجري" },
+        en: { name: "Running" },
+      },
+    ],
+    address: {
+      id: "a1",
+      resume_id: RESUME_ID,
+      national_address: "RYBR3344 - حي الياسمين - الرياض ١٣٤٢٢",
+      ar: { national_address: "RYBR3344 - حي الياسمين - الرياض ١٣٤٢٢" },
+      en: { national_address: "RYBR3344 - Al-Yasmin District - Riyadh 13422" },
+    },
+  };
+}
