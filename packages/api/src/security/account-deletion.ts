@@ -72,16 +72,35 @@ async function purgeBucketPrefix(
   // legitimate avatar/attachment count.
   const MAX_ITERATIONS = 1000;
   for (let iter = 0; iter < MAX_ITERATIONS; iter += 1) {
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .list(userId, { limit: PAGE_SIZE, offset });
+    // Wrap each fetch in try/catch so transport-level failures
+    // (DNS, connection refused, fetch abort) collapse into the
+    // returned `errors` array instead of throwing — the public
+    // contract is "never block account deletion".
+    let listResult: Awaited<ReturnType<ReturnType<SupabaseClient["storage"]["from"]>["list"]>>;
+    try {
+      listResult = await supabase.storage
+        .from(bucket)
+        .list(userId, { limit: PAGE_SIZE, offset });
+    } catch (err) {
+      errors.push(`[${bucket}] list threw: ${err instanceof Error ? err.message : String(err)}`);
+      break;
+    }
+    const { data, error } = listResult;
     if (error) {
       errors.push(`[${bucket}] list failed: ${error.message}`);
       break;
     }
     if (!data || data.length === 0) break;
     const paths = data.map((entry) => `${userId}/${entry.name}`);
-    const { error: removeErr } = await supabase.storage.from(bucket).remove(paths);
+    let removeErr: { message: string } | null = null;
+    try {
+      const { error: e } = await supabase.storage.from(bucket).remove(paths);
+      removeErr = e;
+    } catch (err) {
+      removeErr = {
+        message: `threw: ${err instanceof Error ? err.message : String(err)}`,
+      };
+    }
     if (removeErr) {
       errors.push(`[${bucket}] remove failed: ${removeErr.message}`);
       // Advance past the failing window so the next iteration tries
@@ -114,10 +133,41 @@ export async function deleteUserStorageArtifacts(
   supabaseAdmin: SupabaseClient,
   userId: string,
 ): Promise<AccountDeletionStorageResult> {
-  const [avatars, attachments] = await Promise.all([
+  // `Promise.allSettled` (not `.all`) so an unexpected throw from one
+  // bucket sweep doesn't block the other or — critically — the caller's
+  // subsequent `auth.admin.deleteUser` call.  The contract is: storage
+  // cleanup never blocks account deletion.  `purgeBucketPrefix` is
+  // already defensive internally, but allSettled is belt-and-braces.
+  const [avatarsResult, attachmentsResult] = await Promise.allSettled([
     purgeBucketPrefix(supabaseAdmin, "avatars", userId),
     purgeBucketPrefix(supabaseAdmin, "attachments", userId),
   ]);
+  const avatars =
+    avatarsResult.status === "fulfilled"
+      ? avatarsResult.value
+      : {
+          removed: 0,
+          errors: [
+            `[avatars] sweep threw: ${
+              avatarsResult.reason instanceof Error
+                ? avatarsResult.reason.message
+                : String(avatarsResult.reason)
+            }`,
+          ],
+        };
+  const attachments =
+    attachmentsResult.status === "fulfilled"
+      ? attachmentsResult.value
+      : {
+          removed: 0,
+          errors: [
+            `[attachments] sweep threw: ${
+              attachmentsResult.reason instanceof Error
+                ? attachmentsResult.reason.message
+                : String(attachmentsResult.reason)
+            }`,
+          ],
+        };
   return {
     avatars: avatars.removed,
     attachments: attachments.removed,
