@@ -27,7 +27,18 @@ export interface ResetPasswordActionResult {
 export async function resetPasswordAction(
   password: string,
 ): Promise<ResetPasswordActionResult> {
-  const policyErrors = validatePassword(password);
+  // Resolve the recovery session FIRST so we can pass the email to
+  // `validatePassword` and enforce the `looks_like_email` rule.
+  // Without this the policy here is laxer than at signup — a user
+  // could set their password to their own email after a reset.
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const policyErrors = validatePassword(password, {
+    email: user?.email ?? undefined,
+  });
   if (policyErrors.length > 0) {
     return {
       ok: false,
@@ -36,7 +47,6 @@ export async function resetPasswordAction(
     };
   }
 
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
