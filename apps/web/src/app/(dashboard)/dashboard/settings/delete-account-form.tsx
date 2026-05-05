@@ -41,8 +41,14 @@ export function DeleteAccountForm({ email }: DeleteAccountFormProps) {
     setPending(true);
     try {
       const fd = new FormData();
-      fd.set("email", emailInput);
-      fd.set("confirm", confirmInput);
+      // Send the trimmed values so the server-side zod `.email()`
+      // check (which rejects leading/trailing whitespace) matches the
+      // client-side gate that already runs `.trim()` before
+      // comparing.  Without this an accidental leading space enables
+      // the submit button but the server rejects the request with a
+      // generic "بيانات النموذج غير صالحة" (Devin Review on PR #32).
+      fd.set("email", emailInput.trim());
+      fd.set("confirm", confirmInput.trim());
       const result = await deleteOwnAccountAction(fd);
       if (!result.ok) {
         toast.error(result.message);
