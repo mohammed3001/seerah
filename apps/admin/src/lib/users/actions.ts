@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { deleteUserStorageArtifacts } from "@seerah/api/security";
+
 import { logAdminAction } from "../audit";
 import { getCurrentAdmin } from "../auth/current";
 import { sendDirectEmail } from "../email";
@@ -236,11 +238,23 @@ export async function deleteUserAccount(
   }
 
   const supabase = getServiceRoleClient();
-  // Auth deletion cascades to profiles via `on delete cascade`.  Resumes,
-  // subscriptions, etc. cascade in turn.
+  // Audit F3: auth deletion FIRST, then storage sweep.  We use the
+  // service-role client which bypasses storage RLS entirely — the
+  // userId is just a path prefix to `list()`/`remove()`, not an RLS
+  // binding — so the storage cleanup works just as well after the
+  // user row is gone.  Doing it second means: if `deleteUser` fails
+  // (Supabase outage, FK constraint snag, etc.) we haven't already
+  // destroyed the user's files.  Files orphaned by a successful
+  // deleteUser + failed sweep are recoverable; files destroyed
+  // alongside a still-existing account are not.
   const { error } = await supabase.auth.admin.deleteUser(parsed.data.userId);
 
   if (error) return ERR(`تعذّر حذف الحساب: ${error.message}`);
+
+  // Storage sweep AFTER auth deletion succeeded.  Errors here are
+  // non-fatal — the audit log captures the counts so an operator can
+  // sweep manually if needed.
+  const storage = await deleteUserStorageArtifacts(supabase, parsed.data.userId);
 
   await logAdminAction({
     adminId: guard.ctx.admin.id,
@@ -248,7 +262,12 @@ export async function deleteUserAccount(
     action: "admin.user.deleted",
     targetType: "user",
     targetId: parsed.data.userId,
-    metadata: { email: parsed.data.email },
+    metadata: {
+      email: parsed.data.email,
+      storage_avatars_deleted: storage.avatars,
+      storage_attachments_deleted: storage.attachments,
+      storage_errors: storage.errors.length > 0 ? storage.errors : undefined,
+    },
     ip: guard.ip,
     userAgent: guard.userAgent,
   });
