@@ -22,6 +22,7 @@ import {
 } from "@seerah/ui";
 
 import { upsertSingletonAction } from "@/app/(dashboard)/dashboard/resume/[id]/actions";
+import { uploadAvatarAction } from "@/lib/avatars/actions";
 import { CharacterCounter } from "@/components/editor/character-counter";
 import { CountrySelect } from "@/components/editor/country-select";
 import { DateTriad } from "@/components/editor/date-picker";
@@ -29,7 +30,6 @@ import { useEditor } from "@/components/editor/editor-context";
 import { SectionHeader } from "@/components/editor/section-header";
 import { useDebouncedCallback } from "@/lib/editor/use-debounced-callback";
 import type { Tables } from "@seerah/types";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type PersonalRow = Tables<"personal_info">;
 
@@ -73,25 +73,17 @@ export function PersonalSection() {
 
   async function handleAvatarUpload(file: File) {
     if (!file) return;
-    if (file.size > 4 * 1024 * 1024) {
-      toast.error("حجم الصورة يجب ألا يتجاوز 4MB");
-      return;
-    }
     setSavingAvatar(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `${data.resume.user_id}/${data.resume.id}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("avatars").upload(path, file, {
-        upsert: true,
-        contentType: file.type,
-      });
-      if (error) {
-        toast.error(error.message);
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadAvatarAction(fd);
+      if (!result.ok || !result.path) {
+        toast.error(result.message);
         return;
       }
-      update("avatar_path", path);
-      toast.success("تم تحديث الصورة");
+      update("avatar_path", result.path);
+      toast.success(result.message);
     } finally {
       setSavingAvatar(false);
     }

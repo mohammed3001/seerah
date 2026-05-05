@@ -5,12 +5,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { buildStorageKey, validateImageUpload } from "@seerah/api/security";
+
 import { getCurrentAdmin } from "../auth/current";
 import { extractClientIp } from "../ip";
 import { getServiceRoleClient } from "../supabase-admin";
 
 import {
-  ALLOWED_IMAGE_MIME,
   MAX_IMAGE_BYTES,
   TEMPLATE_CATEGORIES,
   type TemplateImageKind,
@@ -346,9 +347,18 @@ export async function deleteTemplate(
 }
 
 // ---------- 7. Upload template image --------------------------------------
-// Validates file type + size, uploads to template-previews (public bucket),
-// returns the public URL.  Server-side because the service-role key signs
-// the upload — the browser never sees that key.
+// Validates file type + size + magic bytes, uploads to template-previews
+// (public bucket), returns the public URL.  Server-side because the
+// service-role key signs the upload — the browser never sees that key.
+//
+// Hardening (audit S3):
+//   * `validateImageUpload` inspects the leading bytes; the client-supplied
+//     MIME and extension are discarded.
+//   * Object key is `{templateId}/{uuid}.{ext}` — no Date.now() so the
+//     upload ordering is not leaked, and the canonical extension comes
+//     from the detected format.
+//   * Stored Content-Type is the canonical MIME; a renamed `.exe` claiming
+//     `image/png` would be rejected before this point.
 export async function uploadTemplateImage(
   _prev: ActionState | undefined,
   formData: FormData,
@@ -367,30 +377,23 @@ export async function uploadTemplateImage(
   }
   const kind = kindRaw as TemplateImageKind;
 
-  if (file.size === 0) return ERR("الملف فارغ.");
-  if (file.size > MAX_IMAGE_BYTES) {
-    return ERR("حجم الصورة أكبر من ١٠ ميغابايت.");
-  }
-  if (!ALLOWED_IMAGE_MIME.includes(file.type as (typeof ALLOWED_IMAGE_MIME)[number])) {
-    return ERR("الصيغة غير مدعومة (PNG / JPG / WebP فقط).");
-  }
+  const result = await validateImageUpload(file, {
+    maxBytes: MAX_IMAGE_BYTES,
+  });
+  if (!result.ok) return ERR(result.messageAr);
 
-  const ext =
-    file.type === "image/png"
-      ? "png"
-      : file.type === "image/webp"
-        ? "webp"
-        : "jpg";
   const safeId = templateId.replace(/[^a-z0-9_-]/gi, "_");
-  const objectKey = `${safeId}/${kind}-${Date.now()}.${ext}`;
+  const objectKey = buildStorageKey(
+    `${safeId}/${kind}`,
+    result.detection.ext,
+  );
 
   const supabase = getServiceRoleClient();
-  const arrayBuffer = await file.arrayBuffer();
   const { error: uploadErr } = await supabase.storage
     .from("template-previews")
-    .upload(objectKey, arrayBuffer, {
-      contentType: file.type,
-      upsert: true,
+    .upload(objectKey, result.buffer, {
+      contentType: result.detection.mime,
+      upsert: false,
     });
   if (uploadErr) return ERR(`تعذّر رفع الصورة: ${uploadErr.message}`);
 
