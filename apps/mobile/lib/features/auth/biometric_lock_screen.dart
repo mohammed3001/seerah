@@ -17,10 +17,10 @@
 
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:supabase_flutter/supabase_flutter.dart";
 
 import "../../core/auth/biometric_gate.dart";
 import "../../core/auth/biometric_service.dart";
+import "../../core/auth/sign_out.dart";
 import "../../core/theme/colors.dart";
 
 class BiometricLockScreen extends ConsumerStatefulWidget {
@@ -68,13 +68,14 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen> {
 
   Future<void> _signOut() async {
     setState(() => _busy = true);
-    await Supabase.instance.client.auth.signOut();
+    // Wipe every per-user Hive artifact (outbox + resume cache) before
+    // tearing down the gotrue session — see `signOutAndWipe` for the
+    // ordering rationale and why each step is best-effort.
+    await signOutAndWipe(ref);
     if (!mounted) return;
-    // Disable the toggle — the next person to log in shouldn't inherit
-    // the previous user's biometric opt-in.
-    await ref.read(biometricEnrolledProvider.notifier).setEnabled(false);
-    // The auth listener inside the router will redirect to /auth/login
-    // automatically once the gate is unlocked.
+    // Lift the gate so the auth listener inside the router redirects to
+    // /auth/login.  Without this the redirect would still land us back
+    // here because the gate stays closed across signOut.
     ref.read(biometricGateProvider.notifier).unlock();
   }
 
