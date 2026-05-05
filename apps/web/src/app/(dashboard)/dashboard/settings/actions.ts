@@ -34,10 +34,16 @@ const deleteAccountSchema = z.object({
  * Order of operations matters:
  *   1. Authenticate (NEXT_REDIRECT must run outside try/catch).
  *   2. Validate the type-DELETE confirm AND the email match.
- *   3. Sweep the user's storage prefix (avatars + attachments) — see
- *      the helper for why this has to happen BEFORE the auth row is
- *      gone.
- *   4. `auth.admin.deleteUser` — cascades through the FK graph.
+ *   3. `auth.admin.deleteUser` — cascades through the FK graph.
+ *      We do this BEFORE the storage sweep because the sweep uses
+ *      the service-role client (which bypasses RLS entirely; userId
+ *      is just a path prefix), so it works just as well after the
+ *      auth row is gone.  If we swept first and `deleteUser` then
+ *      failed — Supabase outage, transient FK snag — we'd have
+ *      destroyed the user's files alongside a still-existing
+ *      account.  That's unrecoverable; orphans aren't.
+ *   4. Sweep the user's storage prefix (avatars + attachments).
+ *      Errors are non-fatal — orphans are recoverable.
  *   5. Sign the SSR session cookie out so the user lands on /auth/login
  *      cleanly instead of seeing a stale "you are signed in" UI.
  *   6. Return `{ ok: true, redirectTo }` so the *client* performs the
@@ -46,10 +52,6 @@ const deleteAccountSchema = z.object({
  *      distinguish the success-redirect from a real failure (Devin
  *      Review on PR #32 caught this — false "delete failed" toast on
  *      the happy path).
- *
- * If the storage sweep returns errors we still proceed with the auth
- * deletion — orphaned files are recoverable; an undeleted user is a
- * privacy-law incident.
  */
 export async function deleteOwnAccountAction(
   formData: FormData,
@@ -77,14 +79,15 @@ export async function deleteOwnAccountAction(
 
   const admin = getServiceRoleClient();
 
-  // Storage sweep BEFORE auth deletion (see helper docstring).  Errors
-  // are collected but never block the auth deletion.
-  await deleteUserStorageArtifacts(admin, session.userId);
-
   const { error } = await admin.auth.admin.deleteUser(session.userId);
   if (error) {
     return { ok: false, message: `تعذّر حذف الحساب: ${error.message}` };
   }
+
+  // Storage sweep AFTER auth deletion (see docstring).  Errors are
+  // collected but never block the response — orphaned files are
+  // recoverable, but we've already committed to deleting the account.
+  await deleteUserStorageArtifacts(admin, session.userId);
 
   // Sign the SSR cookie out so the user's browser doesn't carry a
   // dangling Supabase auth cookie back to /auth/login.  Best-effort —

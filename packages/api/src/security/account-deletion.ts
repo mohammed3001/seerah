@@ -19,7 +19,7 @@
  * What does NOT cascade is **storage** — files written to Supabase
  * Storage buckets via the service role do not have foreign-key
  * relationships to the `auth.users` row.  Without an explicit cleanup
- * pass before `auth.admin.deleteUser`, every avatar the user ever
+ * pass after `auth.admin.deleteUser`, every avatar the user ever
  * uploaded stays in the `avatars` bucket forever, addressable by
  * anyone who guesses the URL (the bucket is public-read).
  *
@@ -31,6 +31,16 @@
  * — that is, every user-owned object lives under `{user_id}/...`.
  * This module sweeps both buckets for the user's prefix and deletes
  * everything found.
+ *
+ * **Ordering note.**  Callers should run `auth.admin.deleteUser`
+ * *first*, then this helper.  The sweep takes the **service role**
+ * client, which bypasses storage RLS entirely — `userId` is just a
+ * path prefix to `list()`/`remove()`, not an RLS binding — so it
+ * works equally well before or after the auth row is gone.  Going
+ * second means: if `deleteUser` fails (transient Supabase outage,
+ * FK snag, etc.) the user's files are still intact.  Files orphaned
+ * by a successful auth deletion + failed sweep are recoverable;
+ * files destroyed alongside a still-existing account are not.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -122,12 +132,12 @@ async function purgeBucketPrefix(
  * Removes every file owned by `userId` from the public `avatars`
  * bucket and the private `attachments` bucket.
  *
- * The supabase client must be the **service role** client; user-bound
+ * The supabase client must be the **service role** client.  User-bound
  * clients can only delete their own files (per the storage RLS
- * policies in `20260501120800_storage_buckets.sql`), and that's the
- * exact path we want closed off here — by the time a user clicks
- * "delete account" we want the cleanup to run with elevated
- * privileges so a transient session expiry can't leave files behind.
+ * policies in `20260501120800_storage_buckets.sql`); the service role
+ * bypasses those policies so the cleanup keeps working even after
+ * the user's auth row has been deleted (recommended ordering — see
+ * the module docstring).
  */
 export async function deleteUserStorageArtifacts(
   supabaseAdmin: SupabaseClient,

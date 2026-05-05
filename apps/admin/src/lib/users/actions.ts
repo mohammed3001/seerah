@@ -238,16 +238,23 @@ export async function deleteUserAccount(
   }
 
   const supabase = getServiceRoleClient();
-  // Audit F3: storage cleanup must happen BEFORE auth.admin.deleteUser.
-  // Once the user row is gone we lose the userId binding the storage
-  // policies use to authorise deletion (and the user-scoped client
-  // can't run anyway).  Storage failures are non-fatal — the audit log
-  // captures the counts so an operator can sweep manually if needed.
-  const storage = await deleteUserStorageArtifacts(supabase, parsed.data.userId);
-
+  // Audit F3: auth deletion FIRST, then storage sweep.  We use the
+  // service-role client which bypasses storage RLS entirely — the
+  // userId is just a path prefix to `list()`/`remove()`, not an RLS
+  // binding — so the storage cleanup works just as well after the
+  // user row is gone.  Doing it second means: if `deleteUser` fails
+  // (Supabase outage, FK constraint snag, etc.) we haven't already
+  // destroyed the user's files.  Files orphaned by a successful
+  // deleteUser + failed sweep are recoverable; files destroyed
+  // alongside a still-existing account are not.
   const { error } = await supabase.auth.admin.deleteUser(parsed.data.userId);
 
   if (error) return ERR(`تعذّر حذف الحساب: ${error.message}`);
+
+  // Storage sweep AFTER auth deletion succeeded.  Errors here are
+  // non-fatal — the audit log captures the counts so an operator can
+  // sweep manually if needed.
+  const storage = await deleteUserStorageArtifacts(supabase, parsed.data.userId);
 
   await logAdminAction({
     adminId: guard.ctx.admin.id,
