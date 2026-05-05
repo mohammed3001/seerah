@@ -10,8 +10,8 @@ import { toast } from "sonner";
 
 import { Button, Checkbox, FloatingInput, Label } from "@seerah/ui";
 
+import { signupAction } from "@/app/auth/register/actions";
 import { track } from "@/lib/analytics/posthog";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { registerSchema, type RegisterInput } from "@/lib/validation/auth";
 
 import { PasswordStrengthMeter } from "./password-strength";
@@ -43,21 +43,17 @@ export function RegisterForm() {
   async function onSubmit(values: RegisterInput) {
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.signUp({
+      const result = await signupAction({
         email: values.email,
         password: values.password,
-        options: {
-          data: { full_name: values.fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        fullName: values.fullName,
       });
-      if (error) {
-        toast.error(error.message);
+      if (!result.ok) {
+        toast.error(result.message);
         return;
       }
       track("signup", { method: "password" });
-      toast.success("تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد.");
+      toast.success(result.message);
       router.replace("/auth/login");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
