@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { Button, FloatingInput } from "@seerah/ui";
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { resetPasswordAction } from "@/app/auth/reset-password/actions";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validation/auth";
 
 import { PasswordStrengthMeter } from "./password-strength";
@@ -33,10 +33,9 @@ export function ResetPasswordForm() {
   async function onSubmit(values: ResetPasswordInput) {
     setSubmitting(true);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.updateUser({ password: values.password });
-      if (error) {
-        toast.error(error.message);
+      const result = await resetPasswordAction(values.password);
+      if (!result.ok) {
+        toast.error(result.message);
         return;
       }
       setSubmitted(true);

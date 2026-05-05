@@ -33,6 +33,8 @@ import * as OTPAuth from "otpauth";
 import path from "node:path";
 import qrcode from "qrcode-terminal";
 
+import { validatePassword } from "@seerah/api/security";
+
 import { BCRYPT_COST } from "../src/lib/auth/password";
 
 // Load env from apps/admin/.env.local first, then repo root .env, in that
@@ -73,13 +75,14 @@ function readEnv(): BootstrapEnv {
     throw new Error(`ADMIN_BOOTSTRAP_EMAIL is not a valid email address.`);
   }
 
-  // Same complexity rule as the user-facing signup — 12+ chars, at least one
-  // letter and one digit.  Stops obvious "Password1" but does not pretend to
-  // be a security frontier; the real defence is bcrypt + TOTP.
-  if (password!.length < 12 || !/[A-Za-z]/.test(password!) || !/[0-9]/.test(password!)) {
-    throw new Error(
-      `ADMIN_BOOTSTRAP_PASSWORD must be ≥12 chars and include at least one letter and one digit.`,
-    );
+  // Apply the shared password policy (length, complexity, common-password
+  // list) — same rules as user-facing signup.  Admin passwords must clear
+  // the same floor; the real defence is bcrypt + TOTP, but a Lock1 / Pass1
+  // bootstrap password would still leak through the policy gap.
+  const policyErrors = validatePassword(password!, { email: email! });
+  if (policyErrors.length > 0) {
+    const reasons = policyErrors.map((e) => e.messageEn).join("; ");
+    throw new Error(`ADMIN_BOOTSTRAP_PASSWORD rejected by policy: ${reasons}`);
   }
 
   return {
