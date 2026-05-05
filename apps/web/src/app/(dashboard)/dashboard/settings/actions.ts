@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { deleteUserStorageArtifacts } from "@seerah/api/security";
@@ -9,10 +8,9 @@ import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceRoleClient } from "@/lib/supabase/service-role";
 
-export interface DeleteAccountActionResult {
-  ok: boolean;
-  message: string;
-}
+export type DeleteAccountActionResult =
+  | { ok: true; redirectTo: string }
+  | { ok: false; message: string };
 
 /**
  * `confirm` must equal "DELETE" (case-insensitive, trimmed).  The
@@ -42,6 +40,12 @@ const deleteAccountSchema = z.object({
  *   4. `auth.admin.deleteUser` — cascades through the FK graph.
  *   5. Sign the SSR session cookie out so the user lands on /auth/login
  *      cleanly instead of seeing a stale "you are signed in" UI.
+ *   6. Return `{ ok: true, redirectTo }` so the *client* performs the
+ *      navigation.  Calling `redirect()` from a server action that's
+ *      awaited inside a client try/catch makes it impossible to
+ *      distinguish the success-redirect from a real failure (Devin
+ *      Review on PR #32 caught this — false "delete failed" toast on
+ *      the happy path).
  *
  * If the storage sweep returns errors we still proceed with the auth
  * deletion — orphaned files are recoverable; an undeleted user is a
@@ -88,5 +92,5 @@ export async function deleteOwnAccountAction(
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
 
-  redirect("/auth/login?deleted=1");
+  return { ok: true, redirectTo: "/auth/login?deleted=1" };
 }

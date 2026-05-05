@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -24,6 +25,7 @@ interface DeleteAccountFormProps {
  * the user gets immediate, in-form feedback before submitting.
  */
 export function DeleteAccountForm({ email }: DeleteAccountFormProps) {
+  const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const [emailInput, setEmailInput] = React.useState("");
   const [confirmInput, setConfirmInput] = React.useState("");
@@ -47,13 +49,16 @@ export function DeleteAccountForm({ email }: DeleteAccountFormProps) {
         setPending(false);
         return;
       }
-      // On success the action calls redirect(); we should never reach here.
-    } catch {
-      // NEXT_REDIRECT after a successful delete bubbles up through the
-      // server-action client wrapper as a thrown error.  That's the
-      // happy path — the browser is already navigating away.  Anything
-      // else lands here too (e.g. network failure); show a toast and
-      // re-enable the form.
+      // The server action returns the redirect target instead of
+      // calling Next's redirect() itself.  Doing the navigation on the
+      // client lets the catch block below distinguish a true failure
+      // from the happy-path redirect (caught by Devin Review on PR #32).
+      router.replace(result.redirectTo);
+    } catch (err) {
+      // Real failure (e.g. network drop, browser hostile to fetch).
+      // Server-success cases never reach here now that the action
+      // returns a result envelope instead of throwing NEXT_REDIRECT.
+      console.error("delete-account-form: action failed", err);
       toast.error("تعذّر حذف الحساب. حاول مرة أخرى.");
       setPending(false);
     }
