@@ -10,12 +10,16 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getDashboardSession } from "@/lib/dashboard/get-session";
+import { assertSameOrigin } from "@/lib/security/origin";
 import { getStripe } from "@/lib/stripe/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(): Promise<Response> {
+export async function POST(request: Request): Promise<Response> {
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   let session;
   try {
     session = await getDashboardSession();
