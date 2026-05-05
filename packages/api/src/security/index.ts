@@ -7,5 +7,6 @@
  */
 
 export * from "./account-deletion";
+export * from "./field-allowlist";
 export * from "./image-validation";
 export * from "./password-policy";
