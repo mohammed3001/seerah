@@ -39,7 +39,8 @@ export type TemplateId =
   | "template_elegant_feminine"
   | "template_academic_research"
   | "template_compact_one_page"
-  | "template_infographic_modern";
+  | "template_infographic_modern"
+  | "template_elegant_serif";
 
 export interface TemplateMeta {
   id: TemplateId;
