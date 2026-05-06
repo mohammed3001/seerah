@@ -143,9 +143,7 @@ export function ResumesTable({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        (r.user_full_name ?? r.user_email ?? "?")
-                          .slice(0, 1)
-                          .toUpperCase()
+                        (r.user_full_name ?? r.user_email ?? "?").slice(0, 1).toUpperCase()
                       )}
                     </div>
                     <div className="min-w-0">
@@ -156,10 +154,7 @@ export function ResumesTable({
                         {r.user_full_name ?? "—"}
                       </Link>
                       {r.user_email ? (
-                        <p
-                          className="truncate text-[11px] text-slate-500"
-                          dir="ltr"
-                        >
+                        <p className="truncate text-[11px] text-slate-500" dir="ltr">
                           {r.user_email}
                         </p>
                       ) : null}
@@ -168,13 +163,8 @@ export function ResumesTable({
                 </td>
 
                 <td className="px-4 py-3 align-middle">
-                  <p className="max-w-[220px] truncate text-sm text-slate-900">
-                    {r.title}
-                  </p>
-                  <p
-                    className="truncate text-[11px] text-slate-400"
-                    dir="ltr"
-                  >
+                  <p className="max-w-[220px] truncate text-sm text-slate-900">{r.title}</p>
+                  <p className="truncate text-[11px] text-slate-400" dir="ltr">
                     /{r.slug}
                   </p>
                 </td>
@@ -208,26 +198,17 @@ export function ResumesTable({
                   </div>
                 </td>
 
-                <td
-                  className="px-4 py-3 align-middle text-sm text-slate-700"
-                  dir="ltr"
-                >
+                <td className="px-4 py-3 align-middle text-sm text-slate-700" dir="ltr">
                   {r.views_count.toLocaleString("ar-SA")}
                 </td>
 
-                <td
-                  className="px-4 py-3 align-middle text-[11px] text-slate-500"
-                  dir="ltr"
-                >
+                <td className="px-4 py-3 align-middle text-[11px] text-slate-500" dir="ltr">
                   {format(new Date(r.created_at), "yyyy-MM-dd")}
                 </td>
 
                 <td className="px-4 py-3 align-middle">
                   {canCurate ? (
-                    <FeaturedToggle
-                      resumeId={r.id}
-                      isFeatured={r.is_featured}
-                    />
+                    <FeaturedToggle resumeId={r.id} isFeatured={r.is_featured} />
                   ) : r.is_featured ? (
                     <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
                       مميزة
@@ -257,10 +238,7 @@ export function ResumesTable({
                       />
                     ) : null}
                     {canDelete ? (
-                      <DeleteResumeButton
-                        resumeId={r.id}
-                        resumeTitle={r.title}
-                      />
+                      <DeleteResumeButton resumeId={r.id} resumeTitle={r.title} />
                     ) : null}
                   </div>
                 </td>

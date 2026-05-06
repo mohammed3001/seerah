@@ -25,10 +25,10 @@ export function ChangeTemplateMenu({
   templates,
 }: ChangeTemplateMenuProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(changeResumeTemplate, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    changeResumeTemplate,
+    undefined,
+  );
 
   return (
     <>
@@ -46,9 +46,7 @@ export function ChangeTemplateMenu({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900">
-                تغيير القالب
-              </h3>
+              <h3 className="text-sm font-semibold text-slate-900">تغيير القالب</h3>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -61,9 +59,7 @@ export function ChangeTemplateMenu({
 
             <form action={formAction} className="space-y-3">
               <input type="hidden" name="resumeId" value={resumeId} />
-              <label className="block text-xs font-medium text-slate-600">
-                القالب الجديد
-              </label>
+              <label className="block text-xs font-medium text-slate-600">القالب الجديد</label>
               <select
                 name="templateId"
                 defaultValue={currentTemplateId}

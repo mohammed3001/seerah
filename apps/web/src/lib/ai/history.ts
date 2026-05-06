@@ -27,11 +27,12 @@ export function loadHistory(resumeId: string, scope: string): HistoryEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((e): e is HistoryEntry =>
-      typeof e === "object" &&
-      e !== null &&
-      typeof (e as HistoryEntry).id === "string" &&
-      typeof (e as HistoryEntry).text === "string",
+    return parsed.filter(
+      (e): e is HistoryEntry =>
+        typeof e === "object" &&
+        e !== null &&
+        typeof (e as HistoryEntry).id === "string" &&
+        typeof (e as HistoryEntry).text === "string",
     );
   } catch {
     return [];

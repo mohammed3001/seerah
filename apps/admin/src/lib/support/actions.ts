@@ -56,10 +56,7 @@ async function requireAdmin(
 
 const replySchema = z.object({
   ticketId: z.string().uuid(),
-  body: z
-    .string()
-    .min(1, "الرسالة فارغة")
-    .max(8000, "الرسالة طويلة جدًا (الحدّ ٨٠٠٠ حرفًا)"),
+  body: z.string().min(1, "الرسالة فارغة").max(8000, "الرسالة طويلة جدًا (الحدّ ٨٠٠٠ حرفًا)"),
   // formData.get() returns null for missing checkbox / hidden fields,
   // so the schema must accept both null and undefined before the
   // transform turns it into a boolean.
@@ -68,12 +65,7 @@ const replySchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v === "on" || v === "true"),
-  attachmentUrl: z
-    .string()
-    .url()
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  attachmentUrl: z.string().url().optional().nullable().or(z.literal("")),
 });
 
 export async function replyToTicket(
@@ -120,10 +112,7 @@ export async function replyToTicket(
 
   revalidatePath(`/support/${parsed.data.ticketId}`);
   revalidatePath("/support");
-  return OK(
-    parsed.data.isInternal ? "تم حفظ الملاحظة الداخلية." : "تم إرسال الردّ.",
-    warning,
-  );
+  return OK(parsed.data.isInternal ? "تم حفظ الملاحظة الداخلية." : "تم إرسال الردّ.", warning);
 }
 
 // ---------- 2. Change status ----------------------------------------------
@@ -136,12 +125,7 @@ const changeStatusSchema = z.object({
   // is "resolved", so any other transition leaves the field absent —
   // formData.get() returns null in that case, which .optional() alone
   // would reject.
-  resolutionNote: z
-    .string()
-    .max(2000)
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  resolutionNote: z.string().max(2000).optional().nullable().or(z.literal("")),
 });
 
 export async function changeTicketStatus(
@@ -285,7 +269,12 @@ const bulkStatusSchema = z.object({
   ticketIds: z
     .string()
     .min(1, "اختر تذاكر أولًا")
-    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
+    .transform((s) =>
+      s
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    )
     .pipe(z.array(z.string().uuid()).min(1)),
   status: z.enum(statusValues),
 });
@@ -346,7 +335,12 @@ const bulkAssignSchema = z.object({
   ticketIds: z
     .string()
     .min(1, "اختر تذاكر أولًا")
-    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean))
+    .transform((s) =>
+      s
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    )
     .pipe(z.array(z.string().uuid()).min(1)),
   // Same null-tolerance as assignSchema.
   assignee: z
@@ -389,9 +383,7 @@ export async function bulkAssignTickets(
     revalidatePath(`/support/${id}`);
   }
   return OK(
-    parsed.data.assignee
-      ? `عُيّنت ${data ?? 0} تذكرة.`
-      : `أُلغِي تعيين ${data ?? 0} تذكرة.`,
+    parsed.data.assignee ? `عُيّنت ${data ?? 0} تذكرة.` : `أُلغِي تعيين ${data ?? 0} تذكرة.`,
   );
 }
 
@@ -399,10 +391,7 @@ export async function bulkAssignTickets(
 
 const updateNotesSchema = z.object({
   ticketId: z.string().uuid(),
-  notes: z
-    .string()
-    .max(8000, "النص طويل جدًا (الحدّ ٨٠٠٠ حرفًا)")
-    .or(z.literal("")),
+  notes: z.string().max(8000, "النص طويل جدًا (الحدّ ٨٠٠٠ حرفًا)").or(z.literal("")),
 });
 
 export async function updateTicketAdminNotes(

@@ -68,9 +68,7 @@ export function AiPanel() {
 
         <Tabs
           value={aiPanel.tab}
-          onValueChange={(v) =>
-            setAiPanelTab(v as "enhance" | "generate" | "analyze" | "chat")
-          }
+          onValueChange={(v) => setAiPanelTab(v as "enhance" | "generate" | "analyze" | "chat")}
           className="flex flex-1 flex-col overflow-hidden"
         >
           <TabsList className="m-3 grid grid-cols-4">

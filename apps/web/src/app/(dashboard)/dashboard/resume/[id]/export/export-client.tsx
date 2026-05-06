@@ -127,7 +127,8 @@ export function ExportClient({
           return;
         }
         const blob = await res.blob();
-        const filename = parseFilename(res.headers.get("content-disposition")) ??
+        const filename =
+          parseFilename(res.headers.get("content-disposition")) ??
           fallbackFilename(resumeTitle, format, language);
         downloadBlob(blob, filename);
         track("export_downloaded", { format, language, plan });
@@ -146,9 +147,7 @@ export function ExportClient({
           await refreshQuota();
         }
       } catch (cause) {
-        toast.error(
-          cause instanceof Error ? cause.message : "تعذّر إنشاء الملف الآن.",
-        );
+        toast.error(cause instanceof Error ? cause.message : "تعذّر إنشاء الملف الآن.");
       } finally {
         setBusy(null);
       }
@@ -184,8 +183,7 @@ export function ExportClient({
         <div className="rounded-card border bg-card p-4">
           <h3 className="mb-3 font-semibold">تنزيل السيرة</h3>
           <p className="mb-4 text-xs text-muted-foreground">
-            اختر الصيغة واللغة المفضلتين. كل ملف يستخدم القالب والألوان المختارة في تبويب
-            «التصميم».
+            اختر الصيغة واللغة المفضلتين. كل ملف يستخدم القالب والألوان المختارة في تبويب «التصميم».
           </p>
 
           <DownloadGroup

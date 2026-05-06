@@ -29,12 +29,7 @@ export const STATUS_LABELS_AR: Record<UserStatus, string> = {
   disabled: "معطّل",
 };
 
-export type UserSortKey =
-  | "created_at"
-  | "last_seen_at"
-  | "email"
-  | "full_name"
-  | "plan";
+export type UserSortKey = "created_at" | "last_seen_at" | "email" | "full_name" | "plan";
 
 export interface UserListFilters {
   q?: string;

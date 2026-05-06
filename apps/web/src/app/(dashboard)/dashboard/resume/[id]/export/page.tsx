@@ -21,8 +21,7 @@ export default async function ResumeExportPage({ params }: Params) {
   // the page (the buttons will surface their own errors when clicked).
   const quota = await fetchQuota(session.userId, session.profile.plan);
 
-  const appUrl =
-    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.example.com";
+  const appUrl = process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.example.com";
   const shareUrl = `${appUrl.replace(/\/$/, "")}/r/${data.resume.slug}`;
 
   return (

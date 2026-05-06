@@ -15,10 +15,7 @@ export const LANGUAGE_LABELS_AR: Record<ResumeLanguage, string> = {
 
 export type ResumeFeaturedFilter = "featured" | "not_featured";
 
-export const FEATURED_OPTIONS: readonly ResumeFeaturedFilter[] = [
-  "featured",
-  "not_featured",
-];
+export const FEATURED_OPTIONS: readonly ResumeFeaturedFilter[] = ["featured", "not_featured"];
 
 export const FEATURED_LABELS_AR: Record<ResumeFeaturedFilter, string> = {
   featured: "مميزة",
@@ -97,10 +94,7 @@ export type ResumePerPage = (typeof PER_PAGE_OPTIONS)[number];
 export const DEFAULT_PER_PAGE: ResumePerPage = 20;
 
 /** Pretty Arabic label for a template, falling back to the English name. */
-export function templateLabel(
-  templateId: string,
-  templates: TemplateOption[],
-): string {
+export function templateLabel(templateId: string, templates: TemplateOption[]): string {
   const t = templates.find((x) => x.id === templateId);
   if (!t) return templateId;
   return t.name_ar ?? t.name;

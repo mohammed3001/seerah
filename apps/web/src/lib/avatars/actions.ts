@@ -31,9 +31,7 @@ export interface UploadAvatarResult {
  * back to a specific resume, and the v4 UUID makes enumeration of
  * other users' avatars impossible.
  */
-export async function uploadAvatarAction(
-  formData: FormData,
-): Promise<UploadAvatarResult> {
+export async function uploadAvatarAction(formData: FormData): Promise<UploadAvatarResult> {
   // Auth resolution must run OUTSIDE try/catch — getDashboardSession()
   // calls Next's redirect() for unauthenticated users, which works by
   // throwing a NEXT_REDIRECT error.  Catching it would swallow the
@@ -57,15 +55,13 @@ export async function uploadAvatarAction(
   const objectKey = buildStorageKey(session.userId, result.detection.ext);
 
   const supabase = getServiceRoleClient();
-  const { error } = await supabase.storage
-    .from("avatars")
-    .upload(objectKey, result.buffer, {
-      contentType: result.detection.mime,
-      // Avatars are addressable by UUID-suffixed keys; collisions are
-      // statistically impossible, so upsert=false catches storage bugs
-      // rather than silently overwriting another user's file.
-      upsert: false,
-    });
+  const { error } = await supabase.storage.from("avatars").upload(objectKey, result.buffer, {
+    contentType: result.detection.mime,
+    // Avatars are addressable by UUID-suffixed keys; collisions are
+    // statistically impossible, so upsert=false catches storage bugs
+    // rather than silently overwriting another user's file.
+    upsert: false,
+  });
   if (error) {
     return { ok: false, message: `تعذّر رفع الصورة: ${error.message}` };
   }

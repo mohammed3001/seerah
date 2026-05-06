@@ -3,10 +3,7 @@
 import { CalendarPlus, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
-import {
-  extendSubscription,
-  type ActionState,
-} from "@/lib/subscriptions/actions";
+import { extendSubscription, type ActionState } from "@/lib/subscriptions/actions";
 
 import { ActionFeedback } from "./action-feedback";
 
@@ -55,10 +52,10 @@ function Body({
   userEmail: string;
   onClose: () => void;
 }) {
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(extendSubscription, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    extendSubscription,
+    undefined,
+  );
 
   useEffect(() => {
     if (state?.ok) {
@@ -102,13 +99,11 @@ function Body({
             current period end: {currentPeriodEnd.slice(0, 10)}
           </p>
         ) : (
-          <p className="mb-3 text-[11px] text-slate-500">
-            لا يوجد تاريخ انتهاء حالي.
-          </p>
+          <p className="mb-3 text-[11px] text-slate-500">لا يوجد تاريخ انتهاء حالي.</p>
         )}
         <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
-          ملاحظة: هذا التمديد محلّي فقط. لن يُغيّر فوترة Stripe — استخدمه
-          لتعويض المستخدم بوصول إضافي.
+          ملاحظة: هذا التمديد محلّي فقط. لن يُغيّر فوترة Stripe — استخدمه لتعويض المستخدم بوصول
+          إضافي.
         </p>
 
         <form action={formAction} className="space-y-3">

@@ -52,11 +52,7 @@ export async function hmacHex(secret: string, message: string): Promise<string> 
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(message),
-  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
   return bufferToHex(signature);
 }
 

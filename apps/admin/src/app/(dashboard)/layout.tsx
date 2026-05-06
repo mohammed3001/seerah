@@ -13,11 +13,7 @@ export const runtime = "nodejs";
  * always assume `getCurrentAdmin()` succeeded — and so the sidebar gets
  * the role data without an extra round-trip.
  */
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCurrentAdmin();
   if (!ctx) redirect("/login");
 
@@ -25,11 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900" dir="rtl">
-      <Sidebar
-        sections={sections}
-        adminEmail={ctx.admin.email}
-        adminRole={ctx.admin.role}
-      />
+      <Sidebar sections={sections} adminEmail={ctx.admin.email} adminRole={ctx.admin.role} />
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );

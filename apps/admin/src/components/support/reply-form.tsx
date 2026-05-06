@@ -34,9 +34,7 @@ export function ReplyForm({ ticketId }: ReplyFormProps) {
       <input type="hidden" name="ticketId" value={ticketId} />
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          الردّ (نصّ عادي)
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">الردّ (نصّ عادي)</label>
         <textarea
           name="body"
           required
@@ -48,8 +46,7 @@ export function ReplyForm({ ticketId }: ReplyFormProps) {
           placeholder="اكتب ردّك هنا. سيُرسَل بريدًا للمستخدم بعد الحفظ."
         />
         <p className="mt-1 text-[11px] text-slate-500">
-          {body.length}/8000 حرفًا — يُرسَل بريد للمستخدم تلقائيًا (إن لم يكن
-          ملاحظة داخلية).
+          {body.length}/8000 حرفًا — يُرسَل بريد للمستخدم تلقائيًا (إن لم يكن ملاحظة داخلية).
         </p>
       </div>
 

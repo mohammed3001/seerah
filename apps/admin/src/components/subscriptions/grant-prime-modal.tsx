@@ -3,10 +3,7 @@
 import { Crown, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
-import {
-  grantPrimeByEmail,
-  type ActionState,
-} from "@/lib/subscriptions/actions";
+import { grantPrimeByEmail, type ActionState } from "@/lib/subscriptions/actions";
 
 import { ActionFeedback } from "./action-feedback";
 
@@ -37,10 +34,10 @@ export function GrantPrimeModal() {
 }
 
 function Body({ onClose }: { onClose: () => void }) {
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(grantPrimeByEmail, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    grantPrimeByEmail,
+    undefined,
+  );
 
   useEffect(() => {
     if (state?.ok) {
@@ -60,9 +57,7 @@ function Body({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-900">
-            منح برايم مجانًا
-          </h3>
+          <h3 className="text-sm font-semibold text-slate-900">منح برايم مجانًا</h3>
           <button
             type="button"
             onClick={onClose}
@@ -74,8 +69,8 @@ function Body({ onClose }: { onClose: () => void }) {
         </div>
 
         <p className="mb-3 text-xs text-slate-600">
-          سيُحدَّث المستخدم على خطّة برايم مع تاريخ انتهاء محدّد. لا يُنشئ
-          هذا اشتراكًا في Stripe — للتعويض اليدوي فقط (لا يفوتر).
+          سيُحدَّث المستخدم على خطّة برايم مع تاريخ انتهاء محدّد. لا يُنشئ هذا اشتراكًا في Stripe —
+          للتعويض اليدوي فقط (لا يفوتر).
         </p>
 
         <form action={formAction} className="space-y-3">
@@ -92,9 +87,7 @@ function Body({ onClose }: { onClose: () => void }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">
-              تاريخ الانتهاء
-            </label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">تاريخ الانتهاء</label>
             <input
               type="date"
               name="expiresAt"

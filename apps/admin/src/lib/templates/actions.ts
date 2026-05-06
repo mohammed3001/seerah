@@ -11,11 +11,7 @@ import { getCurrentAdmin } from "../auth/current";
 import { extractClientIp } from "../ip";
 import { getServiceRoleClient } from "../supabase-admin";
 
-import {
-  MAX_IMAGE_BYTES,
-  TEMPLATE_CATEGORIES,
-  type TemplateImageKind,
-} from "./types";
+import { MAX_IMAGE_BYTES, TEMPLATE_CATEGORIES, type TemplateImageKind } from "./types";
 
 export interface ActionState {
   ok: boolean;
@@ -211,9 +207,7 @@ export async function updateTemplateMetadata(
     previewUrl: formData.get("previewUrl") || null,
   });
   if (!parsed.success) {
-    return ERR(
-      `بيانات غير صالحة: ${parsed.error.errors.map((e) => e.message).join(", ")}`,
-    );
+    return ERR(`بيانات غير صالحة: ${parsed.error.errors.map((e) => e.message).join(", ")}`);
   }
 
   const supabase = getServiceRoleClient();
@@ -278,9 +272,7 @@ export async function createTemplate(
     previewUrl: formData.get("previewUrl") || null,
   });
   if (!parsed.success) {
-    return ERR(
-      `بيانات غير صالحة: ${parsed.error.errors.map((e) => e.message).join(", ")}`,
-    );
+    return ERR(`بيانات غير صالحة: ${parsed.error.errors.map((e) => e.message).join(", ")}`);
   }
 
   const supabase = getServiceRoleClient();
@@ -383,10 +375,7 @@ export async function uploadTemplateImage(
   if (!result.ok) return ERR(result.messageAr);
 
   const safeId = templateId.replace(/[^a-z0-9_-]/gi, "_");
-  const objectKey = buildStorageKey(
-    `${safeId}/${kind}`,
-    result.detection.ext,
-  );
+  const objectKey = buildStorageKey(`${safeId}/${kind}`, result.detection.ext);
 
   const supabase = getServiceRoleClient();
   const { error: uploadErr } = await supabase.storage
@@ -397,9 +386,7 @@ export async function uploadTemplateImage(
     });
   if (uploadErr) return ERR(`تعذّر رفع الصورة: ${uploadErr.message}`);
 
-  const { data } = supabase.storage
-    .from("template-previews")
-    .getPublicUrl(objectKey);
+  const { data } = supabase.storage.from("template-previews").getPublicUrl(objectKey);
 
   return OK("تم رفع الصورة.", { url: data.publicUrl, kind });
 }

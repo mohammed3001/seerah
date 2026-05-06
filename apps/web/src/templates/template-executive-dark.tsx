@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY } from "./_section-blocks";
 import type { TemplateProps } from "./types";
@@ -27,7 +21,8 @@ export function TemplateExecutiveDark({ data, language, theme }: TemplateProps) 
   const fullName = local["full_name"] ?? data.personal?.full_name ?? "";
   const jobTitle = local["job_title"] ?? data.personal?.job_title ?? "";
   const fontFamily = language === "ar" ? "var(--font-cairo)" : "var(--font-sf-pro)";
-  const bodySurface = theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-white text-zinc-800";
+  const bodySurface =
+    theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-white text-zinc-800";
 
   return (
     <article

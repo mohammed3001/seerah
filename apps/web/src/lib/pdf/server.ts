@@ -7,8 +7,7 @@
 
 import "server-only";
 
-const PDF_SERVICE_URL =
-  process.env["PDF_SERVICE_URL"] ?? "http://localhost:8002";
+const PDF_SERVICE_URL = process.env["PDF_SERVICE_URL"] ?? "http://localhost:8002";
 const INTERNAL_TOKEN = process.env["PDF_SERVICE_INTERNAL_TOKEN"] ?? "";
 
 export interface ExportPayload {

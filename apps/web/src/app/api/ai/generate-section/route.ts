@@ -1,8 +1,4 @@
-import type {
-  GenerateSectionResponse,
-  Language,
-  SectionType,
-} from "@/lib/ai/types";
+import type { GenerateSectionResponse, Language, SectionType } from "@/lib/ai/types";
 
 import { aiServer, handleAIRoute } from "../_helpers";
 

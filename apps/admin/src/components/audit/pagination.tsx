@@ -62,9 +62,7 @@ export function AuditPagination({ page, perPage, total }: PaginationProps) {
             href={pageHref(params, Math.max(1, page - 1))}
             className={cn(
               "inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200",
-              page <= 1
-                ? "pointer-events-none opacity-50"
-                : "text-slate-700 hover:bg-slate-50",
+              page <= 1 ? "pointer-events-none opacity-50" : "text-slate-700 hover:bg-slate-50",
             )}
           >
             <ChevronRight className="h-4 w-4" />

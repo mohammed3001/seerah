@@ -1,14 +1,12 @@
 import { z } from "zod";
 
-import {
-  COMMON_PASSWORDS,
-  MIN_PASSWORD_LENGTH,
-  validatePassword,
-} from "@seerah/api/security";
+import { COMMON_PASSWORDS, MIN_PASSWORD_LENGTH, validatePassword } from "@seerah/api/security";
 
 export const loginSchema = z.object({
   email: z.string().min(1, "البريد الإلكتروني مطلوب").email("صيغة البريد الإلكتروني غير صحيحة"),
-  password: z.string().min(MIN_PASSWORD_LENGTH, `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`),
+  password: z
+    .string()
+    .min(MIN_PASSWORD_LENGTH, `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

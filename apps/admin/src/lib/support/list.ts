@@ -29,18 +29,14 @@ import {
  * accurate after every filter — same pattern as resumes/list.ts and
  * subscriptions/list.ts.
  */
-export async function listTickets(
-  filters: SupportListFilters,
-): Promise<SupportListResult> {
+export async function listTickets(filters: SupportListFilters): Promise<SupportListResult> {
   const supabase = getServiceRoleClient();
   const page = Math.max(1, filters.page);
   const perPage = Math.max(1, filters.perPage);
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
-  const sort: SortableColumn = (
-    SORTABLE_COLUMNS as readonly string[]
-  ).includes(filters.sort)
+  const sort: SortableColumn = (SORTABLE_COLUMNS as readonly string[]).includes(filters.sort)
     ? (filters.sort as SortableColumn)
     : "updated_at";
   const ascending = filters.dir === "asc";
@@ -52,10 +48,7 @@ export async function listTickets(
 
   const term = filters.search.trim();
   if (term.length > 0) {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        term,
-      );
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(term);
     if (isUuid) {
       idExact = term;
     } else {
@@ -148,24 +141,13 @@ export async function listTickets(
   }>;
 
   const userIds = Array.from(
-    new Set(
-      baseRows
-        .map((r) => r.user_id)
-        .filter((id): id is string => id !== null),
-    ),
+    new Set(baseRows.map((r) => r.user_id).filter((id): id is string => id !== null)),
   );
   const assigneeIds = Array.from(
-    new Set(
-      baseRows
-        .map((r) => r.assigned_to)
-        .filter((id): id is string => id !== null),
-    ),
+    new Set(baseRows.map((r) => r.assigned_to).filter((id): id is string => id !== null)),
   );
 
-  const profileMap = new Map<
-    string,
-    { email: string; full_name: string | null; plan: string }
-  >();
+  const profileMap = new Map<string, { email: string; full_name: string | null; plan: string }>();
   if (userIds.length > 0) {
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
@@ -210,12 +192,9 @@ export async function listTickets(
       priority: r.priority,
       attachment_url: r.attachment_url,
       assigned_to: r.assigned_to,
-      assignee_email: r.assigned_to
-        ? assigneeMap.get(r.assigned_to) ?? null
-        : null,
+      assignee_email: r.assigned_to ? (assigneeMap.get(r.assigned_to) ?? null) : null,
       last_admin_reply_at: r.last_admin_reply_at,
-      message_preview:
-        r.message.length > 140 ? `${r.message.slice(0, 140)}…` : r.message,
+      message_preview: r.message.length > 140 ? `${r.message.slice(0, 140)}…` : r.message,
       created_at: r.created_at,
       updated_at: r.updated_at,
     };

@@ -15,10 +15,7 @@ import {
   loadStatusSummary,
 } from "@/lib/subscriptions/list";
 import { loadRevenueSummary } from "@/lib/subscriptions/revenue";
-import {
-  SORTABLE_COLUMNS,
-  type SortableColumn,
-} from "@/lib/subscriptions/types";
+import { SORTABLE_COLUMNS, type SortableColumn } from "@/lib/subscriptions/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,8 +40,7 @@ function asPerPage(value: string | string[] | undefined): PerPage {
 
 function asSort(value: string | string[] | undefined): SortableColumn {
   const v = asString(value);
-  if ((SORTABLE_COLUMNS as readonly string[]).includes(v))
-    return v as SortableColumn;
+  if ((SORTABLE_COLUMNS as readonly string[]).includes(v)) return v as SortableColumn;
   return "created_at";
 }
 
@@ -66,14 +62,7 @@ function buildSortHrefs(
   for (const key of SORTABLE_COLUMNS) {
     const next = new URLSearchParams(base.toString());
     next.set("sort", key);
-    next.set(
-      "dir",
-      current.sort === key
-        ? current.dir === "asc"
-          ? "desc"
-          : "asc"
-        : "desc",
-    );
+    next.set("dir", current.sort === key ? (current.dir === "asc" ? "desc" : "asc") : "desc");
     out[key] = `/subscriptions?${next.toString()}`;
   }
   return out;
@@ -129,18 +118,9 @@ export default async function SubscriptionsPage({ searchParams }: PageProps) {
           <SubscriptionsExportButton />
         </div>
 
-        <SubscriptionsTable
-          rows={list.rows}
-          sort={sort}
-          dir={dir}
-          sortHrefs={sortHrefs}
-        />
+        <SubscriptionsTable rows={list.rows} sort={sort} dir={dir} sortHrefs={sortHrefs} />
 
-        <SubscriptionsPagination
-          page={page}
-          perPage={perPage}
-          total={list.total}
-        />
+        <SubscriptionsPagination page={page} perPage={perPage} total={list.total} />
       </main>
     </>
   );

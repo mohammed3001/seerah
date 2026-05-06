@@ -4,11 +4,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
-import {
-  PRIORITY_LABELS_AR,
-  STATUS_LABELS_AR,
-  type AssigneeOption,
-} from "@/lib/support/types";
+import { PRIORITY_LABELS_AR, STATUS_LABELS_AR, type AssigneeOption } from "@/lib/support/types";
 import { cn } from "@/lib/utils/cn";
 
 interface SupportFiltersProps {
@@ -45,8 +41,7 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
   const from = params.get("from") ?? "";
   const to = params.get("to") ?? "";
 
-  const hasFilter =
-    q || status || priority || assignee || unassigned || from || to;
+  const hasFilter = q || status || priority || assignee || unassigned || from || to;
 
   return (
     <form
@@ -81,40 +76,30 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          الحالة
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">الحالة</label>
         <select
           name="status"
           defaultValue={status}
           className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm"
         >
           <option value="">الكل</option>
-          {(Object.keys(STATUS_LABELS_AR) as Array<keyof typeof STATUS_LABELS_AR>).map(
-            (s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS_AR[s]}
-              </option>
-            ),
-          )}
+          {(Object.keys(STATUS_LABELS_AR) as Array<keyof typeof STATUS_LABELS_AR>).map((s) => (
+            <option key={s} value={s}>
+              {STATUS_LABELS_AR[s]}
+            </option>
+          ))}
         </select>
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          الأولوية
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">الأولوية</label>
         <select
           name="priority"
           defaultValue={priority}
           className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm"
         >
           <option value="">الكل</option>
-          {(
-            Object.keys(PRIORITY_LABELS_AR) as Array<
-              keyof typeof PRIORITY_LABELS_AR
-            >
-          ).map((p) => (
+          {(Object.keys(PRIORITY_LABELS_AR) as Array<keyof typeof PRIORITY_LABELS_AR>).map((p) => (
             <option key={p} value={p}>
               {PRIORITY_LABELS_AR[p]}
             </option>
@@ -123,9 +108,7 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          المُسنَدة إلى
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">المُسنَدة إلى</label>
         <select
           name="assignee"
           defaultValue={assignee}
@@ -141,9 +124,7 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          غير مُسنَدة فقط
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">غير مُسنَدة فقط</label>
         <select
           name="unassigned"
           defaultValue={unassigned}
@@ -156,9 +137,7 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
 
       <div className="grid grid-cols-2 gap-2 md:col-span-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            من تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">من تاريخ</label>
           <input
             type="date"
             name="from"
@@ -167,9 +146,7 @@ export function SupportFilters({ assignees, perPage }: SupportFiltersProps) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            إلى تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">إلى تاريخ</label>
           <input
             type="date"
             name="to"

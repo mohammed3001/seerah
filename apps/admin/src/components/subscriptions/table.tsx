@@ -2,10 +2,7 @@ import { format } from "date-fns";
 import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import {
-  customerDashboardUrl,
-  refundDashboardUrl,
-} from "@/lib/subscriptions/stripe";
+import { customerDashboardUrl, refundDashboardUrl } from "@/lib/subscriptions/stripe";
 import {
   STATUS_BADGE_CLASS,
   STATUS_LABELS_AR,
@@ -66,12 +63,7 @@ function safeDate(iso: string | null): string {
   return format(d, "yyyy-MM-dd");
 }
 
-export function SubscriptionsTable({
-  rows,
-  sort,
-  dir,
-  sortHrefs,
-}: TableProps) {
+export function SubscriptionsTable({ rows, sort, dir, sortHrefs }: TableProps) {
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-400">
@@ -86,7 +78,9 @@ export function SubscriptionsTable({
         <table className="min-w-full divide-y divide-slate-100 text-right text-sm">
           <thead className="bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
             <tr>
-              <th scope="col" className="px-4 py-3">المستخدم</th>
+              <th scope="col" className="px-4 py-3">
+                المستخدم
+              </th>
               <SortHeader
                 label="الحالة"
                 active={sort === "status"}
@@ -99,7 +93,9 @@ export function SubscriptionsTable({
                 dir={dir}
                 href={sortHrefs.provider}
               />
-              <th scope="col" className="px-4 py-3">المعرّف</th>
+              <th scope="col" className="px-4 py-3">
+                المعرّف
+              </th>
               <SortHeader
                 label="تاريخ البداية"
                 active={sort === "created_at"}
@@ -112,16 +108,18 @@ export function SubscriptionsTable({
                 dir={dir}
                 href={sortHrefs.current_period_end}
               />
-              <th scope="col" className="px-4 py-3">العملة</th>
-              <th scope="col" className="px-4 py-3 text-left">إجراءات</th>
+              <th scope="col" className="px-4 py-3">
+                العملة
+              </th>
+              <th scope="col" className="px-4 py-3 text-left">
+                إجراءات
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {rows.map((row) => {
               const statusKey = row.status ?? "unknown";
-              const isCanceled =
-                row.status === "canceled" ||
-                row.status === "incomplete_expired";
+              const isCanceled = row.status === "canceled" || row.status === "incomplete_expired";
               const isStripe = row.provider === "stripe";
               return (
                 <tr key={row.id} className="hover:bg-slate-50">
@@ -133,10 +131,7 @@ export function SubscriptionsTable({
                       >
                         {row.user_full_name ?? "—"}
                       </Link>
-                      <span
-                        className="text-[11px] text-slate-500"
-                        dir="ltr"
-                      >
+                      <span className="text-[11px] text-slate-500" dir="ltr">
                         {row.user_email || "—"}
                       </span>
                     </div>
@@ -145,8 +140,7 @@ export function SubscriptionsTable({
                     <span
                       className={cn(
                         "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-                        STATUS_BADGE_CLASS[statusKey] ??
-                          "bg-slate-100 text-slate-600",
+                        STATUS_BADGE_CLASS[statusKey] ?? "bg-slate-100 text-slate-600",
                       )}
                     >
                       {STATUS_LABELS_AR[statusKey] ?? statusKey}
@@ -175,16 +169,10 @@ export function SubscriptionsTable({
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td
-                    className="px-4 py-3 align-middle text-[11px] text-slate-500"
-                    dir="ltr"
-                  >
+                  <td className="px-4 py-3 align-middle text-[11px] text-slate-500" dir="ltr">
                     {safeDate(row.created_at)}
                   </td>
-                  <td
-                    className="px-4 py-3 align-middle text-[11px] text-slate-700"
-                    dir="ltr"
-                  >
+                  <td className="px-4 py-3 align-middle text-[11px] text-slate-700" dir="ltr">
                     {safeDate(row.current_period_end)}
                   </td>
                   <td className="px-4 py-3 align-middle text-xs uppercase text-slate-600">

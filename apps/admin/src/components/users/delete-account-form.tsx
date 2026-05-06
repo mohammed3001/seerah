@@ -27,8 +27,7 @@ export function DeleteAccountForm({ userId, email }: DeleteAccountFormProps) {
     return (
       <div className="space-y-3">
         <p className="text-xs text-slate-500">
-          الحذف نهائي ويُسبّب cascade على السير الذاتية والاشتراكات وكل البيانات
-          المرتبطة.
+          الحذف نهائي ويُسبّب cascade على السير الذاتية والاشتراكات وكل البيانات المرتبطة.
         </p>
         <button
           type="button"

@@ -36,9 +36,7 @@ export function RateLimitBar({ rateLimit, plan, className }: Props) {
       {exhausted && isFree ? (
         <div className="mt-2 rounded-card border border-amber-200 bg-amber-50/40 p-2 text-xs dark:border-amber-500/30 dark:bg-amber-500/10">
           <p className="font-medium">انتهت طلبات اليوم</p>
-          <p className="mt-0.5 text-muted-foreground">
-            ترقية برايم تمنحك 100 طلب يوميًا.
-          </p>
+          <p className="mt-0.5 text-muted-foreground">ترقية برايم تمنحك 100 طلب يوميًا.</p>
           <Button
             size="sm"
             variant="outline"

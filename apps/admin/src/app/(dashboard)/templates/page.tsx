@@ -13,10 +13,7 @@ export const runtime = "nodejs";
 export default async function TemplatesPage() {
   const ctx = await getCurrentAdmin();
   if (!ctx) redirect("/login");
-  if (
-    ctx.admin.role !== "super_admin" &&
-    ctx.admin.role !== "template_manager"
-  ) {
+  if (ctx.admin.role !== "super_admin" && ctx.admin.role !== "template_manager") {
     redirect("/");
   }
 
@@ -28,17 +25,11 @@ export default async function TemplatesPage() {
 
   return (
     <>
-      <Topbar
-        sections={sections}
-        adminEmail={ctx.admin.email}
-        title="القوالب"
-      />
+      <Topbar sections={sections} adminEmail={ctx.admin.email} title="القوالب" />
       <main className="mx-auto w-full max-w-6xl space-y-5 p-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">
-              إدارة القوالب
-            </h1>
+            <h1 className="text-lg font-semibold text-slate-900">إدارة القوالب</h1>
             <p className="text-xs text-slate-500">
               {rows.length} قالب — {totalActive} مفعّل — {totalPremium} مدفوع
             </p>

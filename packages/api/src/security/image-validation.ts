@@ -52,9 +52,7 @@ const EXT_BY_KIND: Record<ImageKind, string> = {
  * typed array.  Returns `null` if the bytes don't match any supported
  * format.
  */
-export function detectImageMagicBytes(
-  buffer: ArrayBuffer | Uint8Array,
-): ImageDetection | null {
+export function detectImageMagicBytes(buffer: ArrayBuffer | Uint8Array): ImageDetection | null {
   const view = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
 
   // PNG: 89 50 4E 47 0D 0A 1A 0A
@@ -73,12 +71,7 @@ export function detectImageMagicBytes(
   }
 
   // JPEG: FF D8 FF (followed by various flavour bytes — all valid JPEG variants)
-  if (
-    view.length >= 3 &&
-    view[0] === 0xff &&
-    view[1] === 0xd8 &&
-    view[2] === 0xff
-  ) {
+  if (view.length >= 3 && view[0] === 0xff && view[1] === 0xd8 && view[2] === 0xff) {
     return { kind: "jpeg", mime: MIME_BY_KIND.jpeg, ext: EXT_BY_KIND.jpeg };
   }
 
@@ -113,12 +106,7 @@ export type ImageValidationResult =
     }
   | {
       ok: false;
-      code:
-        | "no_file"
-        | "empty_file"
-        | "too_large"
-        | "unrecognised_format"
-        | "format_not_allowed";
+      code: "no_file" | "empty_file" | "too_large" | "unrecognised_format" | "format_not_allowed";
       messageAr: string;
       messageEn: string;
     };
@@ -145,11 +133,7 @@ export async function validateImageUpload(
   file: File,
   options: ValidateImageOptions,
 ): Promise<ImageValidationResult> {
-  const allowed: readonly ImageKind[] = options.allowedKinds ?? [
-    "png",
-    "jpeg",
-    "webp",
-  ];
+  const allowed: readonly ImageKind[] = options.allowedKinds ?? ["png", "jpeg", "webp"];
 
   if (!file) {
     return {

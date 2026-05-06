@@ -3,10 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { changeTicketStatus } from "@/lib/support/actions";
-import {
-  STATUS_LABELS_AR,
-  type TicketStatus,
-} from "@/lib/support/types";
+import { STATUS_LABELS_AR, type TicketStatus } from "@/lib/support/types";
 
 import { ActionFeedback } from "./action-feedback";
 

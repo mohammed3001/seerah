@@ -40,7 +40,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
     (data.resume.theme as { mode?: TemplateMode; primary_color?: string } | null) ?? null;
 
   const [activeTemplate, setActiveTemplate] = React.useState<TemplateId>(
-    () => (resolveTemplate(data.resume.template_id).id) as TemplateId,
+    () => resolveTemplate(data.resume.template_id).id as TemplateId,
   );
   const [accent, setAccent] = React.useState<string | null>(
     initialTheme?.primary_color && /^#[0-9a-fA-F]{6}$/.test(initialTheme.primary_color)
@@ -140,9 +140,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
               language={previewLang}
               theme={{ mode, primaryColor: accent ?? undefined }}
               isActive={activeTemplate === meta.id}
-              isApplying={
-                status.kind === "applying" && status.templateId === meta.id
-              }
+              isApplying={status.kind === "applying" && status.templateId === meta.id}
               isLocked={meta.is_premium && !isPrime}
               onChoose={() => onChooseTemplate(meta)}
               onPreview={() => setFullscreen(meta)}
@@ -163,11 +161,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
                 onClick={onToggleMode}
                 aria-label={mode === "light" ? "وضع داكن" : "وضع فاتح"}
               >
-                {mode === "light" ? (
-                  <Moon className="size-4" />
-                ) : (
-                  <Sun className="size-4" />
-                )}
+                {mode === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
               </Button>
               <div className="flex rounded-input border bg-background text-xs">
                 <button
@@ -196,9 +190,7 @@ export function TemplateGalleryClient({ data, plan }: Props) {
 
           <ColorPicker activeColor={accent} onPick={onPickColor} />
 
-          <div
-            className="mt-3 max-h-[640px] overflow-auto rounded-md border bg-zinc-100 p-3 dark:bg-zinc-900"
-          >
+          <div className="mt-3 max-h-[640px] overflow-auto rounded-md border bg-zinc-100 p-3 dark:bg-zinc-900">
             <div
               style={{
                 transform: "scale(0.55)",
@@ -306,12 +298,7 @@ function TemplateCard({
             pointerEvents: "none",
           }}
         >
-          <meta.Component
-            data={data}
-            language={language}
-            theme={theme}
-            isExport={false}
-          />
+          <meta.Component data={data} language={language} theme={theme} isExport={false} />
         </div>
         {isLocked ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition group-hover:opacity-100">

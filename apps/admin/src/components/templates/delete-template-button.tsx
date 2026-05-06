@@ -26,10 +26,10 @@ export function DeleteTemplateButton({
   usageCount,
 }: DeleteTemplateButtonProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(deleteTemplate, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    deleteTemplate,
+    undefined,
+  );
 
   const blocked = usageCount > 0;
 
@@ -40,11 +40,7 @@ export function DeleteTemplateButton({
         onClick={() => setOpen(true)}
         disabled={blocked}
         className="inline-flex items-center justify-center rounded-md border border-rose-200 px-2.5 py-1.5 text-xs text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
-        title={
-          blocked
-            ? `لا يمكن الحذف — ${usageCount} سيرة تستخدم هذا القالب`
-            : "حذف القالب"
-        }
+        title={blocked ? `لا يمكن الحذف — ${usageCount} سيرة تستخدم هذا القالب` : "حذف القالب"}
       >
         <Trash2 className="h-3 w-3" />
       </button>
@@ -65,10 +61,9 @@ export function DeleteTemplateButton({
             </div>
 
             <p className="mb-3 text-xs text-slate-600">
-              سيُحذف القالب{" "}
-              <span className="font-medium text-slate-900">«{templateLabel}»</span>{" "}
-              بشكل نهائي. لا يمكن التراجع. للتأكيد، اكتب{" "}
-              <span className="font-mono">DELETE</span> أدناه.
+              سيُحذف القالب <span className="font-medium text-slate-900">«{templateLabel}»</span>{" "}
+              بشكل نهائي. لا يمكن التراجع. للتأكيد، اكتب <span className="font-mono">DELETE</span>{" "}
+              أدناه.
             </p>
 
             <form action={formAction} className="space-y-3">

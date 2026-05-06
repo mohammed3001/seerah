@@ -4,10 +4,7 @@ import { Plus, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
 import { createTemplate, type ActionState } from "@/lib/templates/actions";
-import {
-  TEMPLATE_CATEGORIES,
-  TEMPLATE_CATEGORY_LABELS_AR,
-} from "@/lib/templates/types";
+import { TEMPLATE_CATEGORIES, TEMPLATE_CATEGORY_LABELS_AR } from "@/lib/templates/types";
 
 import { ActionFeedback } from "./action-feedback";
 import { TemplateImageUpload } from "./image-upload";
@@ -49,10 +46,10 @@ interface CreateTemplateModalBodyProps {
 function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
   const [draftId, setDraftId] = useState("");
   const [committedId, setCommittedId] = useState<string | null>(null);
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(createTemplate, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    createTemplate,
+    undefined,
+  );
 
   // Auto-close on success.  Because this whole component unmounts on
   // close, there's no stale-state problem on the next reopen — fresh
@@ -70,9 +67,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 pt-10">
       <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-900">
-            إضافة قالب جديد
-          </h3>
+          <h3 className="text-base font-semibold text-slate-900">إضافة قالب جديد</h3>
           <button
             type="button"
             onClick={onClose}
@@ -93,11 +88,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
                 name="id"
                 value={committedId ?? draftId}
                 onChange={(e) =>
-                  setDraftId(
-                    e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9_]/g, "_"),
-                  )
+                  setDraftId(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
                 }
                 placeholder="مثال: template_modern_blue"
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm shadow-sm"
@@ -125,16 +116,13 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
               )}
             </div>
             <p className="mt-1 text-[11px] text-slate-500">
-              أحرف صغيرة وأرقام وشرطة سفلية فقط (٣–٦٤). يتم تثبيته قبل رفع
-              الصور.
+              أحرف صغيرة وأرقام وشرطة سفلية فقط (٣–٦٤). يتم تثبيته قبل رفع الصور.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">
-                الاسم (عربي)
-              </label>
+              <label className="mb-1 block text-xs font-medium text-slate-600">الاسم (عربي)</label>
               <input
                 name="nameAr"
                 className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
@@ -155,9 +143,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">
-              الوصف (عربي)
-            </label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">الوصف (عربي)</label>
             <textarea
               name="descriptionAr"
               rows={2}
@@ -165,9 +151,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">
-              الوصف (إنجليزي)
-            </label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">الوصف (إنجليزي)</label>
             <textarea
               name="descriptionEn"
               rows={2}
@@ -178,9 +162,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">
-                الفئة
-              </label>
+              <label className="mb-1 block text-xs font-medium text-slate-600">الفئة</label>
               <select
                 name="category"
                 defaultValue="modern"
@@ -194,9 +176,7 @@ function CreateTemplateModalBody({ onClose }: CreateTemplateModalBodyProps) {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">
-                التسعير
-              </label>
+              <label className="mb-1 block text-xs font-medium text-slate-600">التسعير</label>
               <select
                 name="isPremium"
                 defaultValue="false"

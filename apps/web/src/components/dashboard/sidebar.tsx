@@ -73,7 +73,8 @@ export function DashboardSidebar({ user, onOpenSupport }: SidebarProps) {
         {dashboardNav.map((item) => {
           const Icon = item.icon;
           const active =
-            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           const highlight = item.highlightFree && user.plan === "free";
 
           const link = (

@@ -3,10 +3,7 @@
 import { Pencil, X } from "lucide-react";
 import { useActionState, useState } from "react";
 
-import {
-  updateTemplateMetadata,
-  type ActionState,
-} from "@/lib/templates/actions";
+import { updateTemplateMetadata, type ActionState } from "@/lib/templates/actions";
 import {
   TEMPLATE_CATEGORIES,
   TEMPLATE_CATEGORY_LABELS_AR,
@@ -22,10 +19,10 @@ interface EditTemplateModalProps {
 
 export function EditTemplateModal({ template }: EditTemplateModalProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(updateTemplateMetadata, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    updateTemplateMetadata,
+    undefined,
+  );
 
   return (
     <>
@@ -111,9 +108,7 @@ export function EditTemplateModal({ template }: EditTemplateModalProps) {
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">
-                    الفئة
-                  </label>
+                  <label className="mb-1 block text-xs font-medium text-slate-600">الفئة</label>
                   <select
                     name="category"
                     defaultValue={

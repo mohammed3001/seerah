@@ -24,27 +24,17 @@ function Card({ label, value, hint, Icon, tone = "default" }: CardProps) {
       </div>
       <div className="flex flex-col">
         <span className="text-xs text-slate-500">{label}</span>
-        <span className="text-2xl font-semibold tabular-nums">
-          {value.toLocaleString("ar-SA")}
-        </span>
+        <span className="text-2xl font-semibold tabular-nums">{value.toLocaleString("ar-SA")}</span>
         {hint ? <span className="text-[11px] text-slate-500">{hint}</span> : null}
       </div>
     </div>
   );
 }
 
-export function SupportSummaryCards({
-  summary,
-}: {
-  summary: StatusSummary;
-}) {
+export function SupportSummaryCards({ summary }: { summary: StatusSummary }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      <Card
-        label="إجمالي التذاكر"
-        value={summary.total}
-        Icon={Inbox}
-      />
+      <Card label="إجمالي التذاكر" value={summary.total} Icon={Inbox} />
       <Card
         label="تذاكر غير محلولة"
         value={summary.unresolved}

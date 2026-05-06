@@ -35,11 +35,7 @@ export function ChatTab({ onRateLimit }: Props) {
 
   return (
     <div className="flex h-[calc(100vh-220px)] flex-col">
-      <ChatThread
-        resumeContext={resumeContext}
-        language={editorLang}
-        onRateLimit={onRateLimit}
-      />
+      <ChatThread resumeContext={resumeContext} language={editorLang} onRateLimit={onRateLimit} />
     </div>
   );
 }

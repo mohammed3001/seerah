@@ -1,8 +1,4 @@
-import type {
-  EnhanceFieldType,
-  EnhanceTextResponse,
-  Language,
-} from "@/lib/ai/types";
+import type { EnhanceFieldType, EnhanceTextResponse, Language } from "@/lib/ai/types";
 
 import { aiServer, handleAIRoute } from "../_helpers";
 

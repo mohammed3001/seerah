@@ -20,9 +20,7 @@ function paragraph(text: string): string {
     .join("");
 }
 
-export function renderSupportTicketReplied(
-  p: SupportTicketRepliedProps,
-): RenderedEmail {
+export function renderSupportTicketReplied(p: SupportTicketRepliedProps): RenderedEmail {
   const locale = p.locale ?? "ar";
   const heading = locale === "ar" ? "ردّ من فريق الدعم" : "A reply from support";
   const shortId = p.ticketId.slice(0, 8);
@@ -39,21 +37,13 @@ export function renderSupportTicketReplied(
   `;
 
   return {
-    subject:
-      locale === "ar"
-        ? "ردّ من فريق الدعم — Seerah"
-        : "Reply from Seerah support",
+    subject: locale === "ar" ? "ردّ من فريق الدعم — Seerah" : "Reply from Seerah support",
     html: renderEmail({
-      subject:
-        locale === "ar"
-          ? "ردّ من فريق الدعم — Seerah"
-          : "Reply from Seerah support",
+      subject: locale === "ar" ? "ردّ من فريق الدعم — Seerah" : "Reply from Seerah support",
       heading,
       body: locale === "ar" ? bodyAr : bodyEn,
       preheader:
-        locale === "ar"
-          ? `ردّ جديد على طلبك ${shortId}.`
-          : `New reply on ticket ${shortId}.`,
+        locale === "ar" ? `ردّ جديد على طلبك ${shortId}.` : `New reply on ticket ${shortId}.`,
       locale,
     }),
   };

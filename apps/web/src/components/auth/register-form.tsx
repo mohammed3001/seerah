@@ -100,7 +100,9 @@ export function RegisterForm() {
         <Checkbox
           id="accept-terms"
           checked={acceptTerms}
-          onCheckedChange={(value) => setValue("acceptTerms", value === true, { shouldValidate: true })}
+          onCheckedChange={(value) =>
+            setValue("acceptTerms", value === true, { shouldValidate: true })
+          }
         />
         <div className="space-y-1">
           <Label htmlFor="accept-terms" className="text-sm leading-tight">

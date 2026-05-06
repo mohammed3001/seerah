@@ -13,18 +13,13 @@ interface AdminNotesFormProps {
 }
 
 export function AdminNotesForm({ ticketId, initial }: AdminNotesFormProps) {
-  const [state, action, pending] = useActionState(
-    updateTicketAdminNotes,
-    undefined,
-  );
+  const [state, action, pending] = useActionState(updateTicketAdminNotes, undefined);
   const [notes, setNotes] = useState(initial);
 
   return (
     <form action={action} className="space-y-2">
       <input type="hidden" name="ticketId" value={ticketId} />
-      <label className="block text-xs font-medium text-slate-600">
-        ملاحظات داخلية على التذكرة
-      </label>
+      <label className="block text-xs font-medium text-slate-600">ملاحظات داخلية على التذكرة</label>
       <p className="text-[11px] text-slate-500">
         نص حرّ مخصّص لفريق الدعم. لا يُرسَل بريد، ولا يراه المستخدم.
       </p>

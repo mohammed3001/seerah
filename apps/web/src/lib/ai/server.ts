@@ -24,8 +24,7 @@ import type {
   SuggestSkillsResponse,
 } from "./types";
 
-const AI_SERVICE_URL =
-  process.env["AI_SERVICE_URL"] ?? "http://localhost:8001";
+const AI_SERVICE_URL = process.env["AI_SERVICE_URL"] ?? "http://localhost:8001";
 const INTERNAL_TOKEN = process.env["AI_SERVICE_INTERNAL_TOKEN"] ?? "";
 
 export class AIServiceError extends Error {
@@ -114,10 +113,7 @@ export const aiServer = {
   enhanceText: (req: EnhanceTextRequest) =>
     call<EnhanceTextRequest, EnhanceTextResponse>("/ai/enhance-text", req),
   generateSection: (req: GenerateSectionRequest) =>
-    call<GenerateSectionRequest, GenerateSectionResponse>(
-      "/ai/generate-section",
-      req,
-    ),
+    call<GenerateSectionRequest, GenerateSectionResponse>("/ai/generate-section", req),
   analyzeResume: (req: AnalyzeResumeRequest) =>
     call<AnalyzeResumeRequest, AnalyzeResumeResponse>("/ai/analyze-resume", req),
   smartFill: (req: SmartFillRequest) =>

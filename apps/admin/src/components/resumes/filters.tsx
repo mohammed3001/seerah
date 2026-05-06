@@ -57,14 +57,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
   const to = params.get("to") ?? "";
 
   const hasFilter =
-    q ||
-    templateId ||
-    language ||
-    featured ||
-    completionMin ||
-    completionMax ||
-    from ||
-    to;
+    q || templateId || language || featured || completionMin || completionMax || from || to;
 
   return (
     <form
@@ -101,9 +94,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          القالب
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">القالب</label>
         <select
           name="templateId"
           defaultValue={templateId}
@@ -120,9 +111,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          اللغة
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">اللغة</label>
         <select
           name="language"
           defaultValue={language}
@@ -139,9 +128,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          التمييز
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">التمييز</label>
         <select
           name="featured"
           defaultValue={featured}
@@ -159,9 +146,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            اكتمال من %
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">اكتمال من %</label>
           <input
             type="number"
             name="completionMin"
@@ -172,9 +157,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            إلى %
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">إلى %</label>
           <input
             type="number"
             name="completionMax"
@@ -188,9 +171,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            من تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">من تاريخ</label>
           <input
             type="date"
             name="from"
@@ -199,9 +180,7 @@ export function ResumesFilters({ templates, perPage }: ResumesFiltersProps) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            إلى تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">إلى تاريخ</label>
           <input
             type="date"
             name="to"

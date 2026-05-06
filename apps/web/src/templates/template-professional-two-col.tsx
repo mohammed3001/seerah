@@ -7,19 +7,20 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactStack } from "./_atoms";
 import { BLOCK_FOR_KEY_WITH_BARS } from "./_section-blocks";
 import type { TemplateProps } from "./types";
 
 const SIDEBAR_KEYS = new Set(["skills", "languages", "links", "hobbies", "address"]);
-const MAIN_KEYS = new Set(["personal", "experience", "education", "courses", "projects", "references"]);
+const MAIN_KEYS = new Set([
+  "personal",
+  "experience",
+  "education",
+  "courses",
+  "projects",
+  "references",
+]);
 
 export function TemplateProfessionalTwoCol({ data, language, theme }: TemplateProps) {
   const dir = language === "ar" ? "rtl" : "ltr";
@@ -33,7 +34,8 @@ export function TemplateProfessionalTwoCol({ data, language, theme }: TemplatePr
 
   const sidebar = sectionOrder.filter((k) => SIDEBAR_KEYS.has(k) && !hidden.has(k));
   const main = sectionOrder.filter((k) => MAIN_KEYS.has(k) && !hidden.has(k));
-  const surfaceMain = theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-white text-zinc-800";
+  const surfaceMain =
+    theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-white text-zinc-800";
 
   return (
     <article
@@ -42,10 +44,7 @@ export function TemplateProfessionalTwoCol({ data, language, theme }: TemplatePr
       style={{ ...A4, fontFamily }}
       className={`mx-auto grid grid-cols-[35%_65%] text-[12.5px] leading-[1.65] ${surfaceMain}`}
     >
-      <aside
-        className="flex flex-col gap-6 p-8 text-white"
-        style={{ backgroundColor: accent }}
-      >
+      <aside className="flex flex-col gap-6 p-8 text-white" style={{ backgroundColor: accent }}>
         <div>
           <h1 className="text-2xl font-bold leading-tight">{fullName || "—"}</h1>
           {jobTitle ? <p className="mt-1 text-sm opacity-90">{jobTitle}</p> : null}
@@ -55,11 +54,7 @@ export function TemplateProfessionalTwoCol({ data, language, theme }: TemplatePr
           <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] opacity-80">
             {language === "ar" ? "التواصل" : "Contact"}
           </h2>
-          <ContactStack
-            data={data}
-            language={language}
-            className="space-y-1 text-xs opacity-90"
-          />
+          <ContactStack data={data} language={language} className="space-y-1 text-xs opacity-90" />
         </div>
 
         {sidebar.map((key) => {

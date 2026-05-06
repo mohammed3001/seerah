@@ -5,12 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
 import { cn } from "@/lib/utils/cn";
-import {
-  PLAN_LABELS_AR,
-  PLAN_OPTIONS,
-  STATUS_LABELS_AR,
-  STATUS_OPTIONS,
-} from "@/lib/users/types";
+import { PLAN_LABELS_AR, PLAN_OPTIONS, STATUS_LABELS_AR, STATUS_OPTIONS } from "@/lib/users/types";
 
 interface UsersFiltersProps {
   countries: string[];
@@ -166,9 +161,7 @@ export function UsersFilters({ countries, perPage }: UsersFiltersProps) {
         {hasFilter ? (
           <button
             type="button"
-            onClick={() =>
-              startTransition(() => router.replace(`/users?perPage=${perPage}`))
-            }
+            onClick={() => startTransition(() => router.replace(`/users?perPage=${perPage}`))}
             className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50"
           >
             <X className="h-3.5 w-3.5" />

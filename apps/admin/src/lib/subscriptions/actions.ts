@@ -36,9 +36,7 @@ type RequireAdminResult =
       userAgent: string | null;
     };
 
-async function requireAdmin(
-  allowed: Role[] = ["super_admin"],
-): Promise<RequireAdminResult> {
+async function requireAdmin(allowed: Role[] = ["super_admin"]): Promise<RequireAdminResult> {
   const ctx = await getCurrentAdmin();
   if (!ctx) redirect("/login");
   if (!allowed.includes(ctx.admin.role)) {
@@ -167,17 +165,14 @@ export async function cancelSubscription(
     }
   }
 
-  const { error: rpcErr } = await supabase.rpc(
-    "admin_cancel_subscription_local",
-    {
-      p_subscription_id: parsed.data.subscriptionId,
-      p_at_period_end: parsed.data.atPeriodEnd,
-      p_admin_id: guard.ctx.admin.id,
-      p_admin_email: guard.ctx.admin.email,
-      p_ip: guard.ip,
-      p_user_agent: guard.userAgent,
-    },
-  );
+  const { error: rpcErr } = await supabase.rpc("admin_cancel_subscription_local", {
+    p_subscription_id: parsed.data.subscriptionId,
+    p_at_period_end: parsed.data.atPeriodEnd,
+    p_admin_id: guard.ctx.admin.id,
+    p_admin_email: guard.ctx.admin.email,
+    p_ip: guard.ip,
+    p_user_agent: guard.userAgent,
+  });
   if (rpcErr) return ERR(`تعذّر تحديث الحالة محلّيًا: ${rpcErr.message}`);
 
   revalidatePath("/subscriptions");

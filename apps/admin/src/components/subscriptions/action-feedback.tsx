@@ -15,10 +15,7 @@ export function ActionFeedback({ state }: { state: ActionState | undefined }) {
     <div className="space-y-2">
       <div
         role="status"
-        className={cn(
-          "flex items-start gap-2 rounded-md border px-3 py-2 text-xs",
-          color,
-        )}
+        className={cn("flex items-start gap-2 rounded-md border px-3 py-2 text-xs", color)}
       >
         <Icon className="mt-0.5 h-4 w-4 shrink-0" />
         <span>{state.message}</span>

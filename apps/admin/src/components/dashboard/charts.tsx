@@ -23,7 +23,16 @@ import { formatDayLabel, formatMonthLabel } from "@/lib/dashboard/types";
 
 const ACCENT = "#635BFF";
 const ACCENT_SOFT = "#A5B4FC";
-const PIE_COLORS = ["#635BFF", "#A5B4FC", "#22D3EE", "#34D399", "#FBBF24", "#F472B6", "#94A3B8", "#FCA5A5"];
+const PIE_COLORS = [
+  "#635BFF",
+  "#A5B4FC",
+  "#22D3EE",
+  "#34D399",
+  "#FBBF24",
+  "#F472B6",
+  "#94A3B8",
+  "#FCA5A5",
+];
 
 const TOOLTIP_STYLE = {
   backgroundColor: "rgba(15, 23, 42, 0.95)",
@@ -59,7 +68,11 @@ export function NewUsersChart({ data }: NewUsersChartProps) {
             interval="preserveStartEnd"
             reversed
           />
-          <YAxis tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} orientation="right" />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#64748b" }}
+            allowDecimals={false}
+            orientation="right"
+          />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             labelFormatter={(d) => (typeof d === "string" ? formatDayLabel(d) : String(d ?? ""))}
@@ -110,7 +123,10 @@ export function PlanDistributionChart({ data }: PlanDistributionChartProps) {
           </Pie>
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            formatter={(value, name) => [Number(value ?? 0).toLocaleString("ar-SA"), String(name ?? "")]}
+            formatter={(value, name) => [
+              Number(value ?? 0).toLocaleString("ar-SA"),
+              String(name ?? ""),
+            ]}
           />
           <Legend
             verticalAlign="bottom"
@@ -135,7 +151,11 @@ export function TemplateUsageChart({ data }: TemplateUsageChartProps) {
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} />
-          <YAxis tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} orientation="right" />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#64748b" }}
+            allowDecimals={false}
+            orientation="right"
+          />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             formatter={(value) => [Number(value ?? 0).toLocaleString("ar-SA"), "سيرة"]}
@@ -201,7 +221,11 @@ export function AiActivityChart({ data }: AiActivityChartProps) {
             interval="preserveStartEnd"
             reversed
           />
-          <YAxis tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} orientation="right" />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#64748b" }}
+            allowDecimals={false}
+            orientation="right"
+          />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             labelFormatter={(d) => (typeof d === "string" ? formatDayLabel(d) : String(d ?? ""))}

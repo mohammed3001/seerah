@@ -88,9 +88,7 @@ async function purgeBucketPrefix(
     // contract is "never block account deletion".
     let listResult: Awaited<ReturnType<ReturnType<SupabaseClient["storage"]["from"]>["list"]>>;
     try {
-      listResult = await supabase.storage
-        .from(bucket)
-        .list(userId, { limit: PAGE_SIZE, offset });
+      listResult = await supabase.storage.from(bucket).list(userId, { limit: PAGE_SIZE, offset });
     } catch (err) {
       errors.push(`[${bucket}] list threw: ${err instanceof Error ? err.message : String(err)}`);
       break;

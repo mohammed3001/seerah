@@ -35,7 +35,15 @@ type ItemTable =
 export function useSectionActions<
   K extends keyof Pick<
     ReturnType<typeof useEditor>["data"],
-    "education" | "experience" | "courses" | "skills" | "projects" | "references" | "languages" | "links" | "hobbies"
+    | "education"
+    | "experience"
+    | "courses"
+    | "skills"
+    | "projects"
+    | "references"
+    | "languages"
+    | "links"
+    | "hobbies"
   >,
   T extends BaseItem,
 >(field: K, table: ItemTable, defaults: Partial<T>) {
@@ -44,18 +52,18 @@ export function useSectionActions<
 
   const setItems = React.useCallback(
     (next: T[]) => {
-      setData((prev) => ({ ...prev, [field]: next as unknown as typeof prev[K] }));
+      setData((prev) => ({ ...prev, [field]: next as unknown as (typeof prev)[K] }));
     },
     [setData, field],
   );
 
   const onAdd = React.useCallback(async () => {
     const sortOrder = items.length;
-    const result = await insertSectionItem<Record<string, unknown>>(
-      data.resume.id,
-      table,
-      { ...defaults, sort_order: sortOrder, is_visible: true } as Record<string, unknown>,
-    );
+    const result = await insertSectionItem<Record<string, unknown>>(data.resume.id, table, {
+      ...defaults,
+      sort_order: sortOrder,
+      is_visible: true,
+    } as Record<string, unknown>);
     if ("error" in result) {
       toast.error(result.error);
       return null;

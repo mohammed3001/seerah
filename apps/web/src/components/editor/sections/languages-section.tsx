@@ -1,6 +1,15 @@
 "use client";
 
-import { Checkbox, FloatingInput, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@seerah/ui";
+import {
+  Checkbox,
+  FloatingInput,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@seerah/ui";
 
 import { SectionHeader } from "@/components/editor/section-header";
 import { SectionList } from "@/components/editor/section-list";
@@ -26,7 +35,12 @@ export function LanguagesSection() {
 
   return (
     <section>
-      <SectionHeader section="languages" title="اللغات" description="اللغات التي تجيدها" showAi={false} />
+      <SectionHeader
+        section="languages"
+        title="اللغات"
+        description="اللغات التي تجيدها"
+        showAi={false}
+      />
       <SectionList<Item>
         items={actions.items}
         onItemsChange={actions.setItems}
@@ -68,9 +82,7 @@ export function LanguagesSection() {
             <label className="inline-flex items-center gap-2 text-sm">
               <Checkbox
                 checked={item.is_sign_language}
-                onCheckedChange={(v) =>
-                  patch({ is_sign_language: Boolean(v) } as Partial<Item>)
-                }
+                onCheckedChange={(v) => patch({ is_sign_language: Boolean(v) } as Partial<Item>)}
               />
               <span>لغة إشارة</span>
             </label>

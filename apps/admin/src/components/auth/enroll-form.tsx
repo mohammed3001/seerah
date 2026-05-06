@@ -2,10 +2,7 @@
 
 import { useActionState } from "react";
 
-import {
-  confirmEnrollment,
-  type EnrollmentFormState,
-} from "@/app/(auth)/2fa/setup/actions";
+import { confirmEnrollment, type EnrollmentFormState } from "@/app/(auth)/2fa/setup/actions";
 
 import { TotpInput } from "./totp-input";
 

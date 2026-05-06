@@ -97,10 +97,7 @@ export function SectionHeading({
   accent?: string;
 }) {
   return (
-    <h2
-      className={className}
-      style={accent ? { color: accent } : undefined}
-    >
+    <h2 className={className} style={accent ? { color: accent } : undefined}>
       {children}
     </h2>
   );

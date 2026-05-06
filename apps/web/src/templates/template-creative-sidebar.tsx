@@ -6,19 +6,20 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactStack } from "./_atoms";
 import { BLOCK_FOR_KEY_WITH_BARS } from "./_section-blocks";
 import type { TemplateProps } from "./types";
 
 const SIDEBAR_KEYS = new Set(["skills", "languages", "links", "hobbies", "address"]);
-const MAIN_KEYS = new Set(["personal", "experience", "education", "courses", "projects", "references"]);
+const MAIN_KEYS = new Set([
+  "personal",
+  "experience",
+  "education",
+  "courses",
+  "projects",
+  "references",
+]);
 
 const SECTION_GLYPH: Record<string, string> = {
   experience: "▰",
@@ -70,11 +71,7 @@ export function TemplateCreativeSidebar({ data, language, theme }: TemplateProps
           <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] opacity-80">
             {language === "ar" ? "التواصل" : "Contact"}
           </h2>
-          <ContactStack
-            data={data}
-            language={language}
-            className="space-y-1 text-xs opacity-95"
-          />
+          <ContactStack data={data} language={language} className="space-y-1 text-xs opacity-95" />
         </div>
 
         {sidebar.map((key) => {

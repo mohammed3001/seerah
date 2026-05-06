@@ -16,10 +16,7 @@ import { SendEmailForm } from "@/components/users/send-email-form";
 import { getCurrentAdmin } from "@/lib/auth/current";
 import { isResendConfigured } from "@/lib/email";
 import { getUserDetail } from "@/lib/users/detail";
-import {
-  PLAN_BADGE_CLASSES,
-  PLAN_LABELS_AR,
-} from "@/lib/users/types";
+import { PLAN_BADGE_CLASSES, PLAN_LABELS_AR } from "@/lib/users/types";
 import { cn } from "@/lib/utils/cn";
 
 export const dynamic = "force-dynamic";
@@ -65,9 +62,10 @@ export default async function UserDetailPage({ params }: PageProps) {
   const resendOn = isResendConfigured();
 
   // Public resumes are served by apps/web — admin domain has no /:slug route.
-  const publicAppUrl = (
-    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com"
-  ).replace(/\/$/, "");
+  const publicAppUrl = (process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com").replace(
+    /\/$/,
+    "",
+  );
 
   return (
     <>
@@ -94,11 +92,7 @@ export default async function UserDetailPage({ params }: PageProps) {
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-2xl font-medium text-slate-600">
               {profile.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatar_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 (profile.full_name ?? profile.email).slice(0, 1).toUpperCase()
               )}
@@ -106,9 +100,7 @@ export default async function UserDetailPage({ params }: PageProps) {
 
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-slate-900">
-                  {profile.full_name ?? "—"}
-                </h1>
+                <h1 className="text-lg font-semibold text-slate-900">{profile.full_name ?? "—"}</h1>
                 <span
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[11px] font-medium",
@@ -127,13 +119,21 @@ export default async function UserDetailPage({ params }: PageProps) {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-700" dir="ltr">{profile.email}</p>
-              <p className="text-xs text-slate-500" dir="ltr">{profile.id}</p>
+              <p className="text-sm text-slate-700" dir="ltr">
+                {profile.email}
+              </p>
+              <p className="text-xs text-slate-500" dir="ltr">
+                {profile.id}
+              </p>
             </div>
           </div>
 
           <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-xs md:grid-cols-4">
-            <Field label="تاريخ التسجيل" value={format(new Date(profile.created_at), "yyyy-MM-dd")} dir="ltr" />
+            <Field
+              label="تاريخ التسجيل"
+              value={format(new Date(profile.created_at), "yyyy-MM-dd")}
+              dir="ltr"
+            />
             <Field
               label="آخر نشاط"
               value={
@@ -166,11 +166,7 @@ export default async function UserDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* LEFT 2/3: data sections */}
           <div className="space-y-4 lg:col-span-2">
-            <SectionCard
-              title="السير الذاتية"
-              subtitle={`${resumes.length} سيرة (آخر ٥٠)`}
-              flush
-            >
+            <SectionCard title="السير الذاتية" subtitle={`${resumes.length} سيرة (آخر ٥٠)`} flush>
               {resumes.length === 0 ? (
                 <p className="px-5 py-6 text-xs text-slate-400">لا توجد سير ذاتية بعد.</p>
               ) : (
@@ -180,7 +176,8 @@ export default async function UserDetailPage({ params }: PageProps) {
                       <div className="space-y-0.5">
                         <p className="font-medium text-slate-900">{r.title}</p>
                         <p className="text-[11px] text-slate-500" dir="ltr">
-                          {r.template_id} · {r.language} · اكتمال {r.completion_score}% · {r.views_count.toLocaleString("ar-SA")} مشاهدة
+                          {r.template_id} · {r.language} · اكتمال {r.completion_score}% ·{" "}
+                          {r.views_count.toLocaleString("ar-SA")} مشاهدة
                         </p>
                       </div>
                       <a
@@ -198,11 +195,7 @@ export default async function UserDetailPage({ params }: PageProps) {
               )}
             </SectionCard>
 
-            <SectionCard
-              title="سجل الاشتراكات"
-              subtitle={`${subscriptions.length} اشتراك`}
-              flush
-            >
+            <SectionCard title="سجل الاشتراكات" subtitle={`${subscriptions.length} اشتراك`} flush>
               {subscriptions.length === 0 ? (
                 <p className="px-5 py-6 text-xs text-slate-400">لا توجد اشتراكات.</p>
               ) : (
@@ -234,10 +227,7 @@ export default async function UserDetailPage({ params }: PageProps) {
               )}
             </SectionCard>
 
-            <SectionCard
-              title="استخدام الذكاء الاصطناعي"
-              subtitle="آخر ٣٠ يوماً"
-            >
+            <SectionCard title="استخدام الذكاء الاصطناعي" subtitle="آخر ٣٠ يوماً">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-center">
                   <p className="text-xs text-slate-500">عدد الطلبات</p>
@@ -265,7 +255,9 @@ export default async function UserDetailPage({ params }: PageProps) {
                   <tbody className="text-slate-700">
                     {aiBreakdown.map((row) => (
                       <tr key={row.action_type}>
-                        <td className="py-1" dir="ltr">{row.action_type}</td>
+                        <td className="py-1" dir="ltr">
+                          {row.action_type}
+                        </td>
                         <td className="py-1">{row.count.toLocaleString("ar-SA")}</td>
                         <td className="py-1">{row.total_tokens.toLocaleString("ar-SA")}</td>
                       </tr>
@@ -275,11 +267,7 @@ export default async function UserDetailPage({ params }: PageProps) {
               ) : null}
             </SectionCard>
 
-            <SectionCard
-              title="تذاكر الدعم"
-              subtitle={`${tickets.length} تذكرة`}
-              flush
-            >
+            <SectionCard title="تذاكر الدعم" subtitle={`${tickets.length} تذكرة`} flush>
               {tickets.length === 0 ? (
                 <p className="px-5 py-6 text-xs text-slate-400">لا توجد تذاكر.</p>
               ) : (
@@ -301,10 +289,7 @@ export default async function UserDetailPage({ params }: PageProps) {
               )}
             </SectionCard>
 
-            <SectionCard
-              title="الملاحظات الداخلية"
-              subtitle="لا يراها المستخدم"
-            >
+            <SectionCard title="الملاحظات الداخلية" subtitle="لا يراها المستخدم">
               <AdminNotes userId={profile.id} notes={adminNotes} />
             </SectionCard>
           </div>
@@ -319,9 +304,7 @@ export default async function UserDetailPage({ params }: PageProps) {
                   currentExpiresAt={profile.plan_expires_at}
                 />
               ) : (
-                <p className="text-xs text-slate-400">
-                  super_admin فقط يستطيع تغيير الخطط.
-                </p>
+                <p className="text-xs text-slate-400">super_admin فقط يستطيع تغيير الخطط.</p>
               )}
             </SectionCard>
 
@@ -355,9 +338,7 @@ export default async function UserDetailPage({ params }: PageProps) {
               {canDestroy ? (
                 <DeleteAccountForm userId={profile.id} email={profile.email} />
               ) : (
-                <p className="text-xs text-slate-400">
-                  super_admin فقط يستطيع حذف الحسابات.
-                </p>
+                <p className="text-xs text-slate-400">super_admin فقط يستطيع حذف الحسابات.</p>
               )}
             </SectionCard>
           </aside>
@@ -367,15 +348,7 @@ export default async function UserDetailPage({ params }: PageProps) {
   );
 }
 
-function Field({
-  label,
-  value,
-  dir,
-}: {
-  label: string;
-  value: string;
-  dir?: "ltr" | "rtl";
-}) {
+function Field({ label, value, dir }: { label: string; value: string; dir?: "ltr" | "rtl" }) {
   return (
     <div>
       <dt className="text-[11px] text-slate-500">{label}</dt>

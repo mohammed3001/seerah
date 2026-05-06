@@ -22,9 +22,7 @@ import type {
  *
  * Returns null if the ticket id doesn't exist.
  */
-export async function loadTicketDetail(
-  ticketId: string,
-): Promise<TicketDetail | null> {
+export async function loadTicketDetail(ticketId: string): Promise<TicketDetail | null> {
   const supabase = getServiceRoleClient();
 
   const { data: ticket, error } = await supabase
@@ -40,36 +38,31 @@ export async function loadTicketDetail(
   }
   if (!ticket) return null;
 
-  const [profileResult, assigneeResult, messagesResult, ticketCountResult] =
-    await Promise.all([
-      ticket.user_id
-        ? supabase
-            .from("profiles")
-            .select("id, email, full_name, plan, plan_expires_at, created_at")
-            .eq("id", ticket.user_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      ticket.assigned_to
-        ? supabase
-            .from("admin_users")
-            .select("id, email")
-            .eq("id", ticket.assigned_to)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      supabase
-        .from("support_ticket_messages")
-        .select(
-          "id, ticket_id, author_type, author_id, body, attachment_url, is_internal, created_at",
-        )
-        .eq("ticket_id", ticketId)
-        .order("created_at", { ascending: true }),
-      ticket.user_id
-        ? supabase
-            .from("support_tickets")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", ticket.user_id)
-        : Promise.resolve({ count: 0, error: null }),
-    ]);
+  const [profileResult, assigneeResult, messagesResult, ticketCountResult] = await Promise.all([
+    ticket.user_id
+      ? supabase
+          .from("profiles")
+          .select("id, email, full_name, plan, plan_expires_at, created_at")
+          .eq("id", ticket.user_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    ticket.assigned_to
+      ? supabase.from("admin_users").select("id, email").eq("id", ticket.assigned_to).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("support_ticket_messages")
+      .select(
+        "id, ticket_id, author_type, author_id, body, attachment_url, is_internal, created_at",
+      )
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: true }),
+    ticket.user_id
+      ? supabase
+          .from("support_tickets")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", ticket.user_id)
+      : Promise.resolve({ count: 0, error: null }),
+  ]);
 
   if (profileResult.error) {
     throw new Error(`Failed to load profile: ${profileResult.error.message}`);
@@ -78,27 +71,17 @@ export async function loadTicketDetail(
     throw new Error(`Failed to load assignee: ${assigneeResult.error.message}`);
   }
   if (messagesResult.error) {
-    throw new Error(
-      `Failed to load messages: ${messagesResult.error.message}`,
-    );
+    throw new Error(`Failed to load messages: ${messagesResult.error.message}`);
   }
 
   const messageRows = messagesResult.data ?? [];
 
   // Resolve author labels in two batches.
   const userAuthorIds = Array.from(
-    new Set(
-      messageRows
-        .filter((m) => m.author_type === "user")
-        .map((m) => m.author_id),
-    ),
+    new Set(messageRows.filter((m) => m.author_type === "user").map((m) => m.author_id)),
   );
   const adminAuthorIds = Array.from(
-    new Set(
-      messageRows
-        .filter((m) => m.author_type === "admin")
-        .map((m) => m.author_id),
-    ),
+    new Set(messageRows.filter((m) => m.author_type === "admin").map((m) => m.author_id)),
   );
 
   const userLabelMap = new Map<string, string>();
@@ -132,8 +115,8 @@ export async function loadTicketDetail(
     author_id: m.author_id,
     author_label:
       m.author_type === "user"
-        ? userLabelMap.get(m.author_id) ?? "(مستخدم محذوف)"
-        : adminLabelMap.get(m.author_id) ?? "(مشرف محذوف)",
+        ? (userLabelMap.get(m.author_id) ?? "(مستخدم محذوف)")
+        : (adminLabelMap.get(m.author_id) ?? "(مشرف محذوف)"),
     body: m.body,
     attachment_url: m.attachment_url,
     is_internal: m.is_internal,
@@ -157,9 +140,7 @@ export async function loadTicketDetail(
     assignee_email: assignee?.email ?? null,
     last_admin_reply_at: ticket.last_admin_reply_at,
     message_preview:
-      ticket.message.length > 140
-        ? `${ticket.message.slice(0, 140)}…`
-        : ticket.message,
+      ticket.message.length > 140 ? `${ticket.message.slice(0, 140)}…` : ticket.message,
     created_at: ticket.created_at,
     updated_at: ticket.updated_at,
   };

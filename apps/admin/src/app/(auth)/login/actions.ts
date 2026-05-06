@@ -100,8 +100,7 @@ export async function loginAction(
       // 30-minute window forever.  Treat an expired lockout as a fresh
       // start so we increment from 0, not from MAX_FAILED_LOGINS.
       const lockoutExpired =
-        admin.locked_until !== null &&
-        new Date(admin.locked_until).getTime() <= Date.now();
+        admin.locked_until !== null && new Date(admin.locked_until).getTime() <= Date.now();
       const previousAttempts = lockoutExpired ? 0 : admin.failed_login_attempts;
       const nextAttempts = previousAttempts + 1;
       const update: {
@@ -182,7 +181,6 @@ export async function loginAction(
   // The setup page reuses the existing secret when one is present, so we
   // don't churn QR codes — but it also re-shows the QR + base32 fallback
   // so an admin who lost the secret mid-enrollment can still complete it.
-  const target =
-    admin.totp_secret && admin.totp_verified_at ? "/2fa/verify" : "/2fa/setup";
+  const target = admin.totp_secret && admin.totp_verified_at ? "/2fa/verify" : "/2fa/setup";
   redirect(target);
 }

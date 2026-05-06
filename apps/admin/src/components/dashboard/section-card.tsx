@@ -21,12 +21,7 @@ export function SectionCard({
   flush,
 }: SectionCardProps) {
   return (
-    <section
-      className={cn(
-        "rounded-2xl border border-slate-200 bg-white shadow-sm",
-        className,
-      )}
-    >
+    <section className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>
       <header className="flex items-start justify-between gap-3 px-5 py-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">{title}</h2>

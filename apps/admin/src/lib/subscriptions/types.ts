@@ -66,12 +66,7 @@ export interface RevenueSummary {
 // isn't declared in the generated Database types — sorting would require a
 // PostgREST embedded order which isn't typesafe here.  Admins can search by
 // email instead.
-export const SORTABLE_COLUMNS = [
-  "created_at",
-  "current_period_end",
-  "status",
-  "provider",
-] as const;
+export const SORTABLE_COLUMNS = ["created_at", "current_period_end", "status", "provider"] as const;
 export type SortableColumn = (typeof SORTABLE_COLUMNS)[number];
 
 export const STATUS_LABELS_AR: Record<string, string> = {

@@ -7,17 +7,17 @@
 ## Why this report exists
 
 PR #36 (Audit M1) added Android-side hardening: `FLAG_SECURE`, no backups, deny
-cleartext, signed-release fallback with warning, ProGuard rules.  Source-level
+cleartext, signed-release fallback with warning, ProGuard rules. Source-level
 changes are easy to read; what matters is whether they actually land in the
-binary an attacker would unpack.  This document is the binary-level evidence.
+binary an attacker would unpack. This document is the binary-level evidence.
 
 ## Why no live emulator
 
 The Devin VM has no `/dev/kvm` (verified: `ls /dev/kvm` → `No such file or
-directory`).  Android emulators on x86 hosts without KVM fall back to pure
+directory`). Android emulators on x86 hosts without KVM fall back to pure
 software emulation (QEMU TCG) — boot times balloon to 20–40 minutes, every
 input event registers ~3 s late, and memory pressure makes the OS kill the
-emulator under load.  iOS Simulator is hard-blocked by Apple to macOS.
+emulator under load. iOS Simulator is hard-blocked by Apple to macOS.
 
 Substituted with a build+inspect pipeline that proves each M1 attribute landed
 in the APK an attacker / reverse engineer would actually pull from the Play
@@ -28,45 +28,47 @@ Store.
 Beyond the verification itself, three real code changes were required to make
 the project buildable on a clean machine:
 
-1. **AGP 8.1.0 → 8.7.0** (`android/settings.gradle`).  The transitive
+1. **AGP 8.1.0 → 8.7.0** (`android/settings.gradle`). The transitive
    dependency `androidx.core:core:1.16.0` (pulled by recent
    `androidx.lifecycle` / `androidx.biometric` updates) gates its AAR metadata
-   on AGP ≥ 8.6.  Builds on AGP 8.1 fail with:
+   on AGP ≥ 8.6. Builds on AGP 8.1 fail with:
+
    ```
    Dependency 'androidx.core:core:1.16.0' requires Android Gradle plugin 8.6.0 or higher.
    ```
+
    This was a latent regression — anyone cloning the repo today on a clean
    machine would hit the same error.
 
 2. **Gradle wrapper 8.3 → 8.10.2** (`android/gradle/wrapper/gradle-wrapper.properties`).
    AGP 8.7 requires Gradle ≥ 8.7.
 
-3. **Kotlin plugin 1.8.22 → 1.9.24**.  AGP 8.7 ships with Kotlin 1.9.x by
+3. **Kotlin plugin 1.8.22 → 1.9.24**. AGP 8.7 ships with Kotlin 1.9.x by
    default; the older Kotlin plugin emitted compiler warnings about Java 21
    bytecode targets.
 
-4. **NDK pin 26.x → 27.0.12077973** (`android/app/build.gradle`).  Several
+4. **NDK pin 26.x → 27.0.12077973** (`android/app/build.gradle`). Several
    Flutter plugins (`local_auth_android`, `app_links`, `image_picker_android`,
    …) request NDK 27.x and the build was emitting a wall of warnings.
 
 5. **iOS AppDelegate** (`ios/Runner/AppDelegate.swift`) — added a privacy
    overlay during `applicationWillResignActive`/`DidBecomeActive` to hide
-   resume content from the App Switcher snapshot.  iOS has no equivalent of
-   Android's `FLAG_SECURE`; the overlay is the standard pattern.  Authored
+   resume content from the App Switcher snapshot. iOS has no equivalent of
+   Android's `FLAG_SECURE`; the overlay is the standard pattern. Authored
    but **not compile-tested** on Linux (Swift toolchain not installed; iOS
-   builds require Xcode + macOS regardless).  Verified by code review against
+   builds require Xcode + macOS regardless). Verified by code review against
    Apple's `UIApplicationDelegate` API surface.
 
 ## Evidence
 
 ### Build outputs
 
-| Build | Size | Status |
-|---|---|---|
-| `flutter build apk --debug` | 110 MB | ✓ |
-| `flutter build apk --release` | 36.1 MB | ✓ (-67% vs debug, confirms minify+shrink ran) |
-| `flutter analyze` | clean | `No issues found! (ran in 3.9s)` |
-| `flutter test` | 72/72 pass | All sign-out, deep-link, design-service, etc. tests green |
+| Build                         | Size       | Status                                                    |
+| ----------------------------- | ---------- | --------------------------------------------------------- |
+| `flutter build apk --debug`   | 110 MB     | ✓                                                         |
+| `flutter build apk --release` | 36.1 MB    | ✓ (-67% vs debug, confirms minify+shrink ran)             |
+| `flutter analyze`             | clean      | `No issues found! (ran in 3.9s)`                          |
+| `flutter test`                | 72/72 pass | All sign-out, deep-link, design-service, etc. tests green |
 
 ### Manifest verification (compiled `AndroidManifest.xml` from APK)
 
@@ -81,7 +83,7 @@ A: android:dataExtractionRules=@0x7f110000      ← reference present ✓
 ```
 
 Debug APK has the same attributes plus `android:debuggable=0xffffffff` (true,
-correct for debug).  Release APK has **no** debuggable flag — correct.
+correct for debug). Release APK has **no** debuggable flag — correct.
 
 ### XML resource verification (compiled XMLs from release APK)
 
@@ -117,17 +119,17 @@ Android 12+ device-to-device transfer ✓.
 
 Comparing class lists from `dexdump -l plain`:
 
-| App-package class | Debug APK | Release APK |
-|---|---|---|
-| `com.seerah.app.MainActivity` | present | **kept** (referenced from manifest) ✓ |
-| `com.seerah.app.R` | present | **stripped** ✓ |
-| `com.seerah.app.R$drawable` | present | **stripped** ✓ |
-| `com.seerah.app.R$mipmap` | present | **stripped** ✓ |
-| `com.seerah.app.R$style` | present | **stripped** ✓ |
-| `com.seerah.app.R$xml` | present | **stripped** ✓ |
+| App-package class             | Debug APK | Release APK                           |
+| ----------------------------- | --------- | ------------------------------------- |
+| `com.seerah.app.MainActivity` | present   | **kept** (referenced from manifest) ✓ |
+| `com.seerah.app.R`            | present   | **stripped** ✓                        |
+| `com.seerah.app.R$drawable`   | present   | **stripped** ✓                        |
+| `com.seerah.app.R$mipmap`     | present   | **stripped** ✓                        |
+| `com.seerah.app.R$style`      | present   | **stripped** ✓                        |
+| `com.seerah.app.R$xml`        | present   | **stripped** ✓                        |
 
-Resource shrinking:  release APK contains files like `res/0E.xml`, `res/4j.xml`,
-`res/8G.xml` — 2-character obfuscated names.  Debug APK has the original
+Resource shrinking: release APK contains files like `res/0E.xml`, `res/4j.xml`,
+`res/8G.xml` — 2-character obfuscated names. Debug APK has the original
 `res/xml/network_security_config.xml`, `res/xml/data_extraction_rules.xml`.
 This is the expected output of `shrinkResources true`.
 
@@ -146,7 +148,7 @@ Disassembled `MainActivity.onCreate` from the **release** dex
 ```
 
 Both the flags and mask arguments are register `v1` (= `8192` = `FLAG_SECURE`).
-ProGuard preserved the call rather than inlining or stripping it ✓.  Note that
+ProGuard preserved the call rather than inlining or stripping it ✓. Note that
 `setFlags` runs **before** `super.onCreate` — matches the source ordering in
 `MainActivity.kt`.
 
@@ -159,9 +161,9 @@ Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
 Signer #1 certificate SHA-256 digest: 2f8371221976f3a8da39dedb893816...
 ```
 
-Identical fingerprint to the debug APK.  This is the expected fallback
+Identical fingerprint to the debug APK. This is the expected fallback
 behaviour: `key.properties` is missing (gitignored, never committed), so
-release falls back to the debug keystore *and* prints a Gradle warning:
+release falls back to the debug keystore _and_ prints a Gradle warning:
 
 ```
 > Configure project :app
@@ -171,28 +173,29 @@ android/key.properties to fix.
 ```
 
 Operator-action-required for Play Store distribution: drop a real keystore at
-`apps/mobile/android/key.properties` (already in `.gitignore`).  Until then,
+`apps/mobile/android/key.properties` (already in `.gitignore`). Until then,
 release builds are signed with the public Android Debug keystore — usable for
 internal QA but obviously **must not** be distributed.
 
-## What was *not* verified
+## What was _not_ verified
 
-The build+inspect pipeline cannot exercise runtime behaviour.  These items
+The build+inspect pipeline cannot exercise runtime behaviour. These items
 require either (a) a real Android device or (b) macOS+Xcode for iOS:
 
-| Behaviour | Verified by | Cannot verify here |
-|---|---|---|
-| `FLAG_SECURE` actually blocks screenshots | bytecode present | needs real device — try `adb shell screencap` |
-| Sign-out wipes Hive boxes end-to-end | unit tests on `wipeLocalUserData` (3 tests, green) | full UI: sign in as A → edit → sign out → sign in as B → check no carry-over |
-| Biometric prompt on lock screen | unit tests on `signOutAndWipe` ordering | needs hardware biometric or emulator with a fingerprint |
-| iOS privacy overlay | code review of API contract | needs Mac+Xcode+device |
-| Cleartext traffic actually denied at runtime | `network_security_config` is wired | needs `adb shell setprop log.tag.OkHttp DEBUG` + dummy http call |
+| Behaviour                                    | Verified by                                        | Cannot verify here                                                           |
+| -------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `FLAG_SECURE` actually blocks screenshots    | bytecode present                                   | needs real device — try `adb shell screencap`                                |
+| Sign-out wipes Hive boxes end-to-end         | unit tests on `wipeLocalUserData` (3 tests, green) | full UI: sign in as A → edit → sign out → sign in as B → check no carry-over |
+| Biometric prompt on lock screen              | unit tests on `signOutAndWipe` ordering            | needs hardware biometric or emulator with a fingerprint                      |
+| iOS privacy overlay                          | code review of API contract                        | needs Mac+Xcode+device                                                       |
+| Cleartext traffic actually denied at runtime | `network_security_config` is wired                 | needs `adb shell setprop log.tag.OkHttp DEBUG` + dummy http call             |
 
 ## iOS test plan (for the operator's Mac)
 
 Once the patch in this PR lands, perform on a Mac with Xcode 15+:
 
 1. **Pod install + open workspace.**
+
    ```sh
    cd apps/mobile/ios && pod install
    open Runner.xcworkspace
@@ -232,7 +235,7 @@ Once the patch in this PR lands, perform on a Mac with Xcode 15+:
    - In Notes app, tap `seerah://onboarding` → expected: app routes to
      onboarding screen, doesn't crash on unknown links.
    - In Notes app, tap `seerah://hax/whatever` → expected: app silently
-     ignores (allow-list rejects).  Check Console.app → "Seerah" filter:
+     ignores (allow-list rejects). Check Console.app → "Seerah" filter:
      should see `deep_link path not allow-listed: /hax/whatever`.
 
 6. **Biometric**:

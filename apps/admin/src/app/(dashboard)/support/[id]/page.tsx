@@ -33,10 +33,7 @@ export default async function SupportTicketDetailPage({ params }: PageProps) {
   const { id } = await params;
   const sections = visibleSections(ctx.admin.role);
 
-  const [detail, assignees] = await Promise.all([
-    loadTicketDetail(id),
-    listAssignees(),
-  ]);
+  const [detail, assignees] = await Promise.all([loadTicketDetail(id), listAssignees()]);
 
   if (!detail) notFound();
 
@@ -85,14 +82,9 @@ export default async function SupportTicketDetailPage({ params }: PageProps) {
             <UserSidebar profile={user_profile} />
 
             <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="text-sm font-semibold text-slate-900">
-                إجراءات التذكرة
-              </h2>
+              <h2 className="text-sm font-semibold text-slate-900">إجراءات التذكرة</h2>
               <StatusControl ticketId={ticket.id} current={ticket.status} />
-              <PriorityControl
-                ticketId={ticket.id}
-                current={ticket.priority}
-              />
+              <PriorityControl ticketId={ticket.id} current={ticket.priority} />
               <AssigneeControl
                 ticketId={ticket.id}
                 current={ticket.assigned_to}
@@ -101,13 +93,8 @@ export default async function SupportTicketDetailPage({ params }: PageProps) {
             </section>
 
             <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="text-sm font-semibold text-slate-900">
-                ملاحظات داخلية
-              </h2>
-              <AdminNotesForm
-                ticketId={ticket.id}
-                initial={ticket.admin_notes ?? ""}
-              />
+              <h2 className="text-sm font-semibold text-slate-900">ملاحظات داخلية</h2>
+              <AdminNotesForm ticketId={ticket.id} initial={ticket.admin_notes ?? ""} />
             </section>
           </div>
         </div>

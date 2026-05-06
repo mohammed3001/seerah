@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY } from "./_section-blocks";
 import type { TemplateProps } from "./types";
@@ -28,8 +22,7 @@ export function TemplateCleanModern({ data, language, theme }: TemplateProps) {
   const surface = theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-white text-zinc-800";
   const subtle = theme.mode === "dark" ? "border-zinc-800" : "border-zinc-200";
   const muted = theme.mode === "dark" ? "text-zinc-400" : "text-zinc-500";
-  const fontFamily =
-    language === "ar" ? "var(--font-cairo)" : "var(--font-sf-pro)";
+  const fontFamily = language === "ar" ? "var(--font-cairo)" : "var(--font-sf-pro)";
 
   return (
     <article

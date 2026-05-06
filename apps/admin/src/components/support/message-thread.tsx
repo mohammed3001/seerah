@@ -23,7 +23,10 @@ function safeDate(iso: string | null): string {
 }
 
 function paragraphs(text: string): string[] {
-  return text.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  return text
+    .split(/\n{2,}/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 interface BubbleProps {
@@ -72,9 +75,7 @@ function Bubble({
           <span className="text-slate-700" dir="ltr">
             {authorLabel}
           </span>
-          {isInternal ? (
-            <Lock className="h-3 w-3 text-amber-700" />
-          ) : null}
+          {isInternal ? <Lock className="h-3 w-3 text-amber-700" /> : null}
         </div>
         <time className="text-slate-500" dir="ltr">
           {safeDate(createdAt)}

@@ -4,11 +4,7 @@ import { logAdminAction } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth/current";
 import { extractClientIp } from "@/lib/ip";
 import { listUsers } from "@/lib/users/list";
-import {
-  type Plan,
-  type UserSortKey,
-  type UserStatus,
-} from "@/lib/users/types";
+import { type Plan, type UserSortKey, type UserStatus } from "@/lib/users/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

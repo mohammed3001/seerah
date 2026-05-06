@@ -94,11 +94,7 @@ const COPY: Record<UpgradeFeature, FeatureCopy> = {
   passwordProtection: {
     title: "احمِ سيرتك بكلمة مرور",
     description: "شارك الرابط مع من تثق بهم فقط.",
-    highlights: [
-      "كلمة مرور مخصصة لكل سيرة",
-      "إخفاء السيرة من نتائج البحث",
-      "تتبع زيارات الرابط",
-    ],
+    highlights: ["كلمة مرور مخصصة لكل سيرة", "إخفاء السيرة من نتائج البحث", "تتبع زيارات الرابط"],
   },
   customSection: {
     title: "أقسام مخصصة لاحتياجاتك",
@@ -112,11 +108,7 @@ const COPY: Record<UpgradeFeature, FeatureCopy> = {
   watermark: {
     title: "تصدير بدون علامة مائية",
     description: "ملفاتك الاحترافية تستحق ظهورًا نظيفًا بدون شعارنا.",
-    highlights: [
-      "PDF نظيف بدون أي إشارة لـSeerah",
-      "أنسب لإرسال السيرة للشركات",
-      "PNG بدون تذييل",
-    ],
+    highlights: ["PDF نظيف بدون أي إشارة لـSeerah", "أنسب لإرسال السيرة للشركات", "PNG بدون تذييل"],
   },
 };
 
@@ -147,8 +139,7 @@ export function UpgradeModal({
   const copy = COPY[feature];
   const session = useDashboardSession();
   // Currency precedence: explicit prop > profile.billing_country > USD default.
-  const resolvedCurrency =
-    currency ?? pickCurrencyForCountry(session.profile.billing_country);
+  const resolvedCurrency = currency ?? pickCurrencyForCountry(session.profile.billing_country);
   const pricing = PRICE_BY_CURRENCY[resolvedCurrency];
   const priceLabel = pricing.label_yearly;
   const monthlyLabel = pricing.label_monthly;
@@ -213,9 +204,7 @@ export function UpgradeModal({
         ) : null}
 
         <div className="rounded-card border border-border bg-secondary/40 p-4">
-          <p className="text-sm font-semibold">
-            باقة برايم — {priceLabel} / سنة
-          </p>
+          <p className="text-sm font-semibold">باقة برايم — {priceLabel} / سنة</p>
           <p className="text-xs text-muted-foreground">
             ≈ {monthlyLabel} شهريًا · جرّبها مجانًا 7 أيام
           </p>

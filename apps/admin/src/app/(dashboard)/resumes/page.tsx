@@ -39,22 +39,17 @@ function asInt(value: string | string[] | undefined): number | undefined {
 
 function asPerPage(value: string | string[] | undefined): ResumePerPage {
   const n = Number(asString(value));
-  if ((PER_PAGE_OPTIONS as readonly number[]).includes(n))
-    return n as ResumePerPage;
+  if ((PER_PAGE_OPTIONS as readonly number[]).includes(n)) return n as ResumePerPage;
   return DEFAULT_PER_PAGE;
 }
 
-function asLanguage(
-  value: string | string[] | undefined,
-): ResumeLanguage | undefined {
+function asLanguage(value: string | string[] | undefined): ResumeLanguage | undefined {
   const v = asString(value);
   if (v === "ar" || v === "en") return v;
   return undefined;
 }
 
-function asFeatured(
-  value: string | string[] | undefined,
-): ResumeFeaturedFilter | undefined {
+function asFeatured(value: string | string[] | undefined): ResumeFeaturedFilter | undefined {
   const v = asString(value);
   if (v === "featured" || v === "not_featured") return v;
   return undefined;
@@ -62,8 +57,7 @@ function asFeatured(
 
 function asSortKey(value: string | string[] | undefined): ResumeSortKey {
   const v = asString(value);
-  if (v && (SORT_KEYS as readonly string[]).includes(v))
-    return v as ResumeSortKey;
+  if (v && (SORT_KEYS as readonly string[]).includes(v)) return v as ResumeSortKey;
   return "created_at";
 }
 
@@ -101,10 +95,7 @@ export default async function ResumesPage({ searchParams }: PageProps) {
   if (!ctx) redirect("/login");
   // Resumes are accessible to super_admin and template_manager.  Support
   // agents are scoped to users + tickets.
-  if (
-    ctx.admin.role !== "super_admin" &&
-    ctx.admin.role !== "template_manager"
-  ) {
+  if (ctx.admin.role !== "super_admin" && ctx.admin.role !== "template_manager") {
     redirect("/");
   }
 
@@ -132,15 +123,14 @@ export default async function ResumesPage({ searchParams }: PageProps) {
   const sections = visibleSections(ctx.admin.role);
 
   // Resume preview links must point to the public app, not admin domain.
-  const publicAppUrl = (
-    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com"
-  ).replace(/\/$/, "");
+  const publicAppUrl = (process.env["NEXT_PUBLIC_APP_URL"] ?? "https://seerah.com").replace(
+    /\/$/,
+    "",
+  );
 
   const canDelete = ctx.admin.role === "super_admin";
   // super_admin and template_manager can curate (change template + featured).
-  const canCurate =
-    ctx.admin.role === "super_admin" ||
-    ctx.admin.role === "template_manager";
+  const canCurate = ctx.admin.role === "super_admin" || ctx.admin.role === "template_manager";
 
   return (
     <>
@@ -152,10 +142,7 @@ export default async function ResumesPage({ searchParams }: PageProps) {
       />
 
       <main className="flex-1 space-y-4 px-4 py-6 lg:px-8 lg:py-8">
-        <ResumesFilters
-          templates={result.templates}
-          perPage={result.perPage}
-        />
+        <ResumesFilters templates={result.templates} perPage={result.perPage} />
 
         <div className="flex items-center justify-end">
           <ResumesExportButton />
@@ -172,11 +159,7 @@ export default async function ResumesPage({ searchParams }: PageProps) {
           canCurate={canCurate}
         />
 
-        <ResumesPagination
-          page={result.page}
-          perPage={result.perPage}
-          total={result.total}
-        />
+        <ResumesPagination page={result.page} perPage={result.perPage} total={result.total} />
       </main>
     </>
   );

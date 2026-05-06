@@ -30,14 +30,8 @@ function MoneyList({
   );
 }
 
-export function RevenueSummaryCards({
-  revenue,
-  statusSummary,
-}: RevenueSummaryCardsProps) {
-  const churnPct =
-    revenue.churn_rate === null
-      ? null
-      : (revenue.churn_rate * 100).toFixed(1);
+export function RevenueSummaryCards({ revenue, statusSummary }: RevenueSummaryCardsProps) {
+  const churnPct = revenue.churn_rate === null ? null : (revenue.churn_rate * 100).toFixed(1);
 
   return (
     <div className="space-y-3">
@@ -47,11 +41,9 @@ export function RevenueSummaryCards({
           <div>
             <p className="font-medium">إعدادات Stripe ناقصة</p>
             <p className="mt-1 text-[11px] text-amber-700">
-              MRR/ARR لا تظهر لأن{" "}
-              <span className="font-mono">STRIPE_SECRET_KEY</span> غير
-              مهيّأ. الأرقام أدناه (نشط، تجريبي، إلخ.) محسوبة من قاعدة
-              البيانات وتظهر بشكل طبيعي. أضف المفتاح في إعدادات النشر
-              لتفعيل الإيرادات الحقيقيّة.
+              MRR/ARR لا تظهر لأن <span className="font-mono">STRIPE_SECRET_KEY</span> غير مهيّأ.
+              الأرقام أدناه (نشط، تجريبي، إلخ.) محسوبة من قاعدة البيانات وتظهر بشكل طبيعي. أضف
+              المفتاح في إعدادات النشر لتفعيل الإيرادات الحقيقيّة.
             </p>
           </div>
         </div>
@@ -65,23 +57,17 @@ export function RevenueSummaryCards({
           <div className="mt-2">
             <MoneyList
               buckets={revenue.mrr}
-              emptyLabel={
-                revenue.configured ? "لا اشتراكات نشطة" : "غير متاح بدون Stripe"
-              }
+              emptyLabel={revenue.configured ? "لا اشتراكات نشطة" : "غير متاح بدون Stripe"}
             />
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-medium text-slate-500">
-            الإيرادات السنوية (ARR)
-          </p>
+          <p className="text-[11px] font-medium text-slate-500">الإيرادات السنوية (ARR)</p>
           <div className="mt-2">
             <MoneyList
               buckets={revenue.arr}
-              emptyLabel={
-                revenue.configured ? "لا اشتراكات نشطة" : "غير متاح بدون Stripe"
-              }
+              emptyLabel={revenue.configured ? "لا اشتراكات نشطة" : "غير متاح بدون Stripe"}
             />
           </div>
         </div>
@@ -100,9 +86,7 @@ export function RevenueSummaryCards({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-medium text-slate-500">
-            مشتركون جدد هذا الشهر
-          </p>
+          <p className="text-[11px] font-medium text-slate-500">مشتركون جدد هذا الشهر</p>
           <p className="mt-2 flex items-baseline gap-1 text-2xl font-semibold text-slate-900">
             {revenue.new_this_month.toLocaleString("ar-SA")}
             <TrendingUp className="h-4 w-4 text-emerald-600" />
@@ -131,9 +115,7 @@ export function RevenueSummaryCards({
               </>
             )}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">
-            ملغى ÷ نشط قبل ٣٠ يومًا
-          </p>
+          <p className="mt-1 text-[11px] text-slate-500">ملغى ÷ نشط قبل ٣٠ يومًا</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -152,7 +134,9 @@ export function RevenueSummaryCards({
 
       <p className="text-[11px] text-slate-400">
         المصدر:{" "}
-        {revenue.source === "stripe" ? "Stripe API + قاعدة البيانات" : "تقدير محلّي (Stripe غير مهيّأ)"}
+        {revenue.source === "stripe"
+          ? "Stripe API + قاعدة البيانات"
+          : "تقدير محلّي (Stripe غير مهيّأ)"}
       </p>
     </div>
   );

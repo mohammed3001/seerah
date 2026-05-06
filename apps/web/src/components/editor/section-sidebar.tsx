@@ -18,11 +18,10 @@ export function SectionSidebar() {
     const s = sections.find((x) => x.key === key);
     if (!s) return true;
     if (s.singleton) return true;
-    const items = (
-      data[
-        key === "links" ? "links" : (key as keyof typeof data)
-      ] as { is_visible: boolean }[] | undefined
-    ) ?? [];
+    const items =
+      (data[key === "links" ? "links" : (key as keyof typeof data)] as
+        | { is_visible: boolean }[]
+        | undefined) ?? [];
     return items.some((i) => i.is_visible);
   }
 

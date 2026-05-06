@@ -24,9 +24,7 @@ export interface ResetPasswordActionResult {
  * generic error message Supabase would have returned, so we don't
  * leak whether the recovery link was valid.
  */
-export async function resetPasswordAction(
-  password: string,
-): Promise<ResetPasswordActionResult> {
+export async function resetPasswordAction(password: string): Promise<ResetPasswordActionResult> {
   // Resolve the recovery session FIRST so we can pass the email to
   // `validatePassword` and enforce the `looks_like_email` rule.
   // Without this the policy here is laxer than at signup — a user

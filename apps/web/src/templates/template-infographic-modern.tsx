@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY_WITH_BARS } from "./_section-blocks";
 import type { TemplateProps } from "./types";
@@ -59,9 +53,7 @@ export function TemplateInfographicModern({ data, language, theme }: TemplatePro
         <h1 className="text-[32px] font-extrabold leading-tight tracking-tight text-white">
           {fullName || "—"}
         </h1>
-        {jobTitle ? (
-          <p className="mt-1 text-base text-white/90">{jobTitle}</p>
-        ) : null}
+        {jobTitle ? <p className="mt-1 text-base text-white/90">{jobTitle}</p> : null}
         <ContactInline
           data={data}
           language={language}

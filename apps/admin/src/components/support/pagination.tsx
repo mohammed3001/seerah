@@ -30,9 +30,7 @@ export function SupportPagination({ page, perPage, total }: PaginationProps) {
     <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm sm:flex-row">
       <p>
         عرض {start.toLocaleString("ar-SA")} – {end.toLocaleString("ar-SA")} من{" "}
-        <span className="font-semibold text-slate-900">
-          {total.toLocaleString("ar-SA")}
-        </span>
+        <span className="font-semibold text-slate-900">{total.toLocaleString("ar-SA")}</span>
       </p>
 
       <div className="flex items-center gap-3">
@@ -64,9 +62,7 @@ export function SupportPagination({ page, perPage, total }: PaginationProps) {
             href={pageHref(params, Math.max(1, page - 1))}
             className={cn(
               "inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200",
-              page <= 1
-                ? "pointer-events-none opacity-50"
-                : "text-slate-700 hover:bg-slate-50",
+              page <= 1 ? "pointer-events-none opacity-50" : "text-slate-700 hover:bg-slate-50",
             )}
           >
             <ChevronRight className="h-4 w-4" />

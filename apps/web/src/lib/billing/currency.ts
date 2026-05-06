@@ -20,9 +20,7 @@ const SAR_COUNTRIES = new Set([
 
 export type BillingCurrency = "sar" | "usd";
 
-export function pickCurrencyForCountry(
-  country: string | null | undefined,
-): BillingCurrency {
+export function pickCurrencyForCountry(country: string | null | undefined): BillingCurrency {
   if (country && SAR_COUNTRIES.has(country.toUpperCase())) return "sar";
   return "usd";
 }

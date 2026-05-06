@@ -39,8 +39,7 @@ function asInt(v: string | null): number | undefined {
 }
 
 function asSort(v: string | null): ResumeSortKey {
-  if (v && (SORT_KEYS as readonly string[]).includes(v))
-    return v as ResumeSortKey;
+  if (v && (SORT_KEYS as readonly string[]).includes(v)) return v as ResumeSortKey;
   return "created_at";
 }
 
@@ -49,10 +48,7 @@ export async function GET(request: NextRequest) {
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   // Resumes are visible to super_admin and template_manager (curation
   // surface).  Support agents stay scoped to users + tickets.
-  if (
-    ctx.admin.role !== "super_admin" &&
-    ctx.admin.role !== "template_manager"
-  ) {
+  if (ctx.admin.role !== "super_admin" && ctx.admin.role !== "template_manager") {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

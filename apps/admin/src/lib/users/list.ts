@@ -31,9 +31,7 @@ export async function listUsers(filters: UserListFilters): Promise<UserListResul
   const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
-  const sortKey: UserSortKey = ALLOWED_SORT_KEYS.includes(
-    filters.sort as UserSortKey,
-  )
+  const sortKey: UserSortKey = ALLOWED_SORT_KEYS.includes(filters.sort as UserSortKey)
     ? (filters.sort as UserSortKey)
     : "created_at";
   const ascending = filters.dir === "asc";
@@ -78,10 +76,9 @@ export async function listUsers(filters: UserListFilters): Promise<UserListResul
   const userIds = rows.map((r) => r.id);
   const countMap = new Map<string, number>();
   if (userIds.length > 0) {
-    const { data: countRows, error: countErr } = await supabase.rpc(
-      "admin_user_resume_counts",
-      { p_user_ids: userIds },
-    );
+    const { data: countRows, error: countErr } = await supabase.rpc("admin_user_resume_counts", {
+      p_user_ids: userIds,
+    });
     if (countErr) {
       throw new Error(`Failed to load resume counts: ${countErr.message}`);
     }
@@ -92,9 +89,7 @@ export async function listUsers(filters: UserListFilters): Promise<UserListResul
 
   // Distinct countries for the filter dropdown — DISTINCT-as-RPC for the
   // same reason as the audit log's action filter.
-  const { data: countryRows } = await supabase.rpc(
-    "admin_distinct_user_countries",
-  );
+  const { data: countryRows } = await supabase.rpc("admin_distinct_user_countries");
   const countries = (countryRows ?? []).map((r) => r.country);
 
   const result: UserListRow[] = rows.map((r) => ({
