@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security config for Seerah on Android.
+
+  Default policy: HTTPS only.  Cleartext HTTP is disabled because every
+  service the app talks to (Supabase, our Next.js API at seerah.com,
+  Stripe Checkout) is TLS-only.  This is defence-in-depth against:
+    1. A compromised proxy or hostile DNS pushing the app to plaintext.
+    2. A `dio.fetch("http://…")` typo accidentally landing in code review.
+
+  Trust anchors: only the system trust store.  We deliberately do NOT
+  trust user-installed CAs because that's the most common MITM vector
+  on rooted devices and at corporate proxies.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

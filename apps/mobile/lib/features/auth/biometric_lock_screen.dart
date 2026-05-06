@@ -17,10 +17,10 @@
 
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:supabase_flutter/supabase_flutter.dart";
 
 import "../../core/auth/biometric_gate.dart";
 import "../../core/auth/biometric_service.dart";
+import "../../core/auth/sign_out.dart";
 import "../../core/theme/colors.dart";
 
 class BiometricLockScreen extends ConsumerStatefulWidget {
@@ -67,15 +67,33 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen> {
   }
 
   Future<void> _signOut() async {
-    setState(() => _busy = true);
-    await Supabase.instance.client.auth.signOut();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    // Wipe every per-user Hive artifact (outbox + resume cache) before
+    // tearing down the gotrue session — see `signOutAndWipe` for why
+    // ordering matters (TL;DR: signOut first, biometric mutations
+    // after, otherwise the router would briefly redirect to /dashboard
+    // with a still-valid session).
+    final ok = await signOutAndWipe(ref);
     if (!mounted) return;
-    // Disable the toggle — the next person to log in shouldn't inherit
-    // the previous user's biometric opt-in.
-    await ref.read(biometricEnrolledProvider.notifier).setEnabled(false);
-    // The auth listener inside the router will redirect to /auth/login
-    // automatically once the gate is unlocked.
-    ref.read(biometricGateProvider.notifier).unlock();
+    if (!ok) {
+      // Keep the lock screen up so the user can retry — biometric
+      // protection stays in place because step 5 of the helper
+      // skipped the toggle clear.
+      setState(() {
+        _busy = false;
+        _error = "تعذّر تسجيل الخروج. حاول مرة أخرى.";
+      });
+      return;
+    }
+    // signOut succeeded → currentSession is null → the router's
+    // !loggedIn rule (`/auth/login`) wins and redirects automatically.
+    // No manual gate.unlock() — see Devin Review on PR #36 for the bug
+    // that fix introduced (clearing the gate while still loggedIn would
+    // race the auth listener and bounce to /dashboard via
+    // `loggedIn && isLock && !biometricEnrolled`).
   }
 
   @override
