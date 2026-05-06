@@ -54,7 +54,13 @@ class Settings(BaseSettings):
     )
 
     def render_allowed_extra_hosts(self) -> list[str]:
-        return [s for s in (self.pdf_render_allowed_extra_hosts or "").split(",") if s.strip()]
+        # Strip each entry before returning so callers see clean hostnames.
+        # The split-then-filter pattern previously left whitespace on the
+        # entries (e.g. " host2" for input "host1, host2"), which the SSRF
+        # guard happened to tolerate via an internal strip but any other
+        # consumer (logging, display, alternate matching path) would not.
+        raw = self.pdf_render_allowed_extra_hosts or ""
+        return [s.strip() for s in raw.split(",") if s.strip()]
 
 
 @lru_cache(maxsize=1)

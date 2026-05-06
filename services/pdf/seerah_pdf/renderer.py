@@ -22,7 +22,12 @@ from urllib.parse import urlencode, urljoin
 from playwright.async_api import Browser, BrowserContext, Route, async_playwright
 
 from .config import get_settings
-from .network_guard import GuardDecision, default_allowed_hosts, should_allow
+from .network_guard import (
+    GuardDecision,
+    default_allowed_hosts,
+    default_trusted_hosts,
+    should_allow,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -114,10 +119,23 @@ class PlaywrightRenderer:
             supabase_url=settings.supabase_url,
             extras=settings.render_allowed_extra_hosts(),
         )
+        # The renderer's own primary targets bypass the address-family check.
+        # Without this, `localhost` (dev) and any in-cluster private-IP
+        # service-mesh hostname (prod) would be refused on the very first
+        # navigation, breaking the renderer.  See network_guard.should_allow
+        # docstring for the threat-model rationale.
+        trusted_hosts = default_trusted_hosts(
+            web_app_url=settings.web_app_url,
+            supabase_url=settings.supabase_url,
+        )
 
         async def _guard(route: Route) -> None:
             url = route.request.url
-            decision: GuardDecision = should_allow(url, allowed_hosts=allowed_hosts)
+            decision: GuardDecision = should_allow(
+                url,
+                allowed_hosts=allowed_hosts,
+                trusted_hosts=trusted_hosts,
+            )
             if decision.allowed:
                 await route.continue_()
             else:

@@ -125,6 +125,7 @@ def should_allow(
     url: str,
     *,
     allowed_hosts: list[str],
+    trusted_hosts: list[str] | None = None,
     skip_address_check: bool = False,
 ) -> GuardDecision:
     """Run a candidate URL through both gates.
@@ -132,6 +133,25 @@ def should_allow(
     `allowed_hosts` is the post-startup-merged list of legitimate request
     targets — at minimum the web app's own host and the Supabase public
     storage host.
+
+    `trusted_hosts` is the strict subset of those hosts that were declared
+    at startup as the renderer's *primary* targets (typically the web app
+    URL and the Supabase URL).  These hosts are not subject to the
+    address-family check, because:
+
+    - They are operator-configured at process startup, not user-supplied,
+      so DNS rebinding has no leverage (an attacker would need to compromise
+      the operator's env config, at which point they already control the
+      service).
+    - In dev `localhost` resolves to `::1` / `127.0.0.1` and the address
+      check would refuse the renderer's own navigation to its target, which
+      breaks the entire pipeline.  Same applies to in-cluster service-mesh
+      deployments where the web app is reachable on a private IP only.
+
+    Operator-curated extras (`PDF_RENDER_ALLOWED_EXTRA_HOSTS`) are NOT
+    trusted — they still get the address-family check, because the threat
+    model for extras is DNS rebinding on a third-party CDN that the
+    operator added on someone else's recommendation.
 
     `skip_address_check` exists ONLY for tests.  In production callers
     should leave it false so DNS rebinding cannot bypass the guard.
@@ -159,6 +179,11 @@ def should_allow(
     if not _hostname_matches(hostname, allowed_hosts):
         return GuardDecision(False, f"host not in allow-list: {hostname}")
 
+    # Trusted hosts (renderer's own primary targets, configured at startup)
+    # bypass the address check.  See docstring above.
+    if trusted_hosts and _hostname_matches(hostname, trusted_hosts):
+        return GuardDecision(True, "host trusted (address check bypassed)")
+
     if skip_address_check:
         return GuardDecision(True, "host allowed (address check skipped)")
 
@@ -183,7 +208,28 @@ def default_allowed_hosts(
 ) -> list[str]:
     """Build the per-process allow-list from settings.  The web app itself
     and the Supabase public storage CDN are always permitted; operators can
-    add more via PDF_RENDER_ALLOWED_EXTRA_HOSTS (comma-separated)."""
+    add more via PDF_RENDER_ALLOWED_EXTRA_HOSTS (comma-separated).
+
+    Returns the *full* allow-list including extras.  Pair with
+    `default_trusted_hosts()` if the caller wants to bypass the
+    address-family check on the renderer's primary targets only."""
+    out: list[str] = list(default_trusted_hosts(web_app_url, supabase_url))
+    if extras:
+        for entry in extras:
+            entry = entry.strip()
+            if entry:
+                out.append(entry)
+    return out
+
+
+def default_trusted_hosts(
+    web_app_url: str,
+    supabase_url: str,
+) -> list[str]:
+    """Strict subset of `default_allowed_hosts()` for which the address-
+    family check is bypassed.  Only contains the renderer's primary
+    targets (web app URL + Supabase URL); operator-curated extras are NOT
+    in this list — they still get the rebinding check."""
     out: list[str] = []
     for raw in (web_app_url, supabase_url):
         if not raw:
@@ -194,9 +240,4 @@ def default_allowed_hosts(
             continue
         if host:
             out.append(host)
-    if extras:
-        for entry in extras:
-            entry = entry.strip()
-            if entry:
-                out.append(entry)
     return out

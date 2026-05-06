@@ -68,7 +68,14 @@ export async function generateRecoveryCodes(adminId: string): Promise<string[]> 
   for (let i = 0; i < RECOVERY_BATCH_SIZE; i++) {
     const raw = newRawCode();
     codes.push(raw);
-    rows.push({ admin_id: adminId, code_hash: await sha256Hex(raw) });
+    // The stored hash MUST match what consumeRecoveryCode() will compute
+    // from user input.  Consumption first runs `normalize()` to strip
+    // whitespace and dashes from whatever the admin typed (a code from a
+    // password manager may or may not include the readability dashes), so
+    // we have to hash the same normalized form here at generation time.
+    // Hashing the dashed form would mean every code is permanently
+    // unusable.
+    rows.push({ admin_id: adminId, code_hash: await sha256Hex(normalize(raw)) });
   }
 
   const { error: insertError } = await supabase.from("admin_recovery_codes").insert(rows);
