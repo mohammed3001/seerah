@@ -170,6 +170,9 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema='public' order by table_name;"
 
+      - name: Test handle_new_user trigger
+        run: psql -v ON_ERROR_STOP=1 -f scripts/ci/test_handle_new_user_trigger.sql
+
   # ---------------------------------------------------------------------------
   # Flutter — only when apps/mobile changes
   # ---------------------------------------------------------------------------

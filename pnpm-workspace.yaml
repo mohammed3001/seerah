@@ -1,3 +1,7 @@
+# `apps/mobile` is a Flutter (Dart) project and is intentionally NOT part of
+# this pnpm workspace — Dart and TypeScript don't share a package manager.
+# Drift between Dart models and the Postgres schema is mitigated by the
+# shared SQL in `supabase/migrations/`, not by sharing `@seerah/types`.
 packages:
   - "apps/web"
   - "apps/admin"
