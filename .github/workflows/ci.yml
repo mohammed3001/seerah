@@ -173,6 +173,13 @@ jobs:
       - name: Test handle_new_user trigger
         run: psql -v ON_ERROR_STOP=1 -f scripts/ci/test_handle_new_user_trigger.sql
 
+      - name: Run storage orphan purger regression test
+        # Repro for the ::uuid-cast crash fixed in
+        # 20260515000000_storage_lifecycle_fix.sql. Inserts a non-UUID
+        # storage object (.emptyFolderPlaceholder) and confirms the purger
+        # tolerates it instead of raising.
+        run: psql -v ON_ERROR_STOP=1 -f scripts/ci/test_storage_orphan_purger.sql
+
   # ---------------------------------------------------------------------------
   # Flutter — only when apps/mobile changes
   # ---------------------------------------------------------------------------

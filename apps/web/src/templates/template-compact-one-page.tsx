@@ -11,7 +11,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import type { TemplateProps } from "./types";
 import {
@@ -86,27 +86,38 @@ export function TemplateCompactOnePage({ data, language, theme, isExport }: Temp
   // Auto-scale on overflow in the editor preview only. The export route
   // disables this so the headless renderer captures the natural layout
   // (overflow then becomes the user's signal to trim content).
+  //
+  // The measurement must read scrollHeight at the *natural* (unscaled)
+  // width, not at the compensated `100/scale%` width.  The previous
+  // implementation read scrollHeight after the scale + width compensation
+  // were applied, which made the measurement a function of the very state
+  // it was trying to set:
+  //   scale=1 (width 100%)         → scrollHeight=1300 → setScale(0.864)
+  //   scale=0.864 (width 115.7%)   → scrollHeight=1080 → setScale(1)
+  //   scale=1 (width 100%)         → scrollHeight=1300 → setScale(0.864)
+  //   ... infinite oscillation, visible flicker, browser warns about
+  //   "ResizeObserver loop completed with undelivered notifications".
+  // Force-reset transform/width before reading scrollHeight, then commit
+  // the new scale once.  Re-measurement is triggered by content/language
+  // changes via the effect deps, not by our own layout side-effects.
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isExport || !contentRef.current) return;
     const target = contentRef.current;
     const A4_HEIGHT_PX = 1123; // 297mm @ 96dpi
 
-    const check = () => {
-      const h = target.scrollHeight;
-      if (h > A4_HEIGHT_PX) {
-        setScale(Math.max(0.78, A4_HEIGHT_PX / h));
-      } else {
-        setScale(1);
-      }
-    };
+    const prevTransform = target.style.transform;
+    const prevWidth = target.style.width;
+    target.style.transform = "none";
+    target.style.width = "100%";
+    const naturalHeight = target.scrollHeight;
+    target.style.transform = prevTransform;
+    target.style.width = prevWidth;
 
-    const ro = new ResizeObserver(check);
-    ro.observe(target);
-    check();
-    return () => ro.disconnect();
+    const next = naturalHeight > A4_HEIGHT_PX ? Math.max(0.78, A4_HEIGHT_PX / naturalHeight) : 1;
+    setScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
   }, [isExport, data, language]);
 
   return (
