@@ -42,18 +42,14 @@ const ALLOWED_SORT_KEYS: readonly ResumeSortKey[] = SORT_KEYS;
  *      when the admin combines featured with template/language/date/
  *      completion/search filters.
  */
-export async function listResumes(
-  filters: ResumeListFilters,
-): Promise<ResumeListResult> {
+export async function listResumes(filters: ResumeListFilters): Promise<ResumeListResult> {
   const supabase = getServiceRoleClient();
   const page = Math.max(1, filters.page ?? 1);
   const perPage = filters.perPage ?? DEFAULT_PER_PAGE;
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
-  const sortKey: ResumeSortKey = ALLOWED_SORT_KEYS.includes(
-    filters.sort as ResumeSortKey,
-  )
+  const sortKey: ResumeSortKey = ALLOWED_SORT_KEYS.includes(filters.sort as ResumeSortKey)
     ? (filters.sort as ResumeSortKey)
     : "created_at";
   const ascending = filters.dir === "asc";
@@ -83,9 +79,7 @@ export async function listResumes(
     .from("featured_resumes")
     .select("resume_id");
   if (featuredAllErr) {
-    throw new Error(
-      `Failed to load featured set: ${featuredAllErr.message}`,
-    );
+    throw new Error(`Failed to load featured set: ${featuredAllErr.message}`);
   }
   const allFeaturedIds = (allFeaturedRows ?? []).map((r) => r.resume_id);
   const featuredSet = new Set<string>(allFeaturedIds);
@@ -200,9 +194,7 @@ export async function listResumes(
     }
   }
 
-  const rows: ResumeListRow[] = baseRows.map((r) =>
-    toRow(r, templates, userMap, featuredSet),
-  );
+  const rows: ResumeListRow[] = baseRows.map((r) => toRow(r, templates, userMap, featuredSet));
 
   return {
     rows,
@@ -227,10 +219,7 @@ function toRow(
     user_id: string;
   },
   templates: TemplateOption[],
-  userMap: Map<
-    string,
-    { email: string; full_name: string | null; avatar_url: string | null }
-  >,
+  userMap: Map<string, { email: string; full_name: string | null; avatar_url: string | null }>,
   featuredSet: Set<string>,
 ): ResumeListRow {
   const tpl = templates.find((t) => t.id === r.template_id);

@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactStack } from "./_atoms";
 import { BLOCK_FOR_KEY_WITH_CHIPS } from "./_section-blocks";
 import type { TemplateProps } from "./types";
@@ -37,11 +31,7 @@ export function TemplateTechDeveloper({ data, language, theme }: TemplateProps) 
       className={`mx-auto p-12 text-[13px] leading-[1.7] ${surface}`}
     >
       <header className="mb-8">
-        <p
-          className="mb-2 font-mono text-xs"
-          style={{ color: accent }}
-          dir="ltr"
-        >
+        <p className="mb-2 font-mono text-xs" style={{ color: accent }} dir="ltr">
           $ whoami --resume
         </p>
         <h1 className="text-[28px] font-bold tracking-tight">{fullName || "—"}</h1>

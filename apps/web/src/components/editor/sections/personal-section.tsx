@@ -122,10 +122,7 @@ export function PersonalSection() {
         <div className="flex flex-col items-center gap-3">
           <Avatar className="size-28">
             {form.avatar_path ? (
-              <AvatarImage
-                src={publicAvatarUrl(form.avatar_path) ?? undefined}
-                alt=""
-              />
+              <AvatarImage src={publicAvatarUrl(form.avatar_path) ?? undefined} alt="" />
             ) : null}
             <AvatarFallback>
               <User className="size-10 text-muted-foreground/40" />
@@ -142,7 +139,11 @@ export function PersonalSection() {
               }}
             />
             <span className="inline-flex h-9 items-center gap-2 rounded-button border border-border bg-background px-3 text-xs font-medium hover:bg-secondary">
-              {savingAvatar ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+              {savingAvatar ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Upload className="size-3.5" />
+              )}
               تحميل صورة
             </span>
           </label>
@@ -184,9 +185,7 @@ export function PersonalSection() {
                       // Read via formRef so a sync that arrived while the
                       // panel was open isn't clobbered by a stale snapshot.
                       const target =
-                        (formRef.current[lang] as
-                          | Record<string, string>
-                          | undefined) ?? {};
+                        (formRef.current[lang] as Record<string, string> | undefined) ?? {};
                       update(lang, { ...target, bio: text } as PersonalRow["ar"]);
                     },
                   })
@@ -271,10 +270,7 @@ export function PersonalSection() {
               <Select
                 value={form.marital_status ?? ""}
                 onValueChange={(v) =>
-                  update(
-                    "marital_status",
-                    (v || null) as PersonalRow["marital_status"],
-                  )
+                  update("marital_status", (v || null) as PersonalRow["marital_status"])
                 }
               >
                 <SelectTrigger>
@@ -358,5 +354,3 @@ function publicAvatarUrl(path: string | null): string | null {
   if (!url) return null;
   return `${url}/storage/v1/object/public/avatars/${path}`;
 }
-
-

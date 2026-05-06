@@ -32,7 +32,11 @@ export default async function DashboardHome() {
       title="سيرتي"
     >
       <Suspense fallback={<ResumeListSkeleton />}>
-        <ResumesAsync userId={session.userId} maxResumes={session.profile.max_resumes} plan={session.profile.plan} />
+        <ResumesAsync
+          userId={session.userId}
+          maxResumes={session.profile.max_resumes}
+          plan={session.profile.plan}
+        />
       </Suspense>
     </DashboardShell>
   );

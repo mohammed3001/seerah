@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY } from "./_section-blocks";
 import type { TemplateProps } from "./types";

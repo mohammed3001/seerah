@@ -50,7 +50,7 @@ template_manager) are added through the Settings → Admin team panel.
    of the cookie token is persisted, so a database leak does not surrender
    live sessions. Sessions expire after 2 hours of inactivity.
 4. **IP allowlist** — every request (including `/login`) is filtered by
-   `admin_ip_allowlist`. While the table is empty *or* has no `is_active`
+   `admin_ip_allowlist`. While the table is empty _or_ has no `is_active`
    rows, all source IPs are allowed (fail-safe so the first operator
    doesn't lock themselves out). Add at least one CIDR via Settings to
    enforce the gate.
@@ -65,7 +65,7 @@ template_manager) are added through the Settings → Admin team panel.
 - **All super_admins locked out:** rotate `SUPABASE_SERVICE_ROLE_KEY`,
   then run `pnpm bootstrap` after manually deleting the bricked rows from
   `admin_users` via psql. The bootstrap script refuses to insert if
-  *any* admin row exists, so you must clear the table first.
+  _any_ admin row exists, so you must clear the table first.
 
 ## Required environment
 

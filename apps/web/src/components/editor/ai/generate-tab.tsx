@@ -11,11 +11,7 @@ import { HistoryStrip } from "./history-strip";
 import { track } from "@/lib/analytics/posthog";
 import { generateSectionAction } from "@/lib/ai/actions";
 import { pushHistory } from "@/lib/ai/history";
-import type {
-  GenerateSectionResponse,
-  RateLimitInfo,
-  SectionType,
-} from "@/lib/ai/types";
+import type { GenerateSectionResponse, RateLimitInfo, SectionType } from "@/lib/ai/types";
 
 interface Props {
   onRateLimit: (info: RateLimitInfo | null) => void;
@@ -185,8 +181,8 @@ export function GenerateTab({ onRateLimit }: Props) {
             ))}
           </ul>
           <p className="text-xs text-muted-foreground">
-            بإمكانك نسخ القيم يدويًا إلى الحقول المناسبة في القسم.
-            (قبول مباشر للبنود متعددة الأقسام سيُضاف لاحقًا.)
+            بإمكانك نسخ القيم يدويًا إلى الحقول المناسبة في القسم. (قبول مباشر للبنود متعددة الأقسام
+            سيُضاف لاحقًا.)
           </p>
         </div>
       ) : null}
@@ -204,16 +200,8 @@ export function GenerateTab({ onRateLimit }: Props) {
   );
 }
 
-function GeneratedItemCard({
-  index,
-  item,
-}: {
-  index: number;
-  item: Record<string, unknown>;
-}) {
-  const entries = Object.entries(item).filter(
-    ([, v]) => v !== null && v !== undefined && v !== "",
-  );
+function GeneratedItemCard({ index, item }: { index: number; item: Record<string, unknown> }) {
+  const entries = Object.entries(item).filter(([, v]) => v !== null && v !== undefined && v !== "");
   const [collapsed, setCollapsed] = React.useState(false);
 
   return (

@@ -46,9 +46,7 @@ export function AddressSection() {
       />
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label>
-            العنوان الوطني {editorLang === "ar" ? "(عربي)" : "(English)"}
-          </Label>
+          <Label>العنوان الوطني {editorLang === "ar" ? "(عربي)" : "(English)"}</Label>
           <Textarea
             rows={3}
             maxLength={NAT_MAX}

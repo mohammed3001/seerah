@@ -49,8 +49,8 @@ export default async function SettingsPage() {
         <section className="rounded-lg border border-destructive/30 bg-destructive/5 p-6">
           <h2 className="text-lg font-semibold text-destructive">حذف الحساب</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            سيتم حذف حسابك وكل بياناتك (السير الذاتية والصور والتذاكر) نهائيًا. لا يمكن
-            التراجع عن هذا الإجراء.
+            سيتم حذف حسابك وكل بياناتك (السير الذاتية والصور والتذاكر) نهائيًا. لا يمكن التراجع عن
+            هذا الإجراء.
           </p>
           {session.profile.plan !== "free" ? (
             <p className="mt-2 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">

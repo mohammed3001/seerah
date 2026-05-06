@@ -44,8 +44,7 @@ export function buildSampleResume(): LoadedResume {
       resume_id: RESUME_ID,
       full_name: "محمد عبدالله السبيعي",
       job_title: "مهندس برمجيات أول",
-      bio:
-        "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء، شغوف بهندسة جودة الكود وقياس الأداء.",
+      bio: "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء، شغوف بهندسة جودة الكود وقياس الأداء.",
       email: "mohammed@example.com",
       phone: "555 123 4567",
       phone_country_code: "+966",
@@ -62,8 +61,7 @@ export function buildSampleResume(): LoadedResume {
       ar: {
         full_name: "محمد عبدالله السبيعي",
         job_title: "مهندس برمجيات أول",
-        bio:
-          "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء.",
+        bio: "مهندس برمجيات بأكثر من عشر سنوات خبرة في بناء منظومات الويب الموزّعة والأنظمة عالية الأداء.",
         city: "الرياض",
         country: "المملكة العربية السعودية",
         nationality: "سعودي",
@@ -71,8 +69,7 @@ export function buildSampleResume(): LoadedResume {
       en: {
         full_name: "Mohammed Abdullah Al-Subaie",
         job_title: "Senior Software Engineer",
-        bio:
-          "Senior software engineer with 10+ years building distributed web systems and high-performance services.",
+        bio: "Senior software engineer with 10+ years building distributed web systems and high-performance services.",
         city: "Riyadh",
         country: "Saudi Arabia",
         nationality: "Saudi",
@@ -89,8 +86,7 @@ export function buildSampleResume(): LoadedResume {
         field_of_study: "علوم الحاسب",
         start_date: "2010-09-01",
         end_date: "2014-06-01",
-        description:
-          "تخرّج بمرتبة الشرف الأولى — مشروع التخرج: محرّك بحث للمحتوى العربي.",
+        description: "تخرّج بمرتبة الشرف الأولى — مشروع التخرج: محرّك بحث للمحتوى العربي.",
         ar: {
           institution: "جامعة الملك سعود",
           degree: "بكالوريوس",
@@ -155,12 +151,54 @@ export function buildSampleResume(): LoadedResume {
       },
     ],
     skills: [
-      { id: "s1", resume_id: RESUME_ID, is_visible: true, sort_order: 0, name: "TypeScript", level: "expert" },
-      { id: "s2", resume_id: RESUME_ID, is_visible: true, sort_order: 1, name: "React / Next.js", level: "expert" },
-      { id: "s3", resume_id: RESUME_ID, is_visible: true, sort_order: 2, name: "PostgreSQL", level: "advanced" },
-      { id: "s4", resume_id: RESUME_ID, is_visible: true, sort_order: 3, name: "Kubernetes", level: "advanced" },
-      { id: "s5", resume_id: RESUME_ID, is_visible: true, sort_order: 4, name: "Go", level: "good" },
-      { id: "s6", resume_id: RESUME_ID, is_visible: true, sort_order: 5, name: "Python", level: "intermediate" },
+      {
+        id: "s1",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 0,
+        name: "TypeScript",
+        level: "expert",
+      },
+      {
+        id: "s2",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 1,
+        name: "React / Next.js",
+        level: "expert",
+      },
+      {
+        id: "s3",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 2,
+        name: "PostgreSQL",
+        level: "advanced",
+      },
+      {
+        id: "s4",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 3,
+        name: "Kubernetes",
+        level: "advanced",
+      },
+      {
+        id: "s5",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 4,
+        name: "Go",
+        level: "good",
+      },
+      {
+        id: "s6",
+        resume_id: RESUME_ID,
+        is_visible: true,
+        sort_order: 5,
+        name: "Python",
+        level: "intermediate",
+      },
     ],
     projects: [
       {
@@ -173,8 +211,7 @@ export function buildSampleResume(): LoadedResume {
         start_date: "2024-01-01",
         end_date: null,
         is_current: true,
-        description:
-          "مكتبة مكوّنات React جاهزة لـRTL تستخدمها أكثر من ١٢ شركة محلية.",
+        description: "مكتبة مكوّنات React جاهزة لـRTL تستخدمها أكثر من ١٢ شركة محلية.",
         ar: { name: "مكتبة UI عربية" },
         en: { name: "Arabic UI Toolkit" },
       },

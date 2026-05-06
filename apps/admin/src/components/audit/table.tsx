@@ -21,11 +21,21 @@ export function AuditTable({ rows }: AuditTableProps) {
         <table className="min-w-full divide-y divide-slate-100 text-right text-sm">
           <thead className="bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
             <tr>
-              <th scope="col" className="px-4 py-3">المشرف</th>
-              <th scope="col" className="px-4 py-3">الإجراء</th>
-              <th scope="col" className="px-4 py-3">الهدف</th>
-              <th scope="col" className="px-4 py-3">IP</th>
-              <th scope="col" className="px-4 py-3">التاريخ</th>
+              <th scope="col" className="px-4 py-3">
+                المشرف
+              </th>
+              <th scope="col" className="px-4 py-3">
+                الإجراء
+              </th>
+              <th scope="col" className="px-4 py-3">
+                الهدف
+              </th>
+              <th scope="col" className="px-4 py-3">
+                IP
+              </th>
+              <th scope="col" className="px-4 py-3">
+                التاريخ
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">

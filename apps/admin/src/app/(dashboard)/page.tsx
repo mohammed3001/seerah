@@ -57,11 +57,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Charts */}
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <SectionCard
-            title="مستخدمون جدد"
-            subtitle="آخر ٣٠ يومًا"
-            className="lg:col-span-2"
-          >
+          <SectionCard title="مستخدمون جدد" subtitle="آخر ٣٠ يومًا" className="lg:col-span-2">
             <NewUsersChart data={data.newUsersByDay} />
           </SectionCard>
 
@@ -73,10 +69,7 @@ export default async function DashboardOverviewPage() {
             <TemplateUsageChart data={data.templateUsage} />
           </SectionCard>
 
-          <SectionCard
-            title="الإيرادات الشهرية"
-            subtitle="آخر ١٢ شهرًا (Stripe، تقديرية)"
-          >
+          <SectionCard title="الإيرادات الشهرية" subtitle="آخر ١٢ شهرًا (Stripe، تقديرية)">
             <MonthlyRevenueChart data={data.monthlyRevenueUsd} />
           </SectionCard>
 

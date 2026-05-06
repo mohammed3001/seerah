@@ -44,10 +44,7 @@ const MOBILE_SCHEME = "seerah://";
  * origin or the mobile app scheme. Everything else is silently ignored —
  * Stripe Checkout would be a fantastic open-redirect vector otherwise.
  */
-function safeRedirect(
-  candidate: string | undefined,
-  origin: string,
-): string | null {
+function safeRedirect(candidate: string | undefined, origin: string): string | null {
   if (!candidate) return null;
   if (candidate.startsWith(MOBILE_SCHEME)) return candidate;
   try {

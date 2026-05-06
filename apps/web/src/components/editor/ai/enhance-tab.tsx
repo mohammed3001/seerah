@@ -35,7 +35,11 @@ export function EnhanceTab({ onRateLimit }: Props) {
   const [currentText, setCurrentText] = React.useState(aiPanel.currentText ?? "");
   const [context, setContext] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [result, setResult] = React.useState<{ ar: string; en: string; suggestions: string[] } | null>(null);
+  const [result, setResult] = React.useState<{
+    ar: string;
+    en: string;
+    suggestions: string[];
+  } | null>(null);
   const [historyTick, setHistoryTick] = React.useState(0);
 
   React.useEffect(() => {

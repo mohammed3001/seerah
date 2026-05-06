@@ -40,9 +40,7 @@ export async function listSubscriptions(
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
-  const sort: SortableColumn = (
-    SORTABLE_COLUMNS as readonly string[]
-  ).includes(filters.sort)
+  const sort: SortableColumn = (SORTABLE_COLUMNS as readonly string[]).includes(filters.sort)
     ? (filters.sort as SortableColumn)
     : "created_at";
   const ascending = filters.dir === "asc";
@@ -58,11 +56,7 @@ export async function listSubscriptions(
       stripeSubExact = term;
     } else if (/^cus_[A-Za-z0-9]+$/.test(term)) {
       stripeCustomerExact = term;
-    } else if (
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        term,
-      )
-    ) {
+    } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(term)) {
       idExact = term;
     } else {
       // Email-ish search: resolve matching profile ids first.
@@ -148,9 +142,7 @@ export async function listSubscriptions(
       .select("id, email, full_name, plan, plan_expires_at")
       .in("id", userIds);
     if (profileErr) {
-      throw new Error(
-        `Failed to load subscription owners: ${profileErr.message}`,
-      );
+      throw new Error(`Failed to load subscription owners: ${profileErr.message}`);
     }
     for (const p of profileRows ?? []) {
       profileMap.set(p.id, {
@@ -203,9 +195,7 @@ export async function listDistinctStatuses(): Promise<string[]> {
 /** Status counts for the cards.  Computed in Postgres. */
 export async function loadStatusSummary(): Promise<StatusSummary> {
   const supabase = getServiceRoleClient();
-  const { data, error } = await supabase.rpc(
-    "admin_stats_subscriptions_summary",
-  );
+  const { data, error } = await supabase.rpc("admin_stats_subscriptions_summary");
   if (error) {
     throw new Error(`Failed to load status summary: ${error.message}`);
   }

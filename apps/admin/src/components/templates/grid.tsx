@@ -46,8 +46,7 @@ export function TemplatesGrid({ templates, canDelete }: TemplatesGridProps) {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {templates.map((tpl) => {
         const categoryLabel =
-          TEMPLATE_CATEGORY_LABELS_AR[tpl.category as TemplateCategory] ??
-          tpl.category;
+          TEMPLATE_CATEGORY_LABELS_AR[tpl.category as TemplateCategory] ?? tpl.category;
         return (
           <article
             key={tpl.id}
@@ -82,11 +81,7 @@ export function TemplatesGrid({ templates, canDelete }: TemplatesGridProps) {
                   <h3 className="truncate text-sm font-semibold text-slate-900">
                     {tpl.name_ar ?? tpl.name}
                   </h3>
-                  <p
-                    className="truncate text-[11px] text-slate-500"
-                    dir="ltr"
-                    title={tpl.id}
-                  >
+                  <p className="truncate text-[11px] text-slate-500" dir="ltr" title={tpl.id}>
                     {tpl.name} • {tpl.id}
                   </p>
                 </div>
@@ -94,15 +89,11 @@ export function TemplatesGrid({ templates, canDelete }: TemplatesGridProps) {
               </div>
 
               {tpl.description_ar ? (
-                <p className="line-clamp-2 text-xs text-slate-600">
-                  {tpl.description_ar}
-                </p>
+                <p className="line-clamp-2 text-xs text-slate-600">{tpl.description_ar}</p>
               ) : null}
 
               <div className="mt-auto flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                <span className="rounded-full bg-slate-100 px-2 py-0.5">
-                  {categoryLabel}
-                </span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5">{categoryLabel}</span>
                 <span>الترتيب: {tpl.sort_order}</span>
                 <span>•</span>
                 <span>{tpl.usage_count} سيرة</span>

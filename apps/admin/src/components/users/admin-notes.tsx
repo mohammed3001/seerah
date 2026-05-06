@@ -4,11 +4,7 @@ import { format } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { useActionState } from "react";
 
-import {
-  addUserAdminNote,
-  deleteUserAdminNote,
-  type ActionState,
-} from "@/lib/users/actions";
+import { addUserAdminNote, deleteUserAdminNote, type ActionState } from "@/lib/users/actions";
 import type { UserAdminNoteRow } from "@/lib/users/detail";
 
 import { ActionFeedback } from "./action-feedback";
@@ -19,10 +15,10 @@ interface AdminNotesProps {
 }
 
 export function AdminNotes({ userId, notes }: AdminNotesProps) {
-  const [addState, addAction, addPending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(addUserAdminNote, undefined);
+  const [addState, addAction, addPending] = useActionState<ActionState | undefined, FormData>(
+    addUserAdminNote,
+    undefined,
+  );
 
   return (
     <div className="space-y-4">
@@ -64,10 +60,10 @@ export function AdminNotes({ userId, notes }: AdminNotesProps) {
 }
 
 function NoteItem({ note, userId }: { note: UserAdminNoteRow; userId: string }) {
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(deleteUserAdminNote, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    deleteUserAdminNote,
+    undefined,
+  );
 
   return (
     <li className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">

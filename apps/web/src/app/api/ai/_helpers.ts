@@ -28,7 +28,10 @@ interface OkBody<T> {
  */
 export async function handleAIRoute<TInput, TOutput>(
   request: Request,
-  caller: (input: TInput, callerArg: { user_id: string; plan: "free" | "prime" | "enterprise" }) => Promise<AIResult<TOutput>>,
+  caller: (
+    input: TInput,
+    callerArg: { user_id: string; plan: "free" | "prime" | "enterprise" },
+  ) => Promise<AIResult<TOutput>>,
 ): Promise<Response> {
   const blocked = assertSameOrigin(request);
   if (blocked) return blocked;

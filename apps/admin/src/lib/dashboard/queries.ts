@@ -99,10 +99,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .gte("created_at", yesterdayStart.toISOString())
       .lt("created_at", todayStart.toISOString()),
     supabase.from("resumes").select("id", { count: "exact", head: true }),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("plan", "prime"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("plan", "prime"),
     supabase
       .from("ai_usage")
       .select("user_id", { count: "exact", head: true })
@@ -232,9 +229,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   );
   const subUserIds = Array.from(
     new Set(
-      (recentSubscriptionsRes.data ?? [])
-        .map((s) => s.user_id)
-        .filter((x): x is string => !!x),
+      (recentSubscriptionsRes.data ?? []).map((s) => s.user_id).filter((x): x is string => !!x),
     ),
   );
   const allUserIds = Array.from(new Set([...ticketUserIds, ...subUserIds]));
@@ -257,15 +252,15 @@ export async function getDashboardData(): Promise<DashboardData> {
     user_email: t.user_id ? (userEmailMap.get(t.user_id) ?? null) : null,
   }));
 
-  const subscriptionEvents: RecentSubscriptionEvent[] = (
-    recentSubscriptionsRes.data ?? []
-  ).map((s) => ({
-    user_id: s.user_id,
-    user_email: userEmailMap.get(s.user_id) ?? null,
-    status: s.status,
-    provider: s.provider,
-    updated_at: s.updated_at,
-  }));
+  const subscriptionEvents: RecentSubscriptionEvent[] = (recentSubscriptionsRes.data ?? []).map(
+    (s) => ({
+      user_id: s.user_id,
+      user_email: userEmailMap.get(s.user_id) ?? null,
+      status: s.status,
+      provider: s.provider,
+      updated_at: s.updated_at,
+    }),
+  );
 
   // ── Compose metric cards ───────────────────────────────────────────────
   const metrics: MetricCard[] = [

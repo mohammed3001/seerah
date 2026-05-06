@@ -56,10 +56,7 @@ export async function sendDirectEmail(args: SendArgs): Promise<SendDirectEmailRe
   // Minimal HTML wrapper: paragraphs split on blank lines, line breaks
   // preserved.  Keep it simple — admins write a free-form message and we
   // ship it without "send via Word for the Web" surprises.
-  const escaped = args.body
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escaped = args.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const html = `<!doctype html>
 <html dir="rtl" lang="ar">
   <body style="font-family: system-ui, sans-serif; line-height: 1.7; color: #0f172a;">

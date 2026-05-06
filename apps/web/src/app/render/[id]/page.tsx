@@ -80,9 +80,7 @@ async function assertAuthorized(): Promise<void> {
     return;
   }
   const incoming = (await headers()).get("authorization") ?? "";
-  const provided = incoming.startsWith("Bearer ")
-    ? incoming.slice("Bearer ".length)
-    : "";
+  const provided = incoming.startsWith("Bearer ") ? incoming.slice("Bearer ".length) : "";
   if (!provided || !constantTimeEqual(provided, token)) {
     notFound();
   }

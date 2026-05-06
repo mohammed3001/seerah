@@ -40,9 +40,7 @@ type RequireAdminResult =
     };
 
 async function requireAdmin(
-  allowed: Array<"super_admin" | "support_agent" | "template_manager"> = [
-    "super_admin",
-  ],
+  allowed: Array<"super_admin" | "support_agent" | "template_manager"> = ["super_admin"],
 ): Promise<RequireAdminResult> {
   const ctx = await getCurrentAdmin();
   if (!ctx) redirect("/login");
@@ -134,10 +132,7 @@ export async function sendPasswordResetEmail(
   // email via its configured SMTP.  generateLink (admin) only generates the
   // URL — it does NOT send anything, and we'd silently leave the admin
   // believing the mail shipped.
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    parsed.data.email,
-    { redirectTo },
-  );
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo });
 
   if (error) return ERR(`تعذّر إرسال رابط إعادة التعيين: ${error.message}`);
 
@@ -194,9 +189,7 @@ export async function setUserDisabled(
   // When disabling, also revoke all of the user's active auth sessions so
   // they can't continue using the app on a stale JWT.
   if (parsed.data.disabled) {
-    const { error: signOutErr } = await supabase.auth.admin.signOut(
-      parsed.data.userId,
-    );
+    const { error: signOutErr } = await supabase.auth.admin.signOut(parsed.data.userId);
     if (signOutErr) {
       // Non-fatal: the profile is disabled, the gating layer in apps/web
       // checks `is_disabled` server-side on every request, so the user

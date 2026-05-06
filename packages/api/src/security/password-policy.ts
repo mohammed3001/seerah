@@ -350,10 +350,7 @@ export function validatePassword(
 ): PasswordPolicyError[] {
   const errors: PasswordPolicyError[] = [];
 
-  const minLength = Math.max(
-    MIN_PASSWORD_LENGTH,
-    options.minLength ?? MIN_PASSWORD_LENGTH,
-  );
+  const minLength = Math.max(MIN_PASSWORD_LENGTH, options.minLength ?? MIN_PASSWORD_LENGTH);
   if (password.length < minLength) {
     errors.push({
       code: "too_short",
@@ -404,8 +401,7 @@ export function validatePassword(
     const localPart = emailLower.split("@")[0] ?? "";
     if (
       lower === emailLower ||
-      (localPart.length >= 4 &&
-        (lower === localPart || stripped === localPart))
+      (localPart.length >= 4 && (lower === localPart || stripped === localPart))
     ) {
       errors.push({
         code: "looks_like_email",

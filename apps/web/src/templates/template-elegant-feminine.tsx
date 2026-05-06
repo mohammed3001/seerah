@@ -6,13 +6,7 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY } from "./_section-blocks";
 import type { TemplateProps } from "./types";
@@ -23,7 +17,8 @@ export function TemplateElegantFeminine({ data, language, theme }: TemplateProps
   const hidden = getHiddenFields(data);
   const accent = resolveAccent(theme, "#EC4899");
   const accentSoft = `${accent}14`;
-  const surface = theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-[#FFF8FA] text-zinc-700";
+  const surface =
+    theme.mode === "dark" ? "bg-zinc-950 text-zinc-100" : "bg-[#FFF8FA] text-zinc-700";
   const muted = theme.mode === "dark" ? "text-zinc-400" : "text-zinc-500";
   const local = localized(data.personal, language);
   const fullName = local["full_name"] ?? data.personal?.full_name ?? "";
@@ -37,16 +32,11 @@ export function TemplateElegantFeminine({ data, language, theme }: TemplateProps
       style={{ ...A4, fontFamily }}
       className={`mx-auto p-12 text-[13px] leading-[1.8] ${surface}`}
     >
-      <header
-        className="mb-10 rounded-3xl p-8 text-center"
-        style={{ backgroundColor: accentSoft }}
-      >
+      <header className="mb-10 rounded-3xl p-8 text-center" style={{ backgroundColor: accentSoft }}>
         <h1 className="text-[30px] font-light tracking-[0.04em]" style={{ color: accent }}>
           {fullName || "—"}
         </h1>
-        {jobTitle ? (
-          <p className={`mt-1 text-sm tracking-[0.22em] ${muted}`}>{jobTitle}</p>
-        ) : null}
+        {jobTitle ? <p className={`mt-1 text-sm tracking-[0.22em] ${muted}`}>{jobTitle}</p> : null}
         <ContactInline
           data={data}
           language={language}

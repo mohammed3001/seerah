@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ChevronDown,
-  Crown,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  X as XIcon,
-} from "lucide-react";
+import { ChevronDown, Crown, Loader2, ShieldCheck, Sparkles, Star, X as XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -51,7 +43,12 @@ const FEATURES: readonly FeatureRow[] = [
   { key: "watermark", label: "بدون علامة مائية", free: false, prime: true },
   { key: "slug", label: "تخصيص رابط السيرة", free: false, prime: true },
   { key: "password", label: "حماية بكلمة مرور", free: false, prime: true },
-  { key: "custom_sections", label: "أقسام مخصصة (مؤتمرات / تطوع / عضويات)", free: false, prime: true },
+  {
+    key: "custom_sections",
+    label: "أقسام مخصصة (مؤتمرات / تطوع / عضويات)",
+    free: false,
+    prime: true,
+  },
   { key: "support", label: "أولوية الدعم", free: false, prime: true },
   { key: "future", label: "تحديثات وميزات قادمة", free: false, prime: true },
 ];
@@ -353,9 +350,7 @@ export function SubscriptionClient({
                     className={cn("size-4 transition-transform", open && "rotate-180")}
                   />
                 </button>
-                {open ? (
-                  <p className="px-4 pb-4 text-sm text-muted-foreground">{item.a}</p>
-                ) : null}
+                {open ? <p className="px-4 pb-4 text-sm text-muted-foreground">{item.a}</p> : null}
               </div>
             );
           })}
@@ -366,7 +361,8 @@ export function SubscriptionClient({
         <section className="mt-10 rounded-card border border-amber-200 bg-amber-50/40 p-4 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
           <p className="font-medium">يبدو أنك من بلد قد لا يدعم Stripe</p>
           <p className="mt-1 text-muted-foreground">
-            خيار الدفع عبر Paddle قادم قريبًا. حتى ذلك الحين، يمكن مراسلة الدعم لتفعيل اشتراك يدويًا.
+            خيار الدفع عبر Paddle قادم قريبًا. حتى ذلك الحين، يمكن مراسلة الدعم لتفعيل اشتراك
+            يدويًا.
           </p>
         </section>
       ) : null}

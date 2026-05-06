@@ -507,7 +507,11 @@ export type Database = {
       };
       admin_sessions: {
         Row: AdminSessionsRow;
-        Insert: Partial<AdminSessionsRow> & { admin_id: string; token_hash: string; expires_at: string };
+        Insert: Partial<AdminSessionsRow> & {
+          admin_id: string;
+          token_hash: string;
+          expires_at: string;
+        };
         Update: Partial<AdminSessionsRow>;
         Relationships: [];
       };
@@ -525,7 +529,11 @@ export type Database = {
       };
       admin_notes: {
         Row: AdminNotesRow;
-        Insert: Partial<AdminNotesRow> & { target_type: "user" | "resume" | "ticket"; target_id: string; body: string };
+        Insert: Partial<AdminNotesRow> & {
+          target_type: "user" | "resume" | "ticket";
+          target_id: string;
+          body: string;
+        };
         Update: Partial<AdminNotesRow>;
         Relationships: [];
       };

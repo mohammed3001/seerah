@@ -23,7 +23,10 @@ export default function ForgotPasswordPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         تذكرت كلمة المرور؟{" "}
-        <Link href="/auth/login" className="font-medium text-accent transition-colors hover:underline">
+        <Link
+          href="/auth/login"
+          className="font-medium text-accent transition-colors hover:underline"
+        >
           تسجيل الدخول
         </Link>
       </p>

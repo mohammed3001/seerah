@@ -3,13 +3,7 @@
 import { passwordStrength } from "@/lib/validation/auth";
 import { cn } from "@/lib/utils";
 
-const colors = [
-  "bg-destructive",
-  "bg-destructive",
-  "bg-amber-500",
-  "bg-success",
-  "bg-success",
-];
+const colors = ["bg-destructive", "bg-destructive", "bg-amber-500", "bg-success", "bg-success"];
 
 export function PasswordStrengthMeter({ password }: { password: string }) {
   if (!password) return null;

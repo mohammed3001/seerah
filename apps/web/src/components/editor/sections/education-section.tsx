@@ -101,5 +101,3 @@ export function EducationSection() {
     </section>
   );
 }
-
-

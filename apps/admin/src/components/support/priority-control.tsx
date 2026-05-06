@@ -3,10 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { setTicketPriority } from "@/lib/support/actions";
-import {
-  PRIORITY_LABELS_AR,
-  type TicketPriority,
-} from "@/lib/support/types";
+import { PRIORITY_LABELS_AR, type TicketPriority } from "@/lib/support/types";
 
 import { ActionFeedback } from "./action-feedback";
 

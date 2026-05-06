@@ -18,11 +18,16 @@ export function DashboardTopbar({ title, breadcrumb, onOpenSearch }: TopbarProps
       <div className="min-w-0 flex-1">
         <h1 className="truncate font-cairo text-lg font-semibold">{title}</h1>
         {breadcrumb && breadcrumb.length > 0 ? (
-          <nav className="hidden text-xs text-muted-foreground md:flex md:gap-1.5" aria-label="مسار التنقل">
+          <nav
+            className="hidden text-xs text-muted-foreground md:flex md:gap-1.5"
+            aria-label="مسار التنقل"
+          >
             {breadcrumb.map((b, i) => (
               <span key={`${b.label}-${i}`}>
                 {b.label}
-                {i < breadcrumb.length - 1 ? <span className="mx-1 text-muted-foreground/40">/</span> : null}
+                {i < breadcrumb.length - 1 ? (
+                  <span className="mx-1 text-muted-foreground/40">/</span>
+                ) : null}
               </span>
             ))}
           </nav>

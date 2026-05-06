@@ -68,7 +68,9 @@ export default function RegisterPage() {
       <Card className="w-full max-w-[400px] justify-self-end p-8 shadow-card">
         <div className="mb-8 text-center">
           <h1 className="font-cairo text-3xl font-bold tracking-tight">سيرة</h1>
-          <p className="mt-2 text-sm text-muted-foreground">أنشئ حسابك المجاني وابدأ بناء سيرتك الذاتية</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            أنشئ حسابك المجاني وابدأ بناء سيرتك الذاتية
+          </p>
         </div>
 
         <RegisterForm />
@@ -83,7 +85,10 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           لديك حساب بالفعل؟{" "}
-          <Link href="/auth/login" className="font-medium text-accent transition-colors hover:underline">
+          <Link
+            href="/auth/login"
+            className="font-medium text-accent transition-colors hover:underline"
+          >
             تسجيل الدخول
           </Link>
         </p>

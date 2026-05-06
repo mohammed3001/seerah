@@ -3,10 +3,7 @@
 import { Ban, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
-import {
-  cancelSubscription,
-  type ActionState,
-} from "@/lib/subscriptions/actions";
+import { cancelSubscription, type ActionState } from "@/lib/subscriptions/actions";
 
 import { ActionFeedback } from "./action-feedback";
 
@@ -64,10 +61,10 @@ function Body({
   isStripe: boolean;
   onClose: () => void;
 }) {
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(cancelSubscription, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    cancelSubscription,
+    undefined,
+  );
   const [atPeriodEnd, setAtPeriodEnd] = useState(true);
 
   useEffect(() => {
@@ -111,11 +108,7 @@ function Body({
 
         <form action={formAction} className="space-y-3">
           <input type="hidden" name="subscriptionId" value={subscriptionId} />
-          <input
-            type="hidden"
-            name="atPeriodEnd"
-            value={atPeriodEnd ? "true" : "false"}
-          />
+          <input type="hidden" name="atPeriodEnd" value={atPeriodEnd ? "true" : "false"} />
 
           <fieldset className="space-y-2 rounded-md border border-slate-200 p-3 text-xs text-slate-700">
             <label className="flex items-start gap-2">
@@ -127,9 +120,7 @@ function Body({
                 className="mt-0.5"
               />
               <span>
-                <span className="font-medium text-slate-900">
-                  في نهاية الفترة الحالية
-                </span>
+                <span className="font-medium text-slate-900">في نهاية الفترة الحالية</span>
                 <span className="block text-[11px] text-slate-500">
                   يحتفظ المستخدم بالوصول حتى انتهاء الفترة المدفوعة.
                 </span>
@@ -146,8 +137,8 @@ function Body({
               <span>
                 <span className="font-medium text-slate-900">إلغاء فوري</span>
                 <span className="block text-[11px] text-slate-500">
-                  يفقد المستخدم الوصول الآن. لا يُرجَع المبلغ تلقائيًا — استخدم
-                  زر «ردّ مبلغ» بعد ذلك.
+                  يفقد المستخدم الوصول الآن. لا يُرجَع المبلغ تلقائيًا — استخدم زر «ردّ مبلغ» بعد
+                  ذلك.
                 </span>
               </span>
             </label>

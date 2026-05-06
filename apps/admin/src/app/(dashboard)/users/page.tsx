@@ -140,11 +140,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
 
         <UsersTable rows={result.rows} sort={sort} dir={dir} sortHrefs={sortHrefs} />
 
-        <UsersPagination
-          page={result.page}
-          perPage={result.perPage}
-          total={result.total}
-        />
+        <UsersPagination page={result.page} perPage={result.perPage} total={result.total} />
       </main>
     </>
   );

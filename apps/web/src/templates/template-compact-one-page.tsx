@@ -6,19 +6,21 @@
 
 import * as React from "react";
 
-import {
-  getHiddenFields,
-  getSectionOrder,
-  localized,
-  resolveAccent,
-  sectionLabel,
-} from "./_data";
+import { getHiddenFields, getSectionOrder, localized, resolveAccent, sectionLabel } from "./_data";
 import { A4, ContactInline } from "./_atoms";
 import { BLOCK_FOR_KEY_WITH_CHIPS } from "./_section-blocks";
 import type { TemplateProps } from "./types";
 
 const COL_A = new Set(["personal", "experience", "projects", "courses"]);
-const COL_B = new Set(["education", "skills", "languages", "links", "references", "hobbies", "address"]);
+const COL_B = new Set([
+  "education",
+  "skills",
+  "languages",
+  "links",
+  "references",
+  "hobbies",
+  "address",
+]);
 
 export function TemplateCompactOnePage({ data, language, theme }: TemplateProps) {
   const dir = language === "ar" ? "rtl" : "ltr";
@@ -42,7 +44,10 @@ export function TemplateCompactOnePage({ data, language, theme }: TemplateProps)
       style={{ ...A4, fontFamily }}
       className={`mx-auto px-10 py-8 text-[11px] leading-[1.5] ${surface}`}
     >
-      <header className="mb-4 flex items-end justify-between gap-6 border-b pb-3" style={{ borderColor: accent }}>
+      <header
+        className="mb-4 flex items-end justify-between gap-6 border-b pb-3"
+        style={{ borderColor: accent }}
+      >
         <div>
           <h1 className="text-[22px] font-bold leading-tight" style={{ color: accent }}>
             {fullName || "—"}
@@ -65,7 +70,10 @@ export function TemplateCompactOnePage({ data, language, theme }: TemplateProps)
             return (
               <section key={key}>
                 {key !== "personal" ? (
-                  <h2 className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
+                  <h2
+                    className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]"
+                    style={{ color: accent }}
+                  >
                     {sectionLabel(key, language)}
                   </h2>
                 ) : null}
@@ -81,7 +89,10 @@ export function TemplateCompactOnePage({ data, language, theme }: TemplateProps)
             if (!Block) return null;
             return (
               <section key={key}>
-                <h2 className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
+                <h2
+                  className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]"
+                  style={{ color: accent }}
+                >
                   {sectionLabel(key, language)}
                 </h2>
                 <Block data={data} language={language} accent={accent} />

@@ -8,7 +8,13 @@ interface Props {
   errorMessage: string | null;
 }
 
-function SubmitButton({ pendingLabel, submitLabel }: { pendingLabel: string; submitLabel: string }) {
+function SubmitButton({
+  pendingLabel,
+  submitLabel,
+}: {
+  pendingLabel: string;
+  submitLabel: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button

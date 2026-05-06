@@ -17,7 +17,9 @@ import { extractClientIp, isIpAllowed, type AllowlistEntry } from "@/lib/ip";
 
 export const config = {
   // Run on every page and API route except Next internals + static assets.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)).*)",
+  ],
 };
 
 interface AllowlistCache {
@@ -61,7 +63,9 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function isPendingPath(pathname: string): boolean {
-  return PENDING_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  return PENDING_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 }
 
 export async function middleware(request: NextRequest) {

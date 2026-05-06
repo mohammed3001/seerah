@@ -105,11 +105,7 @@ export function AiChatWidget() {
       </header>
 
       <div className="flex-1 overflow-hidden p-3">
-        <ChatThread
-          resumeContext={resumeContext}
-          language={editorLang}
-          compact
-        />
+        <ChatThread resumeContext={resumeContext} language={editorLang} compact />
       </div>
     </aside>
   );

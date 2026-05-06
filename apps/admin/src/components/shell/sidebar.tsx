@@ -65,9 +65,7 @@ export function Sidebar({ sections, adminEmail, adminRole }: SidebarProps) {
         <p className="mb-1 truncate text-xs font-medium text-slate-200" dir="ltr">
           {adminEmail}
         </p>
-        <p className="text-[11px] text-slate-500">
-          {ROLE_LABELS[adminRole] ?? adminRole}
-        </p>
+        <p className="text-[11px] text-slate-500">{ROLE_LABELS[adminRole] ?? adminRole}</p>
         <form action="/api/auth/logout" method="post" className="mt-3">
           <button
             type="submit"

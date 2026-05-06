@@ -65,13 +65,7 @@ function SortHeader({
   );
 }
 
-export function SupportInbox({
-  rows,
-  sort,
-  dir,
-  sortHrefs,
-  assignees,
-}: InboxProps) {
+export function SupportInbox({ rows, sort, dir, sortHrefs, assignees }: InboxProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const allSelected = useMemo(
@@ -126,8 +120,12 @@ export function SupportInbox({
                     className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
                   />
                 </th>
-                <th scope="col" className="px-4 py-3">الموضوع</th>
-                <th scope="col" className="px-4 py-3">المستخدم</th>
+                <th scope="col" className="px-4 py-3">
+                  الموضوع
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  المستخدم
+                </th>
                 <SortHeader
                   label="الحالة"
                   active={sort === "status"}
@@ -140,7 +138,9 @@ export function SupportInbox({
                   dir={dir}
                   href={sortHrefs.priority}
                 />
-                <th scope="col" className="px-4 py-3">المُسنَدة</th>
+                <th scope="col" className="px-4 py-3">
+                  المُسنَدة
+                </th>
                 <SortHeader
                   label="آخر ردّ"
                   active={sort === "last_admin_reply_at"}
@@ -167,10 +167,7 @@ export function SupportInbox({
                 return (
                   <tr
                     key={row.id}
-                    className={cn(
-                      "hover:bg-slate-50",
-                      isSelected ? "bg-slate-50" : "",
-                    )}
+                    className={cn("hover:bg-slate-50", isSelected ? "bg-slate-50" : "")}
                   >
                     <td className="w-10 px-4 py-3 align-middle">
                       <input
@@ -208,14 +205,9 @@ export function SupportInbox({
                             {row.user_full_name ?? "—"}
                           </Link>
                         ) : (
-                          <span className="text-sm text-slate-500">
-                            (مستخدم محذوف)
-                          </span>
+                          <span className="text-sm text-slate-500">(مستخدم محذوف)</span>
                         )}
-                        <span
-                          className="text-[11px] text-slate-500"
-                          dir="ltr"
-                        >
+                        <span className="text-[11px] text-slate-500" dir="ltr">
                           {row.user_email || "—"}
                         </span>
                       </div>

@@ -3,11 +3,7 @@ import Link from "next/link";
 
 import { detectCountryFromHeaders, shouldOfferPaddle } from "@/lib/billing/country";
 import { getDashboardSession } from "@/lib/dashboard/get-session";
-import {
-  PRIME_PLAN,
-  getStripeConfig,
-  pickCurrencyForCountry,
-} from "@/lib/stripe/server";
+import { PRIME_PLAN, getStripeConfig, pickCurrencyForCountry } from "@/lib/stripe/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { SubscriptionClient } from "./subscription-client";
@@ -18,17 +14,14 @@ export default async function SubscriptionPage() {
   const session = await getDashboardSession();
   const hdrs = await headers();
   const country =
-    detectCountryFromHeaders(hdrs as unknown as Headers) ??
-    session.profile.billing_country;
+    detectCountryFromHeaders(hdrs as unknown as Headers) ?? session.profile.billing_country;
   const currency = pickCurrencyForCountry(country);
   const stripe = getStripeConfig();
 
   const supabase = await createSupabaseServerClient();
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select(
-      "status, cancel_at_period_end, current_period_end, trial_end, provider, currency",
-    )
+    .select("status, cancel_at_period_end, current_period_end, trial_end, provider, currency")
     .eq("user_id", session.userId)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -44,8 +37,8 @@ export default async function SubscriptionPage() {
         </p>
         <h1 className="text-3xl font-bold">الاشتراك والباقة</h1>
         <p className="text-muted-foreground">
-          أنت حاليًا على {session.profile.plan === "prime" ? "باقة برايم" : "الباقة المجانية"}.
-          قارن الميزات أدناه واترقَّ متى ما أردت.
+          أنت حاليًا على {session.profile.plan === "prime" ? "باقة برايم" : "الباقة المجانية"}. قارن
+          الميزات أدناه واترقَّ متى ما أردت.
         </p>
       </header>
 

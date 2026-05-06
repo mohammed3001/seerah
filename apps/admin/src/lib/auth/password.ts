@@ -22,5 +22,4 @@ export const BCRYPT_COST = 12;
  * Generated with:
  *   node -e "console.log(require('bcryptjs').hashSync('not-a-real-password-do-not-match', 12))"
  */
-export const DUMMY_PASSWORD_HASH =
-  "$2a$12$uUkspBJyc5MReddxYoVLDeXZn3i1bQze4/pOhjAXhIZTQNmuTQb3q";
+export const DUMMY_PASSWORD_HASH = "$2a$12$uUkspBJyc5MReddxYoVLDeXZn3i1bQze4/pOhjAXhIZTQNmuTQb3q";

@@ -1,6 +1,14 @@
 "use client";
 
-import { FloatingInput, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@seerah/ui";
+import {
+  FloatingInput,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@seerah/ui";
 
 import { SectionHeader } from "@/components/editor/section-header";
 import { SectionList } from "@/components/editor/section-list";

@@ -17,15 +17,12 @@ interface DeleteResumeButtonProps {
  * requires the admin to type the word "DELETE" to confirm.  The server
  * action validates the same word so client manipulation can't bypass it.
  */
-export function DeleteResumeButton({
-  resumeId,
-  resumeTitle,
-}: DeleteResumeButtonProps) {
+export function DeleteResumeButton({ resumeId, resumeTitle }: DeleteResumeButtonProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<
-    ActionState | undefined,
-    FormData
-  >(deleteResume, undefined);
+  const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
+    deleteResume,
+    undefined,
+  );
 
   return (
     <>
@@ -42,9 +39,7 @@ export function DeleteResumeButton({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-rose-700">
-                حذف السيرة الذاتية
-              </h3>
+              <h3 className="text-sm font-semibold text-rose-700">حذف السيرة الذاتية</h3>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -57,10 +52,8 @@ export function DeleteResumeButton({
 
             <p className="mb-3 text-xs text-slate-600">
               ستُحذف السيرة الذاتية{" "}
-              <span className="font-medium text-slate-900">
-                «{resumeTitle}»
-              </span>{" "}
-              بشكل نهائي مع كل الأقسام المرتبطة بها (لا يمكن التراجع).
+              <span className="font-medium text-slate-900">«{resumeTitle}»</span> بشكل نهائي مع كل
+              الأقسام المرتبطة بها (لا يمكن التراجع).
             </p>
             <p className="mb-3 text-xs text-slate-600">
               للتأكيد، اكتب <span className="font-mono">DELETE</span> أدناه.

@@ -3,10 +3,7 @@
 import { CheckCircle2, UserCog, X } from "lucide-react";
 import { useActionState } from "react";
 
-import {
-  bulkAssignTickets,
-  bulkChangeTicketStatus,
-} from "@/lib/support/actions";
+import { bulkAssignTickets, bulkChangeTicketStatus } from "@/lib/support/actions";
 import { type AssigneeOption } from "@/lib/support/types";
 
 import { ActionFeedback } from "./action-feedback";
@@ -17,19 +14,12 @@ interface BulkActionsBarProps {
   onClear: () => void;
 }
 
-export function BulkActionsBar({
-  selectedIds,
-  assignees,
-  onClear,
-}: BulkActionsBarProps) {
+export function BulkActionsBar({ selectedIds, assignees, onClear }: BulkActionsBarProps) {
   const [statusState, statusAction, statusPending] = useActionState(
     bulkChangeTicketStatus,
     undefined,
   );
-  const [assignState, assignAction, assignPending] = useActionState(
-    bulkAssignTickets,
-    undefined,
-  );
+  const [assignState, assignAction, assignPending] = useActionState(bulkAssignTickets, undefined);
 
   if (selectedIds.length === 0) return null;
 
@@ -39,11 +29,7 @@ export function BulkActionsBar({
     <div className="flex flex-col gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-xs text-slate-700">
-          محدَّد:{" "}
-          <span className="font-semibold text-slate-900">
-            {selectedIds.length}
-          </span>{" "}
-          تذكرة
+          محدَّد: <span className="font-semibold text-slate-900">{selectedIds.length}</span> تذكرة
         </div>
         <button
           type="button"

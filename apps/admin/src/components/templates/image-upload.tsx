@@ -4,11 +4,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 
 import { uploadTemplateImage } from "@/lib/templates/actions";
-import {
-  ALLOWED_IMAGE_MIME,
-  MAX_IMAGE_BYTES,
-  type TemplateImageKind,
-} from "@/lib/templates/types";
+import { ALLOWED_IMAGE_MIME, MAX_IMAGE_BYTES, type TemplateImageKind } from "@/lib/templates/types";
 
 interface TemplateImageUploadProps {
   templateId: string;
@@ -45,11 +41,7 @@ export function TemplateImageUpload({
       setError("حجم الصورة أكبر من ١٠ ميغابايت.");
       return;
     }
-    if (
-      !ALLOWED_IMAGE_MIME.includes(
-        file.type as (typeof ALLOWED_IMAGE_MIME)[number],
-      )
-    ) {
+    if (!ALLOWED_IMAGE_MIME.includes(file.type as (typeof ALLOWED_IMAGE_MIME)[number])) {
       setError("الصيغة غير مدعومة (PNG / JPG / WebP فقط).");
       return;
     }
@@ -76,11 +68,7 @@ export function TemplateImageUpload({
         <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
           {url ? (
             // eslint-disable-next-line @next/next/no-img-element -- public bucket URL, may be from any host
-            <img
-              src={url}
-              alt={label}
-              className="h-full w-full object-cover"
-            />
+            <img src={url} alt={label} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-slate-400">
               <ImagePlus className="h-6 w-6" />
@@ -113,12 +101,8 @@ export function TemplateImageUpload({
           >
             {url ? "تغيير الصورة" : "اختر صورة"}
           </button>
-          <p className="text-[11px] text-slate-500">
-            PNG / JPG / WebP — حد ١٠ ميغا.
-          </p>
-          {error ? (
-            <p className="text-[11px] text-rose-600">{error}</p>
-          ) : null}
+          <p className="text-[11px] text-slate-500">PNG / JPG / WebP — حد ١٠ ميغا.</p>
+          {error ? <p className="text-[11px] text-rose-600">{error}</p> : null}
           {url ? (
             <p className="break-all text-[11px] text-slate-400" dir="ltr">
               {url}

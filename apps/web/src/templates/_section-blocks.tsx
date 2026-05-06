@@ -11,13 +11,7 @@ import * as React from "react";
 import type { LoadedResume } from "@/lib/editor/load-resume";
 import type { SectionKey } from "@/lib/editor/sections";
 import type { TemplateLanguage } from "./types";
-import {
-  fluency,
-  formatDateRange,
-  localized,
-  skillLevel,
-  SKILL_LEVEL_PCT,
-} from "./_data";
+import { fluency, formatDateRange, localized, skillLevel, SKILL_LEVEL_PCT } from "./_data";
 
 interface BlockProps {
   data: LoadedResume;
@@ -48,9 +42,7 @@ export function EducationBlock({ data, language }: BlockProps) {
         const range = formatDateRange(row.start_date, row.end_date, false, language);
         return (
           <div key={row.id}>
-            <p className="font-semibold">
-              {[degree, institution].filter(Boolean).join(" — ")}
-            </p>
+            <p className="font-semibold">{[degree, institution].filter(Boolean).join(" — ")}</p>
             {field ? <p className="text-xs opacity-70">{field}</p> : null}
             {range ? (
               <p className="text-xs opacity-60" dir="ltr">
@@ -78,17 +70,13 @@ export function ExperienceBlock({ data, language }: BlockProps) {
         const range = formatDateRange(row.start_date, row.end_date, row.is_current, language);
         return (
           <div key={row.id}>
-            <p className="font-semibold">
-              {[title, company].filter(Boolean).join(" — ")}
-            </p>
+            <p className="font-semibold">{[title, company].filter(Boolean).join(" — ")}</p>
             {range ? (
               <p className="text-xs opacity-60" dir="ltr">
                 {range}
               </p>
             ) : null}
-            {description ? (
-              <p className="mt-1 whitespace-pre-line text-sm">{description}</p>
-            ) : null}
+            {description ? <p className="mt-1 whitespace-pre-line text-sm">{description}</p> : null}
           </div>
         );
       })}
@@ -282,10 +270,7 @@ export function AddressBlock({ data, language }: BlockProps) {
   return <p className="text-sm">{text}</p>;
 }
 
-export const BLOCK_FOR_KEY: Record<
-  SectionKey,
-  React.ComponentType<BlockProps>
-> = {
+export const BLOCK_FOR_KEY: Record<SectionKey, React.ComponentType<BlockProps>> = {
   personal: PersonalBlock,
   education: EducationBlock,
   experience: ExperienceBlock,

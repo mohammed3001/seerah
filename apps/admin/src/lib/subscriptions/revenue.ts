@@ -72,10 +72,7 @@ export async function loadRevenueSummary(): Promise<RevenueSummary> {
           price.recurring.interval,
           price.recurring.interval_count ?? 1,
         );
-        buckets.set(
-          price.currency,
-          (buckets.get(price.currency) ?? 0) + itemMrr,
-        );
+        buckets.set(price.currency, (buckets.get(price.currency) ?? 0) + itemMrr);
       }
     }
     if (!page.has_more) break;
@@ -191,10 +188,8 @@ async function loadCountsFromDb(): Promise<DbCounts> {
       .gte("canceled_at", thirtyDaysAgoIso),
   ]);
 
-  const denom =
-    (stillActiveFromBefore ?? 0) + (canceledInWindowFromBefore ?? 0);
-  const churn_rate =
-    denom > 0 ? (canceledInWindowFromBefore ?? 0) / denom : null;
+  const denom = (stillActiveFromBefore ?? 0) + (canceledInWindowFromBefore ?? 0);
+  const churn_rate = denom > 0 ? (canceledInWindowFromBefore ?? 0) / denom : null;
 
   return {
     active_count: activeCount ?? 0,

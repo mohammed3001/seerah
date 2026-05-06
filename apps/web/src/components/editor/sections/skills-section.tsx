@@ -1,6 +1,14 @@
 "use client";
 
-import { FloatingInput, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@seerah/ui";
+import {
+  FloatingInput,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@seerah/ui";
 
 import { SectionHeader } from "@/components/editor/section-header";
 import { SectionList } from "@/components/editor/section-list";
@@ -51,7 +59,9 @@ export function SkillsSection() {
               <Label>المستوى</Label>
               <Select
                 value={item.level ?? ""}
-                onValueChange={(v) => patch({ level: (v || null) as Item["level"] } as Partial<Item>)}
+                onValueChange={(v) =>
+                  patch({ level: (v || null) as Item["level"] } as Partial<Item>)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="اختر" />

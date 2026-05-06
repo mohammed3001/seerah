@@ -4,10 +4,7 @@ import { logAdminAction } from "@/lib/audit";
 import { getCurrentAdmin } from "@/lib/auth/current";
 import { extractClientIp } from "@/lib/ip";
 import { listSubscriptions } from "@/lib/subscriptions/list";
-import {
-  SORTABLE_COLUMNS,
-  type SortableColumn,
-} from "@/lib/subscriptions/types";
+import { SORTABLE_COLUMNS, type SortableColumn } from "@/lib/subscriptions/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,9 +122,7 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent"),
   });
 
-  const filename = `seerah-subscriptions-${new Date()
-    .toISOString()
-    .slice(0, 10)}.csv`;
+  const filename = `seerah-subscriptions-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {
     status: 200,

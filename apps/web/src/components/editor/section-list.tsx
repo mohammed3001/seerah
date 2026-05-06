@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
@@ -192,5 +187,3 @@ export function SectionList<T extends BaseItem>({
     </div>
   );
 }
-
-

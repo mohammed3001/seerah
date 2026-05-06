@@ -72,11 +72,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
 
         <AuditTable rows={result.rows} />
 
-        <AuditPagination
-          page={result.page}
-          perPage={result.perPage}
-          total={result.total}
-        />
+        <AuditPagination page={result.page} perPage={result.perPage} total={result.total} />
       </main>
     </>
   );

@@ -70,20 +70,19 @@ export function UsersTable({ rows, sort, dir, sortHrefs }: UsersTableProps) {
         <table className="min-w-full divide-y divide-slate-100 text-right text-sm">
           <thead className="bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
             <tr>
-              <th scope="col" className="px-4 py-3">المستخدم</th>
+              <th scope="col" className="px-4 py-3">
+                المستخدم
+              </th>
               <SortHeader
                 label="البريد"
                 active={sort === "email"}
                 dir={dir}
                 href={sortHrefs.email}
               />
-              <SortHeader
-                label="الخطة"
-                active={sort === "plan"}
-                dir={dir}
-                href={sortHrefs.plan}
-              />
-              <th scope="col" className="px-4 py-3">السير</th>
+              <SortHeader label="الخطة" active={sort === "plan"} dir={dir} href={sortHrefs.plan} />
+              <th scope="col" className="px-4 py-3">
+                السير
+              </th>
               <SortHeader
                 label="تاريخ التسجيل"
                 active={sort === "created_at"}
@@ -96,7 +95,9 @@ export function UsersTable({ rows, sort, dir, sortHrefs }: UsersTableProps) {
                 dir={dir}
                 href={sortHrefs.last_seen_at}
               />
-              <th scope="col" className="px-4 py-3">الحالة</th>
+              <th scope="col" className="px-4 py-3">
+                الحالة
+              </th>
               <th scope="col" className="px-4 py-3 text-left"></th>
             </tr>
           </thead>
@@ -111,19 +112,13 @@ export function UsersTable({ rows, sort, dir, sortHrefs }: UsersTableProps) {
                         // backend doesn't curate them, so we fall back to the
                         // initials block on any 404 / 5xx via onError below.
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={user.avatar_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
+                        <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
                       ) : (
                         (user.full_name ?? user.email).slice(0, 1).toUpperCase()
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        {user.full_name ?? "—"}
-                      </p>
+                      <p className="text-sm font-medium text-slate-900">{user.full_name ?? "—"}</p>
                       {user.billing_country ? (
                         <p className="text-[11px] text-slate-400" dir="ltr">
                           {user.billing_country}

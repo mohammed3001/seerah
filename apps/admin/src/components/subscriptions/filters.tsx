@@ -14,19 +14,14 @@ interface SubscriptionsFiltersProps {
 
 const FORM_KEYS = ["q", "status", "provider", "from", "to", "perPage"] as const;
 
-export function SubscriptionsFilters({
-  statuses,
-  perPage,
-}: SubscriptionsFiltersProps) {
+export function SubscriptionsFilters({ statuses, perPage }: SubscriptionsFiltersProps) {
   const router = useRouter();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
 
   function update(next: URLSearchParams) {
     next.delete("page");
-    startTransition(() =>
-      router.replace(`/subscriptions?${next.toString()}`),
-    );
+    startTransition(() => router.replace(`/subscriptions?${next.toString()}`));
   }
 
   const q = params.get("q") ?? "";
@@ -70,9 +65,7 @@ export function SubscriptionsFilters({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          الحالة
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">الحالة</label>
         <select
           name="status"
           defaultValue={status}
@@ -88,9 +81,7 @@ export function SubscriptionsFilters({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-600">
-          المزوّد
-        </label>
+        <label className="mb-1 block text-xs font-medium text-slate-600">المزوّد</label>
         <select
           name="provider"
           defaultValue={provider}
@@ -104,9 +95,7 @@ export function SubscriptionsFilters({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            من تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">من تاريخ</label>
           <input
             type="date"
             name="from"
@@ -115,9 +104,7 @@ export function SubscriptionsFilters({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
-            إلى تاريخ
-          </label>
+          <label className="mb-1 block text-xs font-medium text-slate-600">إلى تاريخ</label>
           <input
             type="date"
             name="to"

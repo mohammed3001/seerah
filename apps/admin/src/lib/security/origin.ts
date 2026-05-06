@@ -66,10 +66,7 @@ export function assertSameOrigin(req: Request): NextResponse | null {
 
   const allowed = getConfiguredOrigins();
   if (!allowed.has(origin)) {
-    return NextResponse.json(
-      { error: "invalid_origin", code: "INVALID_ORIGIN" },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "invalid_origin", code: "INVALID_ORIGIN" }, { status: 403 });
   }
   return null;
 }

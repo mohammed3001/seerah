@@ -28,7 +28,11 @@ export function DashboardShell({ user, title, breadcrumb, children }: ShellProps
     <div className="flex min-h-dvh">
       <DashboardSidebar user={user} onOpenSupport={() => setSupportOpen(true)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <DashboardTopbar title={title} breadcrumb={breadcrumb} onOpenSearch={() => setSearchOpen(true)} />
+        <DashboardTopbar
+          title={title}
+          breadcrumb={breadcrumb}
+          onOpenSearch={() => setSearchOpen(true)}
+        />
         <main className="flex-1 px-4 py-6 pb-24 md:px-6 md:pb-6">
           <div className="mx-auto w-full max-w-[1200px]">{children}</div>
         </main>

@@ -90,13 +90,7 @@ export const SECTION_FIELD_ALLOWLIST: Record<string, ReadonlyArray<string>> = {
     "en",
   ],
   skills: ["name", "level", "is_visible", "sort_order"],
-  languages: [
-    "language_name",
-    "fluency",
-    "is_sign_language",
-    "is_visible",
-    "sort_order",
-  ],
+  languages: ["language_name", "fluency", "is_sign_language", "is_visible", "sort_order"],
   courses: [
     "name",
     "institution",

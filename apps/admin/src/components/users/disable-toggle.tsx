@@ -12,11 +12,7 @@ interface DisableToggleProps {
   currentReason: string | null;
 }
 
-export function DisableToggle({
-  userId,
-  isDisabled,
-  currentReason,
-}: DisableToggleProps) {
+export function DisableToggle({ userId, isDisabled, currentReason }: DisableToggleProps) {
   const [state, formAction, pending] = useActionState<ActionState | undefined, FormData>(
     setUserDisabled,
     undefined,
@@ -43,9 +39,7 @@ export function DisableToggle({
       ) : (
         <p className="text-xs text-slate-500">
           سبب التعطيل الحالي:{" "}
-          <span className="font-medium text-slate-700">
-            {currentReason ?? "—"}
-          </span>
+          <span className="font-medium text-slate-700">{currentReason ?? "—"}</span>
         </p>
       )}
 
@@ -60,11 +54,7 @@ export function DisableToggle({
             : "rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-60"
         }
       >
-        {pending
-          ? "جاري التحديث…"
-          : isDisabled
-            ? "تفعيل الحساب"
-            : "تعطيل الحساب"}
+        {pending ? "جاري التحديث…" : isDisabled ? "تفعيل الحساب" : "تعطيل الحساب"}
       </button>
     </form>
   );

@@ -8,15 +8,8 @@ import { SupportInbox } from "@/components/support/inbox";
 import { SupportPagination } from "@/components/support/pagination";
 import { SupportSummaryCards } from "@/components/support/summary-cards";
 import { getCurrentAdmin } from "@/lib/auth/current";
-import {
-  listAssignees,
-  listTickets,
-  loadStatusSummary,
-} from "@/lib/support/list";
-import {
-  SORTABLE_COLUMNS,
-  type SortableColumn,
-} from "@/lib/support/types";
+import { listAssignees, listTickets, loadStatusSummary } from "@/lib/support/list";
+import { SORTABLE_COLUMNS, type SortableColumn } from "@/lib/support/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -65,14 +58,7 @@ function buildSortHrefs(
   for (const key of SORTABLE_COLUMNS) {
     const next = new URLSearchParams(base.toString());
     next.set("sort", key);
-    next.set(
-      "dir",
-      current.sort === key
-        ? current.dir === "asc"
-          ? "desc"
-          : "asc"
-        : "desc",
-    );
+    next.set("dir", current.sort === key ? (current.dir === "asc" ? "desc" : "asc") : "desc");
     out[key] = `/support?${next.toString()}`;
   }
   return out;

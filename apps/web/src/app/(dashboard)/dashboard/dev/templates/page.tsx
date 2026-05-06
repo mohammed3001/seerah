@@ -60,7 +60,11 @@ export default async function DevTemplatesPage({ searchParams }: Params) {
         plan: session.profile.plan,
       }}
       title="معرض القوالب (تطوير)"
-      breadcrumb={[{ label: "سيرتي", href: "/dashboard" }, { label: "تطوير" }, { label: "القوالب" }]}
+      breadcrumb={[
+        { label: "سيرتي", href: "/dashboard" },
+        { label: "تطوير" },
+        { label: "القوالب" },
+      ]}
     >
       <div className="space-y-4">
         <div className="rounded-lg border bg-yellow-50 p-4 text-sm text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100">

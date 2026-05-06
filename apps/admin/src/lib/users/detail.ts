@@ -114,58 +114,50 @@ export async function getUserDetail(userId: string): Promise<UserDetail | null> 
   const thirtyDaysAgo = subDays(now, 30);
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const [
-    resumesRes,
-    subsRes,
-    ticketsRes,
-    aiCountsRes,
-    aiBreakdownRes,
-    notesRes,
-  ] = await Promise.all([
-    supabase
-      .from("resumes")
-      .select(
-        "id, title, slug, template_id, language, completion_score, views_count, is_public, created_at, updated_at",
-      )
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(50),
-    supabase
-      .from("subscriptions")
-      .select(
-        "id, stripe_subscription_id, stripe_price_id, status, current_period_start, current_period_end, cancel_at_period_end, provider, currency, trial_end, canceled_at, created_at, updated_at",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(20),
-    supabase
-      .from("support_tickets")
-      .select("id, subject, status, created_at, updated_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(20),
-    supabase.rpc("admin_user_ai_counts", {
-      p_user_ids: [userId],
-      p_from: thirtyDaysAgo.toISOString(),
-      p_to: tomorrow.toISOString(),
-    }),
-    supabase.rpc("admin_user_ai_breakdown", {
-      p_user_id: userId,
-      p_from: thirtyDaysAgo.toISOString(),
-      p_to: tomorrow.toISOString(),
-    }),
-    supabase
-      .from("admin_notes")
-      .select("id, body, admin_id, admin_email, created_at, updated_at")
-      .eq("target_type", "user")
-      .eq("target_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(50),
-  ]);
+  const [resumesRes, subsRes, ticketsRes, aiCountsRes, aiBreakdownRes, notesRes] =
+    await Promise.all([
+      supabase
+        .from("resumes")
+        .select(
+          "id, title, slug, template_id, language, completion_score, views_count, is_public, created_at, updated_at",
+        )
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("subscriptions")
+        .select(
+          "id, stripe_subscription_id, stripe_price_id, status, current_period_start, current_period_end, cancel_at_period_end, provider, currency, trial_end, canceled_at, created_at, updated_at",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("support_tickets")
+        .select("id, subject, status, created_at, updated_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase.rpc("admin_user_ai_counts", {
+        p_user_ids: [userId],
+        p_from: thirtyDaysAgo.toISOString(),
+        p_to: tomorrow.toISOString(),
+      }),
+      supabase.rpc("admin_user_ai_breakdown", {
+        p_user_id: userId,
+        p_from: thirtyDaysAgo.toISOString(),
+        p_to: tomorrow.toISOString(),
+      }),
+      supabase
+        .from("admin_notes")
+        .select("id, body, admin_id, admin_email, created_at, updated_at")
+        .eq("target_type", "user")
+        .eq("target_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
 
-  const last30Days = aiCountsRes.data?.[0]?.count
-    ? Number(aiCountsRes.data[0].count)
-    : 0;
+  const last30Days = aiCountsRes.data?.[0]?.count ? Number(aiCountsRes.data[0].count) : 0;
 
   const aiBreakdown = (aiBreakdownRes.data ?? []).map((r) => ({
     action_type: r.action_type ?? "unknown",
@@ -173,10 +165,7 @@ export async function getUserDetail(userId: string): Promise<UserDetail | null> 
     total_tokens: Number(r.total_tokens),
   }));
 
-  const last30DaysTokens = aiBreakdown.reduce(
-    (sum, r) => sum + r.total_tokens,
-    0,
-  );
+  const last30DaysTokens = aiBreakdown.reduce((sum, r) => sum + r.total_tokens, 0);
 
   return {
     profile: {

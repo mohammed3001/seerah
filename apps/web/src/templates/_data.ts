@@ -114,16 +114,12 @@ export const FLUENCY_EN: Record<string, string> = {
 
 export function skillLevel(level: string | null | undefined, language: TemplateLanguage): string {
   if (!level) return "";
-  return language === "ar"
-    ? (SKILL_LEVEL_AR[level] ?? "")
-    : (SKILL_LEVEL_EN[level] ?? "");
+  return language === "ar" ? (SKILL_LEVEL_AR[level] ?? "") : (SKILL_LEVEL_EN[level] ?? "");
 }
 
 export function fluency(level: string | null | undefined, language: TemplateLanguage): string {
   if (!level) return "";
-  return language === "ar"
-    ? (FLUENCY_AR[level] ?? "")
-    : (FLUENCY_EN[level] ?? "");
+  return language === "ar" ? (FLUENCY_AR[level] ?? "") : (FLUENCY_EN[level] ?? "");
 }
 
 /** Accent colour to use for chrome elements. Hex value, no validation. */

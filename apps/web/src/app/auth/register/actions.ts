@@ -39,9 +39,7 @@ export interface SignupActionResult {
  * outcomes — the audit (1.1) requires that signup never reveals
  * whether an email is already registered.
  */
-export async function signupAction(
-  input: SignupActionInput,
-): Promise<SignupActionResult> {
+export async function signupAction(input: SignupActionInput): Promise<SignupActionResult> {
   const email = input.email.trim().toLowerCase();
   const fullName = input.fullName.trim();
 

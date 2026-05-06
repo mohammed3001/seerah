@@ -11,12 +11,7 @@ import { sha256Hex } from "./crypto";
 
 export type AdminSummary = Pick<
   Tables<"admin_users">,
-  | "id"
-  | "email"
-  | "role"
-  | "is_active"
-  | "totp_verified_at"
-  | "last_login_at"
+  "id" | "email" | "role" | "is_active" | "totp_verified_at" | "last_login_at"
 >;
 
 export interface CurrentAdminContext {

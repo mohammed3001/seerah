@@ -1,11 +1,7 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 
-import type {
-  RecentSignup,
-  RecentSubscriptionEvent,
-  RecentTicket,
-} from "@/lib/dashboard/types";
+import type { RecentSignup, RecentSubscriptionEvent, RecentTicket } from "@/lib/dashboard/types";
 
 const STATUS_LABELS: Record<RecentTicket["status"], string> = {
   open: "مفتوحة",
@@ -55,11 +51,7 @@ export function RecentSignupsList({ items }: { items: RecentSignup[] }) {
                   : "bg-slate-100 text-slate-600"
               }`}
             >
-              {row.plan === "prime"
-                ? "برايم"
-                : row.plan === "enterprise"
-                  ? "مؤسسات"
-                  : "مجاني"}
+              {row.plan === "prime" ? "برايم" : row.plan === "enterprise" ? "مؤسسات" : "مجاني"}
             </span>
             <span className="text-[11px] text-slate-400">{relative(row.created_at)}</span>
           </div>
@@ -99,7 +91,9 @@ export function RecentTicketsList({ items }: { items: RecentTicket[] }) {
 
 export function RecentSubscriptionsList({ items }: { items: RecentSubscriptionEvent[] }) {
   if (items.length === 0) {
-    return <p className="px-4 py-6 text-center text-sm text-slate-400">لا توجد أحداث اشتراك حديثة.</p>;
+    return (
+      <p className="px-4 py-6 text-center text-sm text-slate-400">لا توجد أحداث اشتراك حديثة.</p>
+    );
   }
   return (
     <ul className="divide-y divide-slate-100">

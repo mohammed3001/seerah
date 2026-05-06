@@ -55,9 +55,13 @@ function parseIpv6(value: string): Uint8Array | null {
   const doubleColon = trimmed.split("::");
   if (doubleColon.length > 2) return null;
 
-  const left = doubleColon[0] === "" ? [] : doubleColon[0]?.split(":") ?? [];
+  const left = doubleColon[0] === "" ? [] : (doubleColon[0]?.split(":") ?? []);
   const right =
-    doubleColon.length === 2 ? (doubleColon[1] === "" ? [] : doubleColon[1]?.split(":") ?? []) : [];
+    doubleColon.length === 2
+      ? doubleColon[1] === ""
+        ? []
+        : (doubleColon[1]?.split(":") ?? [])
+      : [];
 
   if (doubleColon.length === 1 && left.length !== 8) return null;
   const fillCount = 8 - left.length - right.length;

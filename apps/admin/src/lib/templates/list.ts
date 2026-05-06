@@ -16,32 +16,31 @@ import type { AdminTemplateRow, TemplatesListResult } from "./types";
 export async function listTemplates(): Promise<TemplatesListResult> {
   const supabase = getServiceRoleClient();
 
-  const [{ data: rows, error }, { data: usage, error: usageErr }] =
-    await Promise.all([
-      supabase
-        .from("templates")
-        .select(
-          [
-            "id",
-            "name",
-            "name_ar",
-            "description_en",
-            "description_ar",
-            "preview_url",
-            "thumbnail_url",
-            "is_premium",
-            "is_active",
-            "category",
-            "tags",
-            "sort_order",
-            "created_at",
-            "updated_at",
-          ].join(","),
-        )
-        .order("sort_order", { ascending: true })
-        .order("id", { ascending: true }),
-      supabase.rpc("admin_stats_template_usage", { p_limit: null }),
-    ]);
+  const [{ data: rows, error }, { data: usage, error: usageErr }] = await Promise.all([
+    supabase
+      .from("templates")
+      .select(
+        [
+          "id",
+          "name",
+          "name_ar",
+          "description_en",
+          "description_ar",
+          "preview_url",
+          "thumbnail_url",
+          "is_premium",
+          "is_active",
+          "category",
+          "tags",
+          "sort_order",
+          "created_at",
+          "updated_at",
+        ].join(","),
+      )
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true }),
+    supabase.rpc("admin_stats_template_usage", { p_limit: null }),
+  ]);
 
   if (error) throw new Error(`Failed to load templates: ${error.message}`);
   if (usageErr) {

@@ -12,9 +12,7 @@ import "server-only";
  * the operator sees a warning that the email wasn't sent.
  */
 
-export type EmailOutcome =
-  | { sent: true }
-  | { sent: false; reason: string };
+export type EmailOutcome = { sent: true } | { sent: false; reason: string };
 
 interface SendOptions {
   ticketId: string;
@@ -31,21 +29,14 @@ const NOTIFY_REPLY_PATH = "/api/admin/support/notify-reply";
 const NOTIFY_RESOLVE_PATH = "/api/admin/support/notify-resolve";
 
 function webOrigin(): string | null {
-  return (
-    process.env["WEB_APP_URL"] ??
-    process.env["NEXT_PUBLIC_APP_URL"] ??
-    null
-  );
+  return process.env["WEB_APP_URL"] ?? process.env["NEXT_PUBLIC_APP_URL"] ?? null;
 }
 
 function token(): string | null {
   return process.env["ADMIN_INTERNAL_TOKEN"] ?? null;
 }
 
-async function postJson(
-  path: string,
-  payload: Record<string, unknown>,
-): Promise<EmailOutcome> {
+async function postJson(path: string, payload: Record<string, unknown>): Promise<EmailOutcome> {
   const origin = webOrigin();
   const auth = token();
   if (!origin) {

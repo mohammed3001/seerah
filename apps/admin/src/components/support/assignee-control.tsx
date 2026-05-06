@@ -13,20 +13,14 @@ interface AssigneeControlProps {
   assignees: AssigneeOption[];
 }
 
-export function AssigneeControl({
-  ticketId,
-  current,
-  assignees,
-}: AssigneeControlProps) {
+export function AssigneeControl({ ticketId, current, assignees }: AssigneeControlProps) {
   const [state, action, pending] = useActionState(assignTicket, undefined);
   const [next, setNext] = useState<string>(current ?? "");
 
   return (
     <form action={action} className="space-y-2">
       <input type="hidden" name="ticketId" value={ticketId} />
-      <label className="block text-xs font-medium text-slate-600">
-        التعيين
-      </label>
+      <label className="block text-xs font-medium text-slate-600">التعيين</label>
       <select
         name="assignee"
         value={next}

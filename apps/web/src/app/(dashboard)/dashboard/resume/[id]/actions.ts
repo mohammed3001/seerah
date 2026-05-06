@@ -19,7 +19,9 @@ type SectionTable =
   | "hobbies"
   | "address";
 
-async function ensureResumeOwner(resumeId: string): Promise<{ userId: string } | { error: string }> {
+async function ensureResumeOwner(
+  resumeId: string,
+): Promise<{ userId: string } | { error: string }> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -50,13 +52,18 @@ export async function updateResumeMeta(
   // The cast is necessary because `pickAllowedResumeMeta` returns
   // `unknown`-valued entries (it has no schema knowledge); after the
   // allowlist filter, every key is guaranteed to be a real column.
-  const { error } = await (supabase.from("resumes") as unknown as {
-    update: (p: Record<string, unknown>) => {
-      eq: (c: string, v: string) => {
-        eq: (c: string, v: string) => Promise<{ error: { message: string } | null }>;
+  const { error } = await (
+    supabase.from("resumes") as unknown as {
+      update: (p: Record<string, unknown>) => {
+        eq: (
+          c: string,
+          v: string,
+        ) => {
+          eq: (c: string, v: string) => Promise<{ error: { message: string } | null }>;
+        };
       };
-    };
-  })
+    }
+  )
     .update(safePatch)
     .eq("id", resumeId)
     .eq("user_id", ownerCheck.userId);
@@ -78,12 +85,14 @@ export async function upsertSingletonAction<T extends Record<string, unknown>>(
   const safePatch = pickAllowed(table, patch);
   const supabase = await createSupabaseServerClient();
   // Upsert against the unique resume_id; rely on the index from migrations.
-  const { error } = await (supabase.from(table) as unknown as {
-    upsert: (
-      v: Record<string, unknown>,
-      o: { onConflict: string },
-    ) => Promise<{ error: { message: string } | null }>;
-  }).upsert({ resume_id: resumeId, ...safePatch }, { onConflict: "resume_id" });
+  const { error } = await (
+    supabase.from(table) as unknown as {
+      upsert: (
+        v: Record<string, unknown>,
+        o: { onConflict: string },
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).upsert({ resume_id: resumeId, ...safePatch }, { onConflict: "resume_id" });
   if (error) return { error: error.message };
   revalidatePath(`/dashboard/resume/${resumeId}`);
   return { ok: true };
@@ -101,13 +110,15 @@ export async function insertSectionItem<T extends Record<string, unknown>>(
   // allowlisted content columns, then re-attach the trusted resume_id.
   const safeValues = pickAllowed(table, values);
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await (supabase.from(table) as unknown as {
-    insert: (v: Record<string, unknown>) => {
-      select: (cols: string) => {
-        single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+  const { data, error } = await (
+    supabase.from(table) as unknown as {
+      insert: (v: Record<string, unknown>) => {
+        select: (cols: string) => {
+          single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+        };
       };
-    };
-  })
+    }
+  )
     .insert({ resume_id: resumeId, ...safeValues })
     .select("id")
     .single();
@@ -134,13 +145,18 @@ export async function updateSectionItem<T extends Record<string, unknown>>(
   // makes the safety property obvious without depending on the
   // section-table policies, which mirrors the existing pattern in
   // `reorderSectionItems` below.
-  const { error } = await (supabase.from(table) as unknown as {
-    update: (p: Record<string, unknown>) => {
-      eq: (col: string, v: string) => {
-        eq: (col: string, v: string) => Promise<{ error: { message: string } | null }>;
+  const { error } = await (
+    supabase.from(table) as unknown as {
+      update: (p: Record<string, unknown>) => {
+        eq: (
+          col: string,
+          v: string,
+        ) => {
+          eq: (col: string, v: string) => Promise<{ error: { message: string } | null }>;
+        };
       };
-    };
-  })
+    }
+  )
     .update(safePatch)
     .eq("id", id)
     .eq("resume_id", resumeId);
@@ -161,13 +177,18 @@ export async function deleteSectionItem(
   // resume_id so a caller can never delete a section that belongs to
   // a different resume — even one they don't own — by passing their
   // own resumeId for the ownership check and someone else's section id.
-  const { error } = await (supabase.from(table) as unknown as {
-    delete: () => {
-      eq: (col: string, v: string) => {
-        eq: (col: string, v: string) => Promise<{ error: { message: string } | null }>;
+  const { error } = await (
+    supabase.from(table) as unknown as {
+      delete: () => {
+        eq: (
+          col: string,
+          v: string,
+        ) => {
+          eq: (col: string, v: string) => Promise<{ error: { message: string } | null }>;
+        };
       };
-    };
-  })
+    }
+  )
     .delete()
     .eq("id", id)
     .eq("resume_id", resumeId);
@@ -193,7 +214,10 @@ export async function reorderSectionItems(
         (
           supabase.from(table) as unknown as {
             update: (p: Record<string, unknown>) => {
-              eq: (c: string, v: string) => {
+              eq: (
+                c: string,
+                v: string,
+              ) => {
                 eq: (c: string, v: string) => Promise<UpdateResult>;
               };
             };

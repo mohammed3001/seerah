@@ -69,18 +69,13 @@ export async function POST(
           : typeof raw["accent"] === "string"
             ? raw["accent"]
             : undefined,
-      mode:
-        raw["mode"] === "light" || raw["mode"] === "dark" ? raw["mode"] : undefined,
+      mode: raw["mode"] === "light" || raw["mode"] === "dark" ? raw["mode"] : undefined,
     };
   } catch {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  if (
-    body.template_id === undefined &&
-    body.accent === undefined &&
-    body.mode === undefined
-  ) {
+  if (body.template_id === undefined && body.accent === undefined && body.mode === undefined) {
     return NextResponse.json(
       { error: "no_changes", message_ar: "لم يتم تمرير أي تغيير." },
       { status: 400 },
@@ -109,11 +104,7 @@ export async function POST(
     templateMeta = meta;
   }
 
-  if (
-    body.accent !== undefined &&
-    body.accent !== null &&
-    !HEX_COLOUR.test(body.accent)
-  ) {
+  if (body.accent !== undefined && body.accent !== null && !HEX_COLOUR.test(body.accent)) {
     return NextResponse.json(
       { error: "invalid_color", message_ar: "اللون غير صالح" },
       { status: 400 },
@@ -176,8 +167,7 @@ export async function POST(
     );
   }
 
-  const currentTheme: Theme =
-    (row.theme as Theme | null) ?? { mode: "light" };
+  const currentTheme: Theme = (row.theme as Theme | null) ?? { mode: "light" };
   const nextTheme: Theme = { mode: currentTheme.mode };
   if (currentTheme.primary_color) nextTheme.primary_color = currentTheme.primary_color;
 

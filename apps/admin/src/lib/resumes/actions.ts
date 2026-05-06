@@ -27,9 +27,7 @@ type RequireAdminResult =
     };
 
 async function requireAdmin(
-  allowed: Array<"super_admin" | "support_agent" | "template_manager"> = [
-    "super_admin",
-  ],
+  allowed: Array<"super_admin" | "support_agent" | "template_manager"> = ["super_admin"],
 ): Promise<RequireAdminResult> {
   const ctx = await getCurrentAdmin();
   if (!ctx) redirect("/login");

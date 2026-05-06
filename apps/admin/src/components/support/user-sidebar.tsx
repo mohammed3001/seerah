@@ -29,16 +29,13 @@ export function UserSidebar({ profile }: UserSidebarProps) {
     );
   }
 
-  const planLabel = profile.plan ? PLAN_LABELS_AR[profile.plan] ?? profile.plan : "—";
+  const planLabel = profile.plan ? (PLAN_LABELS_AR[profile.plan] ?? profile.plan) : "—";
 
   return (
     <aside className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <header className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-900">المستخدم</h2>
-        <Link
-          href={`/users/${profile.id}`}
-          className="text-[11px] text-slate-500 hover:underline"
-        >
+        <Link href={`/users/${profile.id}`} className="text-[11px] text-slate-500 hover:underline">
           فتح الملف
         </Link>
       </header>
@@ -48,9 +45,7 @@ export function UserSidebar({ profile }: UserSidebarProps) {
           <User className="mt-0.5 h-3.5 w-3.5 text-slate-400" />
           <div>
             <dt className="text-[11px] text-slate-500">الاسم</dt>
-            <dd className="font-medium text-slate-900">
-              {profile.full_name ?? "—"}
-            </dd>
+            <dd className="font-medium text-slate-900">{profile.full_name ?? "—"}</dd>
           </div>
         </div>
 

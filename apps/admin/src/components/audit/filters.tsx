@@ -132,9 +132,7 @@ export function AuditFilters({ knownActions, perPage }: AuditFiltersProps) {
         {hasFilter ? (
           <button
             type="button"
-            onClick={() =>
-              startTransition(() => router.replace(`/audit?perPage=${perPage}`))
-            }
+            onClick={() => startTransition(() => router.replace(`/audit?perPage=${perPage}`))}
             className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50"
           >
             <X className="h-3.5 w-3.5" />
