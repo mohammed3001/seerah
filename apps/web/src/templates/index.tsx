@@ -12,6 +12,7 @@ import { TemplateCleanModern } from "./template-clean-modern";
 import { TemplateCompactOnePage } from "./template-compact-one-page";
 import { TemplateCreativeSidebar } from "./template-creative-sidebar";
 import { TemplateElegantFeminine } from "./template-elegant-feminine";
+import { TemplateElegantSerif } from "./template-elegant-serif";
 import { TemplateExecutiveDark } from "./template-executive-dark";
 import { TemplateInfographicModern } from "./template-infographic-modern";
 import { TemplateMinimalLines } from "./template-minimal-lines";
@@ -141,6 +142,18 @@ export const TEMPLATE_REGISTRY: readonly TemplateMeta[] = [
     tagline_ar: "تصميم بصري مع شارات وأشرطة مهارات",
     tagline_en: "Visual layout with badges and skill bars",
     Component: TemplateInfographicModern,
+  },
+  {
+    id: "template_elegant_serif",
+    name_ar: "الكلاسيكي الراقي",
+    name_en: "Elegant Serif",
+    category: "academic",
+    is_premium: true,
+    default_color: "#9F1239",
+    palette: PALETTE,
+    tagline_ar: "هيدر مركزي وزخرفات راقية للمهن الكلاسيكية",
+    tagline_en: "Centred serif header with ornamental dividers",
+    Component: TemplateElegantSerif,
   },
 ] as const;
 

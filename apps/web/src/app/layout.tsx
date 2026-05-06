@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/providers";
-import { cairo, sfPro } from "@/lib/fonts";
+import { cairo, premiumFontClassNames, sfPro } from "@/lib/fonts";
 
 import "./globals.css";
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      className={`${sfPro.variable} ${cairo.variable}`}
+      className={`${sfPro.variable} ${cairo.variable} ${premiumFontClassNames}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
