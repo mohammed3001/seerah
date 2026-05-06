@@ -73,34 +73,54 @@ end
 $$;
 
 -- Idempotency: if a profile row already exists at the matching auth.users id
--- (e.g. legacy data, manual repair, retry), the trigger must NOT overwrite
--- it because it uses `on conflict (id) do nothing`. We exercise this by
--- inserting auth.users + manually overwriting the profile row + re-running
--- the trigger function. Re-INSERT into auth.users would violate the pkey,
--- so we call handle_new_user via a synthetic NEW record.
+-- (e.g. legacy data, manual repair, a Supabase signup retry that fires the
+-- trigger twice), the trigger must NOT overwrite the existing profile row
+-- because it uses `on conflict (id) do nothing`.
+--
+-- We need to fire the *actual* trigger function with a NEW row whose id
+-- already has a profile row attached. Re-INSERTing the same auth.users id
+-- would violate the pkey, so we briefly drop the profiles -> auth.users FK,
+-- delete the auth.users row (without cascading the profile away), then
+-- INSERT a fresh auth.users row at the same id. That second INSERT fires
+-- `on_auth_user_created` -> `handle_new_user()` against an existing
+-- profile row, exercising the on-conflict path end-to-end.
 do $$
 declare
   test_user_id uuid := '22222222-2222-4222-8222-222222222222';
+  observed_email text;
 begin
-  -- Step 1: create auth.users row → trigger creates profile.
+  -- Step 1: real signup -> trigger creates profile via security-definer path.
   insert into auth.users (id, email, raw_user_meta_data)
   values (test_user_id, 'first-signup@example.com', '{}'::jsonb);
 
-  -- Step 2: manually mutate the profile row so we can detect overwrite.
+  -- Step 2: human/operator edits the profile row.
   update public.profiles set email = 'human-edited@example.com'
    where id = test_user_id;
 
-  -- Step 3: simulate the trigger firing again on the same auth.users row
-  -- (Supabase retries / dual-fire scenarios). The on-conflict-do-nothing
-  -- guard must keep our edit intact.
-  insert into public.profiles (id, email, full_name, avatar_url)
-  values (test_user_id, 'first-signup@example.com', null, null)
-  on conflict (id) do nothing;
+  -- Step 3: detach FK so we can swap the auth.users row without
+  -- cascade-deleting the profile row we just edited.
+  alter table public.profiles drop constraint profiles_id_fkey;
 
-  if (select email from public.profiles where id = test_user_id)
-       is distinct from 'human-edited@example.com' then
+  delete from auth.users where id = test_user_id;
+
+  -- Re-INSERT the auth.users row -> fires `on_auth_user_created` ->
+  -- `handle_new_user()` -> attempts to INSERT into profiles. The trigger's
+  -- own `on conflict (id) do nothing` should preserve the human edit.
+  insert into auth.users (id, email, raw_user_meta_data)
+  values (test_user_id, 'second-signup@example.com', '{}'::jsonb);
+
+  -- Restore FK with the same shape declared in the migration.
+  alter table public.profiles
+    add constraint profiles_id_fkey
+    foreign key (id) references auth.users(id) on delete cascade;
+
+  select email into observed_email
+  from public.profiles where id = test_user_id;
+
+  if observed_email is distinct from 'human-edited@example.com' then
     raise exception
-      'handle_new_user overwrote an existing profile row (should be a no-op)';
+      'handle_new_user overwrote an existing profile row (got %, expected %)',
+      observed_email, 'human-edited@example.com';
   end if;
 
   raise notice 'handle_new_user is idempotent on conflicting profile id';
