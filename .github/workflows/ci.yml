@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      # Long-lived integration branch the audit / refactor PRs target.
+      # Once this branch is merged back into main, this entry can be dropped.
+      - devin/1777667032-infrastructure-tier
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - devin/1777667032-infrastructure-tier
 
 concurrency:
   group: ci-${{ github.ref }}

@@ -9,6 +9,24 @@ create extension if not exists "pgcrypto";
 create extension if not exists "citext";
 create extension if not exists "unaccent";
 
+-- ---------- mock platform roles --------------------------------------------
+-- Real Supabase ships these as default roles; vanilla Postgres does not.
+-- We create them as no-login NOINHERIT roles so `grant ... to anon` etc.
+-- inside migrations succeed without changing runtime behaviour.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+    create role authenticated nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin noinherit bypassrls;
+  end if;
+end
+$$;
+
 -- ---------- mock auth schema ------------------------------------------------
 create schema if not exists auth;
 
@@ -34,6 +52,8 @@ create table if not exists storage.buckets (
   id text primary key,
   name text not null,
   public boolean default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
   created_at timestamptz default now()
 );
 
