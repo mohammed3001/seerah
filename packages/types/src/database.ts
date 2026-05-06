@@ -284,6 +284,7 @@ type AdminUsersRow = {
   last_login_ip: string | null;
   failed_login_attempts: number;
   locked_until: string | null;
+  recovery_codes_generated_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -331,6 +332,16 @@ type AdminNotesRow = {
   body: string;
   created_at: string;
   updated_at: string;
+};
+
+type AdminRecoveryCodesRow = {
+  id: string;
+  admin_id: string;
+  code_hash: string;
+  generated_at: string;
+  used_at: string | null;
+  used_ip: string | null;
+  used_user_agent: string | null;
 };
 
 type AppSettingsRow = {
@@ -535,6 +546,15 @@ export type Database = {
           body: string;
         };
         Update: Partial<AdminNotesRow>;
+        Relationships: [];
+      };
+      admin_recovery_codes: {
+        Row: AdminRecoveryCodesRow;
+        Insert: Partial<AdminRecoveryCodesRow> & {
+          admin_id: string;
+          code_hash: string;
+        };
+        Update: Partial<AdminRecoveryCodesRow>;
         Relationships: [];
       };
       app_settings: {

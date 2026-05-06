@@ -7,6 +7,7 @@ import { z } from "zod";
 import { logAdminAction } from "@/lib/audit";
 import { PENDING_COOKIE, PENDING_TTL_SECONDS } from "@/lib/auth/constants";
 import { verifyPendingToken } from "@/lib/auth/pending";
+import { generateRecoveryCodes } from "@/lib/auth/recovery";
 import { createSession } from "@/lib/auth/session";
 import { newTotpEnrollment, verifyTotp } from "@/lib/auth/totp";
 import { extractClientIp } from "@/lib/ip";
@@ -18,7 +19,9 @@ export interface PendingEnrollmentView {
   uri: string;
 }
 
-export type EnrollmentFormState = { ok: false; message: string | null };
+export type EnrollmentFormState =
+  | { ok: false; message: string | null }
+  | { ok: true; codes: string[] };
 
 /**
  * Server-side data fetcher for /2fa/setup.  Validates the pending cookie,
@@ -131,6 +134,12 @@ export async function confirmEnrollment(
     })
     .eq("id", admin.id);
 
+  // Mint the recovery codes *before* the session.  generateRecoveryCodes
+  // is the only path that returns the raw codes (they are never re-readable
+  // after this); if it throws, the admin won't have a session yet, so they
+  // can simply retry the enrollment without ending up in a half-state.
+  const codes = await generateRecoveryCodes(admin.id);
+
   await createSession({ adminId: admin.id, ip, userAgent });
   cookieStore.delete(PENDING_COOKIE);
 
@@ -142,5 +151,10 @@ export async function confirmEnrollment(
     userAgent,
   });
 
-  redirect("/");
+  // We are now authenticated, but instead of redirecting we hand the codes
+  // back to the form.  The page renders them once and the admin clicks
+  // "I saved them" to land on /.  If the admin closes the tab without
+  // saving, they can regenerate from /settings (the codes already in the
+  // DB are unrecoverable but a regen wipes + replaces them atomically).
+  return { ok: true, codes };
 }

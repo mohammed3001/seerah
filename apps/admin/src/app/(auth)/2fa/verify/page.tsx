@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { loadVerify } from "./actions";
 
 import { VerifyForm } from "@/components/auth/verify-form";
@@ -19,6 +21,11 @@ export default async function VerifyPage() {
         افتح تطبيق Authenticator لديك وأدخل الرمز المعروض حاليًا.
       </p>
       <VerifyForm />
+      <p className="mt-5 text-center text-sm">
+        <Link href="/2fa/recovery" className="text-slate-300 underline hover:text-slate-100">
+          فقدت تطبيق Authenticator؟ استخدم رمز استرداد
+        </Link>
+      </p>
     </div>
   );
 }
