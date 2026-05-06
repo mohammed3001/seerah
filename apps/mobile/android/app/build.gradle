@@ -29,7 +29,10 @@ if (hasReleaseKey) {
 android {
     namespace = "com.seerah.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pinned to match the highest NDK requested by transitive plugins
+    // (app_links, local_auth_android, image_picker_android, ...) — leaving
+    // it at flutter.ndkVersion (26.x) prints warnings on every build.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
