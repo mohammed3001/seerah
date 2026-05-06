@@ -3,32 +3,56 @@
 @tailwind utilities;
 
 @layer base {
+  /* ------------------------------------------------------------------ */
+  /*  CV Lite design system tokens.                                     */
+  /*  Light mode mirrors the spec exactly (Primary Blue #2A4EEF as the  */
+  /*  dominant interactive color, Success Green / Warning Orange as     */
+  /*  status accents, neutral scale anchored at #141414 text on #FFFFFF */
+  /*  surface).  Dark mode is desaturated from the same primary so the  */
+  /*  Stripe-purple legacy accent is gone everywhere.                   */
+  /* ------------------------------------------------------------------ */
   :root {
-    /* Pure white light mode (#FFFFFF) */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 4%;
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    /* Surfaces */
+    --background: 0 0% 100%; /* #FFFFFF off-white */
+    --foreground: 0 0% 8%; /* #141414 text-dark */
+    --muted: 0 0% 96%; /* #F4F4F4 light-gray */
+    --muted-foreground: 240 7% 25%; /* #3A3A43 text-light */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 0 0% 9%;
-    /* #635BFF Stripe-like purple */
-    --accent: 244 100% 68%;
+    --popover-foreground: 0 0% 8%;
+
+    /* Body / primary text contrast */
+    --primary: 0 0% 8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 41% 95%; /* #ECF1F7 pale blue-gray */
+    --secondary-foreground: 229 86% 30%;
+
+    /* CV Lite Primary Blue (#2A4EEF) — interactive accent */
+    --accent: 229 86% 55%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 244 100% 68%;
+    --accent-hover: 229 86% 44%; /* #1032CF */
+    --accent-disabled: 221 54% 76%; /* #A1B6E3 */
+    --accent-tint: 213 41% 95%; /* #ECF1F7 */
+
+    /* Status */
+    --success: 155 54% 47%; /* #37B982 */
+    --success-foreground: 0 0% 100%;
+    --warning: 40 100% 50%; /* #FFAB00 */
+    --warning-foreground: 0 0% 8%;
+    --destructive: 0 100% 71%; /* #FF6B6B error red */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders */
+    --border: 0 0% 84%; /* #D6D6D6 medium-gray */
+    --input: 0 0% 84%;
+    --ring: 229 86% 55%;
   }
 
   .dark {
-    /* True dark (#0A0A0A) */
+    /* Dark mode keeps the existing surface palette but swaps the legacy
+       Stripe purple for a CV Lite primary-derived blue so accents stay
+       on-brand.  Spec is light-mode-only; this is our derivation. */
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
     --muted: 240 4% 12%;
@@ -41,13 +65,20 @@
     --primary-foreground: 0 0% 9%;
     --secondary: 240 4% 14%;
     --secondary-foreground: 0 0% 98%;
-    --accent: 244 100% 72%;
+    --accent: 229 86% 65%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --accent-hover: 229 86% 55%;
+    --accent-disabled: 229 30% 40%;
+    --accent-tint: 229 30% 18%;
+    --success: 155 54% 55%;
+    --success-foreground: 0 0% 8%;
+    --warning: 40 100% 60%;
+    --warning-foreground: 0 0% 8%;
+    --destructive: 0 80% 65%;
+    --destructive-foreground: 0 0% 100%;
     --border: 240 4% 18%;
     --input: 240 4% 18%;
-    --ring: 244 100% 72%;
+    --ring: 229 86% 65%;
   }
 
   * {
@@ -69,6 +100,11 @@
   [dir="rtl"] body {
     font-family: var(--font-cairo), var(--font-sf-pro), system-ui, sans-serif;
   }
+
+  /* CV Lite display headings — Manrope for the Latin face, Cairo for the
+     Arabic face.  Headings opt in via `font-display` (mapped in tailwind
+     config) rather than retargeting raw <h*>, so the in-resume templates
+     under apps/web/src/templates/* are not affected. */
 
   a,
   button,

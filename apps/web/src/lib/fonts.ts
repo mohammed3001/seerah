@@ -5,6 +5,7 @@ import {
   Inter,
   JetBrains_Mono,
   Jost,
+  Manrope,
   Montserrat,
   Plus_Jakarta_Sans,
 } from "next/font/google";
@@ -26,6 +27,19 @@ export const cairo = Cairo({
   display: "swap",
   variable: "--font-cairo",
   weight: ["400", "500", "600", "700"],
+});
+
+/**
+ * CV Lite display face for headings + display text. Manrope is the
+ * open-source geometric sans that fills the role the spec assigns to
+ * Gilroy Bold (which is a paid font from Radomir Tinkov). Loaded with
+ * the heavy weights only because it is reserved for headings.
+ */
+export const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-display",
+  weight: ["600", "700", "800"],
 });
 
 /* -------------------------------------------------------------------------- */

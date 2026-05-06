@@ -36,6 +36,17 @@ const config: Config = {
         accent: {
           DEFAULT: "hsl(var(--accent) / <alpha-value>)",
           foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
+          hover: "hsl(var(--accent-hover) / <alpha-value>)",
+          disabled: "hsl(var(--accent-disabled) / <alpha-value>)",
+          tint: "hsl(var(--accent-tint) / <alpha-value>)",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success) / <alpha-value>)",
+          foreground: "hsl(var(--success-foreground) / <alpha-value>)",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning) / <alpha-value>)",
+          foreground: "hsl(var(--warning-foreground) / <alpha-value>)",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
@@ -46,14 +57,26 @@ const config: Config = {
         ring: "hsl(var(--ring) / <alpha-value>)",
       },
       borderRadius: {
-        card: "12px",
+        // CV Lite spec: 8px is the default for buttons + cards + inputs;
+        // 4px reserved for tags, 16px for hero feature containers.
+        card: "8px",
         input: "8px",
-        button: "20px",
+        button: "8px",
+        tag: "4px",
+        hero: "16px",
       },
       boxShadow: {
-        soft: "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)",
-        card: "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)",
+        // CV Lite elevation scale (rgba(95,95,95,...) per spec).
+        soft: "0 2px 8px rgba(95, 95, 95, 0.05)",
+        card: "0 4px 15px rgba(95, 95, 95, 0.07)",
+        elevated: "0 4px 15px rgba(95, 95, 95, 0.07)",
+        prominent: "0 6px 20px rgba(95, 95, 95, 0.12)",
+        deep: "0 8px 30px rgba(95, 95, 95, 0.15)",
+        // Dark-mode equivalent kept for surfaces that opt into the dark
+        // shadow explicitly (sidebar, command palette, etc.).
         "card-dark": "0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)",
+        // Focus ring for inputs (light blue glow).
+        "focus-ring": "0 0 0 3px hsl(var(--accent) / 0.1)",
       },
       transitionTimingFunction: {
         "out-soft": "cubic-bezier(0.16, 1, 0.3, 1)",
@@ -64,6 +87,11 @@ const config: Config = {
       fontFamily: {
         "sf-pro": ["var(--font-sf-pro)", "system-ui", "sans-serif"],
         cairo: ["var(--font-cairo)", "system-ui", "sans-serif"],
+        // CV Lite display face for headings + display text.  Manrope is
+        // an open-source geometric sans that fills the role the spec
+        // assigns to Gilroy Bold (which is a paid font).  Cairo retains
+        // the Arabic side so RTL headings still render correctly.
+        display: ["var(--font-display)", "var(--font-cairo)", "system-ui", "sans-serif"],
         sans: ["var(--font-sf-pro)", "var(--font-cairo)", "system-ui", "sans-serif"],
       },
       keyframes: {
