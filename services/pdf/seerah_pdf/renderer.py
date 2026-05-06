@@ -19,9 +19,10 @@ from dataclasses import dataclass
 from typing import Literal
 from urllib.parse import urlencode, urljoin
 
-from playwright.async_api import Browser, BrowserContext, async_playwright
+from playwright.async_api import Browser, BrowserContext, Route, async_playwright
 
 from .config import get_settings
+from .network_guard import GuardDecision, default_allowed_hosts, should_allow
 
 _logger = logging.getLogger(__name__)
 
@@ -102,6 +103,32 @@ class PlaywrightRenderer:
         # Cap navigation + action timeouts so a stuck render doesn't stall a
         # worker forever. The route is local to the cluster, so 20s is plenty.
         context.set_default_timeout(settings.render_timeout_ms)
+
+        # SSRF guard: every outbound request from the rendered page passes
+        # through `should_allow()` against an explicit allow-list before
+        # Chromium hits the network.  See network_guard.py for the full
+        # rationale (host allow-list + RFC1918 / loopback / link-local
+        # block to defeat DNS rebinding).
+        allowed_hosts = default_allowed_hosts(
+            web_app_url=settings.web_app_url,
+            supabase_url=settings.supabase_url,
+            extras=settings.render_allowed_extra_hosts(),
+        )
+
+        async def _guard(route: Route) -> None:
+            url = route.request.url
+            decision: GuardDecision = should_allow(url, allowed_hosts=allowed_hosts)
+            if decision.allowed:
+                await route.continue_()
+            else:
+                _logger.warning(
+                    "ssrf_guard_blocked url=%s reason=%s",
+                    url,
+                    decision.reason,
+                )
+                await route.abort("blockedbyclient")
+
+        await context.route("**/*", _guard)
         return context
 
     async def render(self, req: RenderRequest) -> RenderResult:
@@ -129,11 +156,7 @@ class PlaywrightRenderer:
                 #     elements that aren't visible at scroll-zero. We use
                 #     position:absolute pinned to the bottom of the article
                 #     so the watermark lands on the screenshot edge.
-                position_css = (
-                    "position:absolute"
-                    if req.format == "png"
-                    else "position:fixed"
-                )
+                position_css = "position:absolute" if req.format == "png" else "position:fixed"
                 await page.add_style_tag(
                     content=(
                         "article{position:relative}"

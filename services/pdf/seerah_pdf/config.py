@@ -42,6 +42,20 @@ class Settings(BaseSettings):
     render_viewport_width: int = Field(default=816, alias="RENDER_VIEWPORT_WIDTH")
     render_viewport_height: int = Field(default=1056, alias="RENDER_VIEWPORT_HEIGHT")
 
+    # SSRF guard for the headless browser.  Comma-separated list of extra
+    # hostnames the renderer is allowed to fetch (the web app's own host
+    # and the Supabase public storage host are auto-included).  Anything
+    # not on the list is blocked at the request layer; see network_guard.py
+    # for the full check (also denies private / loopback / link-local IPs
+    # even for allow-listed hostnames, to defeat DNS rebinding).
+    pdf_render_allowed_extra_hosts: str = Field(
+        default="",
+        alias="PDF_RENDER_ALLOWED_EXTRA_HOSTS",
+    )
+
+    def render_allowed_extra_hosts(self) -> list[str]:
+        return [s for s in (self.pdf_render_allowed_extra_hosts or "").split(",") if s.strip()]
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
