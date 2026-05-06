@@ -29,7 +29,11 @@ export const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-xl font-semibold leading-none tracking-tight", className)}
+    // CV Lite H3: 20px / weight 700 / line-height 32px, display face.
+    className={cn(
+      "font-display text-xl font-bold leading-8 tracking-tight text-foreground",
+      className,
+    )}
     {...props}
   />
 ));
