@@ -11,6 +11,22 @@ interface CreateSessionInput {
   adminId: string;
   ip: string | null;
   userAgent: string | null;
+  /**
+   * When true (default for the explicit auth flows — login + TOTP — which
+   * are the only callers today), revoke every currently active admin_sessions
+   * row for `adminId` *before* inserting the new session row.  This is the
+   * server-side counterpart to "regenerate session ID on auth success" and
+   * defends against:
+   *   - stolen tokens that have not yet hit their natural TTL
+   *   - session-fixation attempts where an attacker plants a session cookie
+   *     and waits for the legitimate admin to authenticate
+   *   - leftover sessions from a previous admin device the operator has
+   *     since lost / replaced
+   *
+   * Pass `false` only if there is a deliberate reason to keep prior
+   * sessions alive across this createSession call.  No caller does today.
+   */
+  rotatePriorSessions?: boolean;
 }
 
 interface CreatedSession {
@@ -22,12 +38,32 @@ interface CreatedSession {
  * Create a server-side admin session row (only the sha256 of the token is
  * persisted) and set the corresponding httpOnly cookie on the current
  * response.
+ *
+ * By default this also revokes all other active sessions for the admin —
+ * see `rotatePriorSessions` on the input for the reasoning.
  */
 export async function createSession(input: CreateSessionInput): Promise<CreatedSession> {
   const supabase = getServiceRoleClient();
   const token = generateToken(32);
   const tokenHash = await sha256Hex(token);
   const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
+
+  if (input.rotatePriorSessions !== false) {
+    // Forward-only: existing sessions are marked revoked but kept around
+    // for audit-log forensics (they remain in admin_sessions with revoked_at
+    // set).  Failure here MUST NOT silently fall through, otherwise a fresh
+    // login would not invalidate a stolen token.
+    const { error: revokeError } = await supabase
+      .from("admin_sessions")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("admin_id", input.adminId)
+      .is("revoked_at", null);
+    if (revokeError) {
+      throw new Error(
+        `Failed to revoke prior admin sessions during rotation: ${revokeError.message}`,
+      );
+    }
+  }
 
   const { error } = await supabase.from("admin_sessions").insert({
     admin_id: input.adminId,
