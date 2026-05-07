@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 
 import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { exportFromService, type ExportPayload } from "@/lib/pdf/server";
+import { enforceIpRateLimit } from "@/lib/security/ip-rate-limit";
 import { assertSameOrigin } from "@/lib/security/origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -28,6 +29,9 @@ interface ClientBody {
 export async function POST(request: Request): Promise<Response> {
   const blocked = assertSameOrigin(request);
   if (blocked) return blocked;
+
+  const throttled = await enforceIpRateLimit(request, "export");
+  if (throttled) return throttled;
 
   const session = await getDashboardSession();
 
