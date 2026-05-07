@@ -1,6 +1,7 @@
 """Runtime configuration for the PDF service."""
 
 from functools import lru_cache
+from typing import ClassVar
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,6 +15,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    # `production` enables strict startup validation (see
+    # `assert_runtime_ready`). Anything else (development / test / ci) is
+    # permissive so unit tests can construct the app without real creds.
+    environment: str = Field(default="development", alias="ENVIRONMENT")
 
     # Web app integration
     web_app_url: str = Field(default="http://localhost:3000", alias="NEXT_PUBLIC_APP_URL")
@@ -61,6 +67,40 @@ class Settings(BaseSettings):
         # consumer (logging, display, alternate matching path) would not.
         raw = self.pdf_render_allowed_extra_hosts or ""
         return [s.strip() for s in raw.split(",") if s.strip()]
+
+    # Fields whose absence makes the service useless in production.
+    REQUIRED_IN_PRODUCTION: ClassVar[tuple[tuple[str, str], ...]] = (
+        ("PDF_SERVICE_INTERNAL_TOKEN", "pdf_service_internal_token"),
+        ("RENDER_INTERNAL_TOKEN", "render_internal_token"),
+        ("NEXT_PUBLIC_SUPABASE_URL", "supabase_url"),
+        ("SUPABASE_SERVICE_ROLE_KEY", "supabase_service_role_key"),
+    )
+
+    def is_production(self) -> bool:
+        return self.environment.strip().lower() == "production"
+
+    def missing_required(self) -> list[str]:
+        return [
+            env_name
+            for env_name, attr in self.REQUIRED_IN_PRODUCTION
+            if not str(getattr(self, attr) or "").strip()
+        ]
+
+    def assert_runtime_ready(self) -> None:
+        """Raise if any required env var is empty in production mode.
+
+        Called from `create_app` so the service crashes loudly at boot
+        instead of returning 502 / silently allowing unauthenticated
+        renders. Non-production modes still boot but log warnings.
+        """
+        if not self.is_production():
+            return
+        missing = self.missing_required()
+        if missing:
+            raise RuntimeError(
+                "PDF service is misconfigured for production: required "
+                "environment variables are empty: " + ", ".join(missing)
+            )
 
 
 @lru_cache(maxsize=1)

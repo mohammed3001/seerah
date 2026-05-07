@@ -9,9 +9,10 @@ interface Props {
 }
 
 /**
- * Lazy-initialises PostHog on mount with the user's distinct id (when known).
- * Renders nothing — purely a side-effect provider mounted in the dashboard
- * layout.
+ * Lazy-initialises PostHog on mount and identifies the user when their
+ * distinct id is known. Pageview tracking lives in `<PageViewTracker>`
+ * which is mounted in the root layout so unauthenticated routes (login,
+ * landing) also report pageviews.
  */
 export function AnalyticsProvider({ distinctId }: Props): null {
   React.useEffect(() => {

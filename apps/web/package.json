@@ -16,6 +16,7 @@
     "@seerah/api": "workspace:*",
     "@seerah/types": "workspace:*",
     "@seerah/ui": "workspace:*",
+    "@sentry/nextjs": "^9",
     "@stripe/stripe-js": "5",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.47.10",
