@@ -8,7 +8,7 @@ Use this skill when verifying token-only changes (CSS variables, Tailwind config
 - **Auth redirect**: middleware redirects authenticated users from `/auth/login` → `/dashboard`. To test the **auth-page** Card+Input+Button surface, either (a) clear cookies for `localhost`, (b) use an incognito window, or (c) substitute another surface that uses the same `packages/ui` primitives (e.g. settings page input, modals).
 - **Dev gallery 404 in prod build**: `apps/web/src/app/(dashboard)/dashboard/dev/templates/page.tsx` calls `notFound()` if `NODE_ENV === "production"`. To verify premium templates in a `pnpm start` build, navigate to `/dashboard/resume/{id}/design` instead — same `RenderTemplate` registry, always reachable.
 - **Premium templates own their colors**: by design, the 11 templates in `packages/templates/...` (especially the 4+ premium ones from PR #47) hold inline hex (`#0F172A`, gold rule, purple gradient, monospace, ✦/◆/▲ ornaments). Token migrations MUST NOT pull these into the global palette.
-- **Color picker shows `#635BFF`**: this is a user-selectable accent for the *resume preview*, not the chrome `--accent`. Don't flag it as a regression.
+- **Color picker shows `#635BFF`**: this is a user-selectable accent for the _resume preview_, not the chrome `--accent`. Don't flag it as a regression.
 
 ## Bootstrap
 
@@ -20,13 +20,13 @@ Use this skill when verifying token-only changes (CSS variables, Tailwind config
 
 For every token migration, ask: "would the test still pass if the migration silently broke?" Use these surfaces:
 
-| Surface | What to check |
-|---|---|
-| Dashboard CTA button | bg / height / radius / box-shadow against spec |
-| `/dashboard/settings` input (focus) | borderColor + box-shadow glow + radius |
-| Theme toggle in topbar | dark-mode `--accent` resolves to new family, not legacy |
-| `/dashboard/resume/{id}/design` | all 11 template cards render; premium badge tint; clicking premium → upgrade modal |
-| Upgrade modal | CTA still uses new token; modal shape obeys new `--radius` |
+| Surface                             | What to check                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| Dashboard CTA button                | bg / height / radius / box-shadow against spec                                     |
+| `/dashboard/settings` input (focus) | borderColor + box-shadow glow + radius                                             |
+| Theme toggle in topbar              | dark-mode `--accent` resolves to new family, not legacy                            |
+| `/dashboard/resume/{id}/design`     | all 11 template cards render; premium badge tint; clicking premium → upgrade modal |
+| Upgrade modal                       | CTA still uses new token; modal shape obeys new `--radius`                         |
 
 ## DevTools verification snippet
 
@@ -35,22 +35,31 @@ Paste in console to dump computed styles + CSS custom properties:
 ```js
 const btn = document.querySelector('main button[type="button"]') || document.activeElement;
 const cs = getComputedStyle(btn);
-console.log(JSON.stringify({
-  bg: cs.backgroundColor,
-  color: cs.color,
-  height: cs.height,
-  radius: cs.borderRadius,
-  boxShadow: cs.boxShadow.slice(0, 80),
-  accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
-  fontDisplay: getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim(),
-}, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      bg: cs.backgroundColor,
+      color: cs.color,
+      height: cs.height,
+      radius: cs.borderRadius,
+      boxShadow: cs.boxShadow.slice(0, 80),
+      accent: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
+      fontDisplay: getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-display")
+        .trim(),
+    },
+    null,
+    2,
+  ),
+);
 ```
 
 For a focused input:
+
 ```js
 const el = document.activeElement;
 const cs = getComputedStyle(el);
-console.log({borderColor: cs.borderColor, boxShadow: cs.boxShadow, radius: cs.borderRadius});
+console.log({ borderColor: cs.borderColor, boxShadow: cs.boxShadow, radius: cs.borderRadius });
 ```
 
 ## Recording
