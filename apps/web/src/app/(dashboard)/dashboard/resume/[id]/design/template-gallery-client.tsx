@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from "@seerah/ui";
 
 import { UpgradeModal } from "@/components/billing/upgrade-modal";
+import { TemplateThumbnail } from "@/components/dashboard/template-thumbnail";
 import { track } from "@/lib/analytics/posthog";
 import {
   DEFAULT_PALETTE,
@@ -280,26 +281,15 @@ function TemplateCard({
       <button
         type="button"
         onClick={onPreview}
-        className="relative aspect-[3/4] w-full overflow-hidden border-b bg-zinc-100 dark:bg-zinc-900"
+        className="relative w-full overflow-hidden border-b bg-zinc-100 dark:bg-zinc-900"
         aria-label={`معاينة ${meta.name_ar}`}
       >
-        <div
-          aria-hidden
-          // The thumbnail is the actual template at 0.20× scale — guaranteed
-          // accurate, no PNGs to keep in sync. The fixed wrapper width makes
-          // sure the inner A4 page maps cleanly to the card's aspect ratio.
-          style={{
-            transform: "scale(0.20)",
-            transformOrigin: "top left",
-            width: "210mm",
-            position: "absolute",
-            top: 0,
-            insetInlineStart: 0,
-            pointerEvents: "none",
-          }}
-        >
+        {/* Thumbnail renders the live template at A4 page size, then scales
+            to fit the card width via ResizeObserver — no static PNGs to keep
+            in sync, and the visible content always fills the card. */}
+        <TemplateThumbnail>
           <meta.Component data={data} language={language} theme={theme} isExport={false} />
-        </div>
+        </TemplateThumbnail>
         {isLocked ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition group-hover:opacity-100">
             <Crown className="size-8" />

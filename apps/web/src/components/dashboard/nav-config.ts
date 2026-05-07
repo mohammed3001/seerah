@@ -12,6 +12,6 @@ export const dashboardNav: NavItem[] = [
   { href: "/dashboard", label: "سيرتي", icon: FileText },
   { href: "/dashboard/templates", label: "التصاميم", icon: Palette },
   { href: "/dashboard/export", label: "تحميل ومشاركة", icon: Share2 },
-  { href: "/dashboard/subscription", label: "الاشتراك", icon: Crown, highlightFree: true },
+  { href: "/subscription", label: "الاشتراك", icon: Crown, highlightFree: true },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
