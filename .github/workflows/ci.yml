@@ -52,6 +52,13 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Dart DB types up-to-date
+        # Regenerates apps/mobile/lib/shared/database/database.g.dart from
+        # packages/types/src/database.ts and fails if the working copy is
+        # stale. Forces every schema change that lands in the TS source to
+        # also regenerate the Dart mirror, so the mobile app cannot drift.
+        run: node scripts/codegen/dart_db_types.mjs --check
+
       - name: Build
         run: pnpm build
         env:
