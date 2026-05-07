@@ -20,7 +20,8 @@ export type AnalyticsEvent =
   | "upgrade_viewed"
   | "upgrade_completed"
   | "subscription_cancelled"
-  | "support_ticket_created";
+  | "support_ticket_created"
+  | "$pageview";
 
 export type EventProps = Record<string, string | number | boolean | null | undefined>;
 
@@ -79,6 +80,17 @@ export function track(event: AnalyticsEvent, properties?: EventProps): void {
     .catch(() => {
       // Analytics must never break the app — swallow.
     });
+}
+
+/**
+ * Fire a PostHog `$pageview` event with the current URL. The App Router
+ * does not emit DOM `load` events between client-side segments so we
+ * synthesise pageviews ourselves from `usePathname()` + `useSearchParams()`
+ * (see `<AnalyticsProvider>`).
+ */
+export function trackPageView(url: string): void {
+  if (typeof window === "undefined" || !PUBLIC_KEY) return;
+  track("$pageview", { $current_url: window.location.origin + url });
 }
 
 /**
