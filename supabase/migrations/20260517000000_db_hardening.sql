@@ -22,9 +22,17 @@
 -- INSERT/UPDATE/DELETE on every section table. The update on `resumes`
 -- itself does NOT touch any section table, so there is no risk of
 -- recursive trigger firing.
+-- security definer + locked search_path: this trigger runs whenever a
+-- section row changes, including INSERTs by the row's owner. The owner
+-- can update their own rows under RLS, but updating `resumes` from a
+-- trigger would still hit the row-level WITH CHECK on `resumes_update_own`
+-- if any code path runs as a non-owner (e.g. service role on cron jobs).
+-- Running as definer keeps the trigger-effect deterministic.
 create or replace function public.update_resume_completion_score()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, pg_catalog
 as $$
 declare
   v_resume_id uuid;
@@ -82,9 +90,19 @@ $$;
 -- -------------------------------------------------------------------------
 -- 2. Increment resumes.views_count on every resume_views INSERT.
 -- -------------------------------------------------------------------------
+-- security definer is REQUIRED here: the primary caller is anonymous
+-- viewers hitting `/r/<slug>`, which can INSERT into `resume_views`
+-- under the public RLS policy. Without `security definer`, the
+-- trigger's UPDATE on `public.resumes` would be subject to
+-- `resumes_update_own` (auth.uid() = user_id), which is NULL for
+-- anonymous users — the UPDATE would silently match 0 rows and the
+-- counter would stay at 0 forever. set search_path locks the function
+-- against role-name shadow attacks.
 create or replace function public.increment_resume_views_count()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, pg_catalog
 as $$
 begin
   update public.resumes

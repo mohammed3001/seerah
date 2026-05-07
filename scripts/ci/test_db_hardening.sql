@@ -85,6 +85,11 @@ end
 $$;
 
 -- ---------- 2. views_count auto-increment -----------------------------------
+-- Run the INSERTs as the `anon` role so the test exercises the same
+-- RLS path as a real public-facing /r/<slug> view. Without
+-- `security definer` on the trigger, the inner UPDATE would silently
+-- match 0 rows under the `resumes_update_own` policy and the counter
+-- would stay at 0.
 do $$
 declare
   v_resume_id uuid;
@@ -93,6 +98,8 @@ begin
   select id into v_resume_id from public.resumes
    where slug = 'hardening-resume' limit 1;
 
+  set local role anon;
+
   insert into public.resume_views (resume_id, viewer_ip)
   values (v_resume_id, '203.0.113.10');
   insert into public.resume_views (resume_id, viewer_ip)
@@ -100,14 +107,16 @@ begin
   insert into public.resume_views (resume_id, viewer_ip)
   values (v_resume_id, '203.0.113.12');
 
+  reset role;
+
   select views_count into v_views
     from public.resumes where id = v_resume_id;
   if v_views <> 3 then
     raise exception
-      'views_count expected 3 after three INSERTs, got %', v_views;
+      'views_count expected 3 after three anon INSERTs, got %', v_views;
   end if;
 
-  raise notice 'PASS: views_count increments on resume_views INSERT';
+  raise notice 'PASS: views_count increments on anonymous resume_views INSERT';
 end
 $$;
 
