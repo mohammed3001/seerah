@@ -65,15 +65,32 @@ function getLimiter(scope: RateLimitScope): Ratelimit | null {
  * Best-effort client IP. Returns `unknown` if every header is absent —
  * we still want a rate-limit key so a single misconfigured proxy
  * doesn't disable all protection.
+ *
+ * Header priority matches `apps/admin/src/lib/ip.ts`:
+ *   1. `cf-connecting-ip` — Cloudflare-set, cannot be spoofed
+ *   2. `x-real-ip` — Vercel-set on the edge, cannot be spoofed
+ *   3. `x-forwarded-for` — last resort; client-controllable on platforms
+ *      that don't strip it. The first comma-separated entry is taken,
+ *      which on Vercel is the real client IP, but on a misconfigured
+ *      proxy could be an attacker-controlled value. We accept that risk
+ *      only when neither trustworthy header is present, which means the
+ *      app is not behind a known edge.
+ *
+ * Earlier revisions checked x-forwarded-for first, which let any caller
+ * bypass the rate limit by sending a unique `X-Forwarded-For: <random>`
+ * per request — every request got a fresh rate-limit key.
  */
 function ipFromRequest(request: NextRequest | Request): string {
   const headers = request.headers;
+  const cf = headers.get("cf-connecting-ip");
+  if (cf) return cf.trim();
+  const real = headers.get("x-real-ip");
+  if (real) return real.trim();
   const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {
-    // The first entry is the original client; everything after is a hop.
     return forwarded.split(",")[0]!.trim();
   }
-  return headers.get("x-real-ip") ?? "unknown";
+  return "unknown";
 }
 
 /**
