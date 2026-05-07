@@ -38,8 +38,23 @@ export const userWelcomeEvent = eventType("user/welcome", {
 export const subscriptionRenewalEvent = eventType("subscription/renewal-reminder", {
   schema: staticSchema<{
     user_id: string;
+    /**
+     * Provider subscription id (Stripe `sub_…` or Paddle equivalent).
+     * Used by the function for diagnostic metadata + as a fallback key
+     * when looking up `cancel_at_period_end` from the `subscriptions`
+     * table.
+     */
     subscription_id: string;
     current_period_end_iso: string;
+    /**
+     * Optional: if the dispatcher already knows whether the user has
+     * cancelled their auto-renew, it should pass it here so the email
+     * can render the correct copy without an extra DB round-trip. When
+     * absent, the function looks it up itself and defaults to "will
+     * auto-renew" only if the row truly doesn't have
+     * `cancel_at_period_end = true` set.
+     */
+    cancel_at_period_end?: boolean;
   }>(),
 });
 
