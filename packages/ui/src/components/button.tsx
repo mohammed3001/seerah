@@ -27,14 +27,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent text-accent-foreground shadow-elevated hover:bg-accent-hover active:bg-accent-hover active:shadow-prominent disabled:bg-accent-disabled disabled:shadow-none",
+          "bg-accent text-accent-foreground shadow-elevated hover:bg-accent-hover active:bg-accent-hover active:shadow-prominent disabled:bg-accent-disabled disabled:shadow-none disabled:opacity-100",
         secondary:
           "border-2 border-accent bg-background text-accent hover:bg-accent-tint hover:border-accent-hover hover:text-accent-hover active:bg-accent-tint active:border-accent-hover active:text-accent-hover",
         outline:
           "border border-border bg-background text-foreground hover:bg-muted hover:border-foreground/20",
         ghost: "text-foreground hover:bg-muted",
         destructive: "bg-destructive text-destructive-foreground shadow-elevated hover:opacity-90",
-        link: "text-accent-hover hover:text-accent hover:underline underline-offset-4 rounded-none px-0 h-auto",
+        link: "text-accent hover:text-accent-hover hover:underline underline-offset-4 rounded-none px-0 h-auto",
       },
       size: {
         // Compact size (action buttons in lists, AI tabs, table-row CTAs).
