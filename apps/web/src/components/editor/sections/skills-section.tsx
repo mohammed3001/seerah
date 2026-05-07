@@ -49,7 +49,7 @@ export function SkillsSection() {
         addLabel="إضافة مهارة جديدة"
         itemLabel={(item, idx) => item.name || `مهارة ${idx + 1}`}
         renderItem={({ item, patch }) => (
-          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+          <div className="grid gap-4 @md:grid-cols-[1fr_180px]">
             <FloatingInput
               label="اسم المهارة"
               value={item.name}

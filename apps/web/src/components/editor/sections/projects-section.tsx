@@ -48,7 +48,7 @@ export function ProjectsSection() {
           }
           return (
             <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <FloatingInput
                   label={`اسم المشروع ${editorLang === "ar" ? "(عربي)" : "(English)"}`}
                   value={localized.name ?? ""}
@@ -61,7 +61,7 @@ export function ProjectsSection() {
                   onChange={(e) => patch({ url: e.target.value } as Partial<Item>)}
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>تاريخ البداية</Label>
                   <DateTriad

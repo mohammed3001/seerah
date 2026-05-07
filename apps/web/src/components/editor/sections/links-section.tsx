@@ -55,7 +55,7 @@ export function LinksSection() {
           LINK_TYPES.find((l) => l.value === item.link_type)?.label ?? `رابط ${idx + 1}`
         }
         renderItem={({ item, patch }) => (
-          <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+          <div className="grid gap-4 @md:grid-cols-[180px_1fr]">
             <div className="space-y-1.5">
               <Label>النوع</Label>
               <Select
