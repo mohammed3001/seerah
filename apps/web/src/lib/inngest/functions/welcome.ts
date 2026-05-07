@@ -10,22 +10,17 @@
  * the email will simply retry rather than be lost on the floor.
  */
 
-import { inngest } from "../client";
+import { inngest, userWelcomeEvent } from "../client";
 
 export const welcomeUserFn = inngest.createFunction(
   {
     id: "user-welcome-email",
     name: "Send welcome email to new user",
     retries: 3,
-    triggers: [{ event: "user/welcome" }],
+    triggers: [{ event: userWelcomeEvent }],
   },
   async ({ event, step }) => {
-    const { user_id, email, full_name, locale } = event.data as {
-      user_id: string;
-      email: string;
-      full_name: string | null;
-      locale: "ar" | "en";
-    };
+    const { user_id, email, full_name, locale } = event.data;
 
     // Lazy import so the email module's transitive deps don't end up in
     // the function-registration manifest.

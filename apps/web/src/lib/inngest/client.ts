@@ -9,34 +9,39 @@
  * both keys are configured.
  */
 
-import { Inngest } from "inngest";
+import { Inngest, eventType, staticSchema } from "inngest";
 
 /**
- * Strongly-typed event catalogue. Add new events here so dispatchers
- * (e.g. `inngest.send({ name: "user/welcome", data: ... })`) get full
- * autocomplete + compile-time validation.
+ * Strongly-typed event catalogue. Each `eventType` call binds an event
+ * name to a `data` shape; passing the EventType to `createFunction`'s
+ * `triggers` array gives the handler `event.data` with full type
+ * inference and gives `inngest.send({ event, data })` compile-time
+ * validation that the data matches the schema.
+ *
+ * `staticSchema<T>()` is a type-only schema (no runtime validation,
+ * zero bundle cost). Switch to a Zod or Valibot schema if a producer
+ * starts dispatching from untrusted sources.
  *
  * Naming convention: `<entity>/<verb>.<modifier?>` (Inngest's idiomatic
  * pattern). `entity` is the noun the event is about; `verb` is past
  * tense for state changes, present tense for commands.
  */
-export type SeerahEvents = {
-  "user/welcome": {
-    data: {
-      user_id: string;
-      email: string;
-      full_name: string | null;
-      locale: "ar" | "en";
-    };
-  };
-  "subscription/renewal-reminder": {
-    data: {
-      user_id: string;
-      subscription_id: string;
-      current_period_end_iso: string;
-    };
-  };
-};
+export const userWelcomeEvent = eventType("user/welcome", {
+  schema: staticSchema<{
+    user_id: string;
+    email: string;
+    full_name: string | null;
+    locale: "ar" | "en";
+  }>(),
+});
+
+export const subscriptionRenewalEvent = eventType("subscription/renewal-reminder", {
+  schema: staticSchema<{
+    user_id: string;
+    subscription_id: string;
+    current_period_end_iso: string;
+  }>(),
+});
 
 export const inngest = new Inngest({
   id: "seerah-web",

@@ -10,21 +10,17 @@
  * inspection UI without touching the cron caller.
  */
 
-import { inngest } from "../client";
+import { inngest, subscriptionRenewalEvent } from "../client";
 
 export const subscriptionRenewalFn = inngest.createFunction(
   {
     id: "subscription-renewal-reminder",
     name: "Send renewal reminder before subscription expires",
     retries: 3,
-    triggers: [{ event: "subscription/renewal-reminder" }],
+    triggers: [{ event: subscriptionRenewalEvent }],
   },
   async ({ event, step }) => {
-    const { user_id, subscription_id, current_period_end_iso } = event.data as {
-      user_id: string;
-      subscription_id: string;
-      current_period_end_iso: string;
-    };
+    const { user_id, subscription_id, current_period_end_iso } = event.data;
 
     await step.run("send-renewal-email", async () => {
       const { sendEmail } = await import("@/lib/email/send");
