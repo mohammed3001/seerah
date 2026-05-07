@@ -30,6 +30,7 @@
  *     node scripts/codegen/dart_db_types.mjs --check   # exit 1 if stale
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -254,12 +255,56 @@ ${classes}`;
   return out;
 }
 
+/**
+ * Run `dart format` on the generated file in-place if the tool is on
+ * PATH. The repo's CI Flutter stage runs
+ * `dart format --set-exit-if-changed`, so the generated output must be
+ * already in Dart's canonical style — otherwise the lint stage and the
+ * Flutter stage disagree and a regen breaks CI.
+ *
+ * No-op (with a warning) when `dart` isn't installed locally; CI's
+ * Flutter stage will catch it on the next run.
+ */
+function dartFormatInPlace(path) {
+  try {
+    execFileSync("dart", ["format", path], { stdio: "pipe" });
+    return true;
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      console.warn(
+        "warning: `dart` not found on PATH — skipping format. " +
+          "Install the Dart SDK locally (or run inside the Flutter CI " +
+          "image) before committing.",
+      );
+      return false;
+    }
+    throw err;
+  }
+}
+
 const args = new Set(process.argv.slice(2));
-const out = generate();
+const rawOut = generate();
+
+// Format the candidate output by writing to a temp path, formatting in
+// place, then reading back. This makes --check and the default mode
+// produce byte-identical output regardless of whether the working tree
+// already has dart-formatted content.
+const TMP = OUT_DART + ".tmp";
+writeFileSync(TMP, rawOut);
+dartFormatInPlace(TMP);
+const formattedOut = readFileSync(TMP, "utf8");
+// Best-effort cleanup; the file is in apps/mobile/lib/shared/database
+// so leaving it on disk would cause `dart format --set-exit-if-changed`
+// to flag it.
+try {
+  execFileSync("rm", ["-f", TMP]);
+} catch {
+  /* ignore */
+}
 
 if (args.has("--check")) {
   const existing = existsSync(OUT_DART) ? readFileSync(OUT_DART, "utf8") : "";
-  if (existing !== out) {
+  if (existing !== formattedOut) {
     console.error(
       `\n${OUT_DART} is out of date.\n` +
         `Run: node scripts/codegen/dart_db_types.mjs\n`,
@@ -270,5 +315,5 @@ if (args.has("--check")) {
   process.exit(0);
 }
 
-writeFileSync(OUT_DART, out);
+writeFileSync(OUT_DART, formattedOut);
 console.log(`wrote ${OUT_DART}`);

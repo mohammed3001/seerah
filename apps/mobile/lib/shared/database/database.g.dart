@@ -74,7 +74,8 @@ class ProfilesRow {
       billingCountry: json['billing_country'] as String?,
       referralCode: json['referral_code'] as String?,
       referredBy: json['referred_by'] as String?,
-      marketingEmailsEnabled: json['marketing_emails_enabled'] as bool? ?? false,
+      marketingEmailsEnabled:
+          json['marketing_emails_enabled'] as bool? ?? false,
       unsubscribeToken: json['unsubscribe_token'] as String? ?? '',
       locale: json['locale'] as String? ?? '',
       isDisabled: json['is_disabled'] as bool? ?? false,
