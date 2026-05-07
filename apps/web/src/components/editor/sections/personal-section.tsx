@@ -118,7 +118,7 @@ export function PersonalSection() {
         description="المعلومات الأساسية التي ستظهر في رأس السيرة"
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[140px_1fr]">
+      <div className="grid grid-cols-1 gap-6 @lg:grid-cols-[140px_1fr]">
         <div className="flex flex-col items-center gap-3">
           <Avatar className="size-28">
             {form.avatar_path ? (
@@ -203,7 +203,7 @@ export function PersonalSection() {
             <CharacterCounter value={localized.bio ?? ""} max={BIO_MAX} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 @xl:grid-cols-2">
             <FloatingInput
               label="البريد الإلكتروني (للسيرة)"
               type="email"
@@ -238,7 +238,7 @@ export function PersonalSection() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 @xl:grid-cols-2">
             <div className="space-y-1.5">
               <Label>الدولة</Label>
               <CountrySelect
@@ -257,7 +257,7 @@ export function PersonalSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 @xl:grid-cols-2">
             <div className="space-y-1.5">
               <Label>تاريخ الميلاد</Label>
               <DateTriad
@@ -286,7 +286,7 @@ export function PersonalSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 @2xl:grid-cols-3">
             <RadioField
               label="الجنس"
               value={form.gender ?? ""}

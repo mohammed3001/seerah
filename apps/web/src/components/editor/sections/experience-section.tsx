@@ -49,7 +49,7 @@ export function ExperienceSection() {
           }
           return (
             <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <FloatingInput
                   label={`الشركة ${editorLang === "ar" ? "(عربي)" : "(English)"}`}
                   value={localized.company ?? ""}
@@ -61,7 +61,7 @@ export function ExperienceSection() {
                   onChange={(e) => setLocalized("job_title", e.target.value)}
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>تاريخ البداية</Label>
                   <DateTriad

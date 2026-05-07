@@ -24,6 +24,7 @@ export default async function ResumeEditorPage({ params }: Params) {
       }}
       title={data.resume.title}
       breadcrumb={[{ label: "سيرتي", href: "/dashboard" }, { label: data.resume.title }]}
+      fullBleed
     >
       <ResumeEditor data={data} />
     </DashboardShell>

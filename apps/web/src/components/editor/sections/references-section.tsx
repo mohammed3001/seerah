@@ -49,7 +49,7 @@ export function ReferencesSection() {
                 value={localized.name ?? ""}
                 onChange={(e) => setLocalized("name", e.target.value)}
               />
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <FloatingInput
                   label="البريد الإلكتروني"
                   type="email"

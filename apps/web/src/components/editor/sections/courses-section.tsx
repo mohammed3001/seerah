@@ -49,7 +49,7 @@ export function CoursesSection() {
           }
           return (
             <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <FloatingInput
                   label={`اسم الدورة ${editorLang === "ar" ? "(عربي)" : "(English)"}`}
                   value={localized.name ?? ""}
@@ -61,7 +61,7 @@ export function CoursesSection() {
                   onChange={(e) => setLocalized("institution", e.target.value)}
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 @xl:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>تاريخ البداية</Label>
                   <DateTriad

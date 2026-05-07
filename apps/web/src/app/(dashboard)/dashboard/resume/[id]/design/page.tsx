@@ -30,6 +30,7 @@ export default async function ResumeDesignPage({ params }: Params) {
         { label: data.resume.title, href: `/dashboard/resume/${id}` },
         { label: "التصاميم" },
       ]}
+      fullBleed
     >
       <ResumeTabs resumeId={id} />
       <TemplateGalleryClient data={data} plan={session.profile.plan} />

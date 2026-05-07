@@ -52,7 +52,7 @@ export function LanguagesSection() {
         itemLabel={(item, idx) => item.language_name || `لغة ${idx + 1}`}
         renderItem={({ item, patch }) => (
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div className="grid gap-4 @md:grid-cols-[1fr_180px]">
               <FloatingInput
                 label="اللغة"
                 value={item.language_name}

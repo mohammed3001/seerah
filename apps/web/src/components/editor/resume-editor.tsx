@@ -41,19 +41,23 @@ export function ResumeEditor({ data }: Props) {
 function EditorWorkspace() {
   return (
     <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <aside className="rounded-card border border-border bg-card p-3 shadow-soft">
+      <aside className="rounded-card border border-border bg-card p-3 shadow-soft lg:sticky lg:top-20 lg:max-h-[calc(100dvh-7rem)] lg:overflow-auto">
         <SectionSidebar />
       </aside>
       <SplitPane
         storageKey="seerah:editor-split-ratio"
-        defaultStartRatio={0.55}
+        defaultStartRatio={0.5}
         minStartRatio={0.35}
         maxStartRatio={0.75}
         breakpoint="lg"
         className="min-w-0"
-        startClassName="rounded-card border border-border bg-card p-6 shadow-soft lg:me-2"
-        endClassName="hidden h-[80vh] overflow-hidden rounded-card border border-border bg-card shadow-soft lg:block lg:ms-2"
-        start={<ActiveSection />}
+        startClassName="rounded-card border border-border bg-card p-6 shadow-soft lg:me-2 lg:max-h-[calc(100dvh-9rem)] lg:overflow-auto"
+        endClassName="hidden h-[calc(100dvh-9rem)] overflow-hidden rounded-card border border-border bg-card shadow-soft lg:block lg:ms-2"
+        start={
+          <div className="mx-auto w-full max-w-[1100px] @container">
+            <ActiveSection />
+          </div>
+        }
         end={<PreviewPane />}
       />
     </div>
