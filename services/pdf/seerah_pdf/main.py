@@ -21,6 +21,9 @@ _logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
+    # Fail-fast in production if a required env var is empty. In dev/test
+    # we still want the app to boot.
+    settings.assert_runtime_ready()
     if settings.sentry_dsn:
         sentry_sdk.init(
             dsn=settings.sentry_dsn,

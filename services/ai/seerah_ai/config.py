@@ -1,6 +1,7 @@
 """Runtime configuration loaded from environment variables."""
 
 from functools import lru_cache
+from typing import ClassVar
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,6 +15,12 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    # `production` enables strict startup validation (see
+    # `assert_runtime_ready`). Anything else (development / test / ci /
+    # local) is permissive so unit tests with mocked dependencies can
+    # still construct the app without real credentials.
+    environment: str = Field(default="development", alias="ENVIRONMENT")
 
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
@@ -36,6 +43,43 @@ class Settings(BaseSettings):
         default="http://localhost:3000",
         alias="AI_CORS_ALLOW_ORIGINS",
     )
+
+    # Fields whose absence makes the service useless in production. Listed
+    # as (env_var_name, attribute_name) so the error message points at the
+    # variable the operator actually sets in their environment, not the
+    # snake_case attribute.
+    REQUIRED_IN_PRODUCTION: ClassVar[tuple[tuple[str, str], ...]] = (
+        ("OPENAI_API_KEY", "openai_api_key"),
+        ("AI_SERVICE_INTERNAL_TOKEN", "internal_token"),
+        ("NEXT_PUBLIC_SUPABASE_URL", "supabase_url"),
+        ("SUPABASE_SERVICE_ROLE_KEY", "supabase_service_role_key"),
+    )
+
+    def is_production(self) -> bool:
+        return self.environment.strip().lower() == "production"
+
+    def missing_required(self) -> list[str]:
+        return [
+            env_name
+            for env_name, attr in self.REQUIRED_IN_PRODUCTION
+            if not str(getattr(self, attr) or "").strip()
+        ]
+
+    def assert_runtime_ready(self) -> None:
+        """Raise if any required env var is empty in production mode.
+
+        Called from `create_app` so the service crashes loudly at boot
+        instead of returning 502 on every API call. Non-production modes
+        log a warning per missing var (see `main.py`) but do not raise.
+        """
+        if not self.is_production():
+            return
+        missing = self.missing_required()
+        if missing:
+            raise RuntimeError(
+                "AI service is misconfigured for production: required "
+                "environment variables are empty: " + ", ".join(missing)
+            )
 
 
 @lru_cache(maxsize=1)
