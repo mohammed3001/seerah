@@ -44,14 +44,15 @@ const OUT_DART = resolve(
 );
 
 /**
- * Read the TS source and split it into top-level blocks. Each block is a
- * single `type XxxRow = ...;` declaration. We anchor on `^type ` so the
- * regex never accidentally matches inside a string / object literal.
+ * Read the TS source and split it into top-level `type Xxx = ...;` blocks.
+ * We anchor on `^type ` so the regex never accidentally matches inside a
+ * string / object literal. Returns *every* top-level type block, not just
+ * the `Row` ones — base types like `SectionItemBase` are needed to resolve
+ * intersections.
  */
-function extractRowTypes(source) {
+function extractTypeBlocks(source) {
   const blocks = [];
-  // Match `type Foo = …;` where the body may contain `& { … }`.
-  const re = /^(type\s+(\w+Row)\s*=\s*[\s\S]*?\n};)/gm;
+  const re = /^(type\s+(\w+)\s*=\s*[\s\S]*?\n};)/gm;
   for (const m of source.matchAll(re)) {
     blocks.push({ name: m[2], body: m[1] });
   }
@@ -59,42 +60,91 @@ function extractRowTypes(source) {
 }
 
 /**
+ * Extract field declarations from the body of a single `{ ... }` object
+ * literal. Returns an array of { name, tsType, optional }.
+ */
+function parseObjectBody(body) {
+  const fields = [];
+  for (const raw of body.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("//")) continue;
+    // `name: type;` or `name?: type;`
+    const fm = /^(\w+)(\?)?\s*:\s*([^;]+);$/.exec(line);
+    if (!fm) continue;
+    fields.push({
+      name: fm[1],
+      optional: !!fm[2],
+      tsType: fm[3].trim(),
+    });
+  }
+  return fields;
+}
+
+/**
  * Extract field declarations from a `type XxxRow` block. Handles:
  *   - `type XxxRow = { ... };`
  *   - `type XxxRow = Base & { ... };`
  *   - `type XxxRow = Base & { ... } & { ... };`
- * Returns an array of { name, tsType, optional }.
+ *
+ * Named base types (e.g. `SectionItemBase`) are resolved against `lookup`
+ * — a Map of typeName → field[] built from non-Row blocks. Inline `{ ... }`
+ * bodies are parsed in place. The two are merged with intersection
+ * semantics: when a column appears in both base and extension, the
+ * extension wins.
  */
-function parseFields(block) {
-  // Pull every `{ … }` body out of the block. Multi-piece intersections
-  // like `Base & { a } & { b }` are merged.
+function parseFields(block, lookup) {
+  // Strip the `type Name = ` prefix and the trailing `;` so we only work
+  // with the right-hand side of the declaration.
+  const rhs = block.body.replace(/^type\s+\w+\s*=\s*/, "").replace(/;\s*$/, "");
+
+  // Walk the RHS one `&`-piece at a time. Each piece is either an inline
+  // object (`{ ... }`) or a named identifier (e.g. `SectionItemBase`).
+  // Splitting by `&` is safe here because the schema does not use
+  // generics or function types in row declarations.
   const fields = [];
-  const objectBodies = [];
-  // Greedy outer braces — the file has no nested object literals inside
-  // row types, so `{ ... }` matches one body cleanly.
-  for (const m of block.body.matchAll(/\{([^{}]*?)\}/gs)) {
-    objectBodies.push(m[1]);
-  }
-  for (const body of objectBodies) {
-    const lines = body.split("\n");
-    for (const raw of lines) {
-      const line = raw.trim();
-      if (!line || line.startsWith("//")) continue;
-      // `name: type;` or `name?: type;`
-      const fm = /^(\w+)(\?)?\s*:\s*([^;]+);$/.exec(line);
-      if (!fm) continue;
-      fields.push({
-        name: fm[1],
-        optional: !!fm[2],
-        tsType: fm[3].trim(),
-      });
+  const pieces = splitIntersection(rhs);
+  for (const piece of pieces) {
+    const trimmed = piece.trim();
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      const inner = trimmed.slice(1, -1);
+      fields.push(...parseObjectBody(inner));
+      continue;
     }
+    // Named base reference — resolve from lookup.
+    const baseName = trimmed.match(/^(\w+)$/)?.[1];
+    if (baseName && lookup.has(baseName)) {
+      fields.push(...lookup.get(baseName));
+    }
+    // Anything else (e.g. mapped types) is intentionally ignored — this
+    // codegen is best-effort and the schema doesn't currently use them.
   }
-  // If a column appears twice (intersection of base + extension), the
-  // last one wins — this matches TypeScript's intersection semantics.
+
+  // Last write wins for duplicates (intersection extension semantics).
   const seen = new Map();
   for (const f of fields) seen.set(f.name, f);
   return [...seen.values()];
+}
+
+/**
+ * Split an intersection RHS like `Base & { a } & { b }` into pieces:
+ * `['Base', '{ a }', '{ b }']`. Brace-aware so `&` inside an object body
+ * is never treated as a separator.
+ */
+function splitIntersection(rhs) {
+  const pieces = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < rhs.length; i++) {
+    const ch = rhs[i];
+    if (ch === "{") depth++;
+    else if (ch === "}") depth--;
+    else if (ch === "&" && depth === 0) {
+      pieces.push(rhs.slice(start, i));
+      start = i + 1;
+    }
+  }
+  pieces.push(rhs.slice(start));
+  return pieces;
 }
 
 /**
@@ -226,14 +276,27 @@ function generate() {
     process.exit(2);
   }
   const src = readFileSync(SOURCE_TS, "utf8");
-  const blocks = extractRowTypes(src);
+  const allBlocks = extractTypeBlocks(src);
+
+  // Build a lookup of every non-Row type so intersections like
+  // `EducationRow = SectionItemBase & { ... }` can resolve the base's
+  // fields. Non-Row types are passed an empty lookup since they shouldn't
+  // recurse — the schema only nests one level deep.
+  const lookup = new Map();
+  for (const b of allBlocks) {
+    if (!b.name.endsWith("Row")) {
+      lookup.set(b.name, parseFields(b, new Map()));
+    }
+  }
+
+  const blocks = allBlocks.filter((b) => b.name.endsWith("Row"));
   if (blocks.length === 0) {
     console.error("no `type XxxRow` blocks found — schema parser drift?");
     process.exit(2);
   }
 
   const classes = blocks
-    .map((b) => renderClass(b.name, parseFields(b)))
+    .map((b) => renderClass(b.name, parseFields(b, lookup)))
     .join("\n");
 
   const out = `// GENERATED FILE — DO NOT EDIT BY HAND.
@@ -282,29 +345,37 @@ function dartFormatInPlace(path) {
   }
 }
 
+/**
+ * Run `dart format` on a string via stdin, returning the formatted
+ * output. Returns null when `dart` isn't on PATH, so --check can fall
+ * back to byte-comparing the unformatted strings (the local dev who
+ * commits without dart will get caught by CI's Flutter stage anyway).
+ */
+function formatViaStdin(source) {
+  try {
+    const out = execFileSync("dart", ["format", "--output=show"], {
+      input: source,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    return out.toString("utf8");
+  } catch (err) {
+    if (err && err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+
 const args = new Set(process.argv.slice(2));
 const rawOut = generate();
 
-// Format the candidate output by writing to a temp path, formatting in
-// place, then reading back. This makes --check and the default mode
-// produce byte-identical output regardless of whether the working tree
-// already has dart-formatted content.
-const TMP = OUT_DART + ".tmp";
-writeFileSync(TMP, rawOut);
-dartFormatInPlace(TMP);
-const formattedOut = readFileSync(TMP, "utf8");
-// Best-effort cleanup; the file is in apps/mobile/lib/shared/database
-// so leaving it on disk would cause `dart format --set-exit-if-changed`
-// to flag it.
-try {
-  execFileSync("rm", ["-f", TMP]);
-} catch {
-  /* ignore */
-}
-
 if (args.has("--check")) {
+  // In --check mode we never touch OUT_DART. Compare in-memory raw
+  // against the existing on-disk content normalised through `dart
+  // format`. This decouples the comparison from any temp-file path
+  // (which previously leaked into `dart format lib test`).
   const existing = existsSync(OUT_DART) ? readFileSync(OUT_DART, "utf8") : "";
-  if (existing !== formattedOut) {
+  const formattedExisting = formatViaStdin(existing) ?? existing;
+  const formattedRaw = formatViaStdin(rawOut) ?? rawOut;
+  if (formattedExisting !== formattedRaw) {
     console.error(
       `\n${OUT_DART} is out of date.\n` +
         `Run: node scripts/codegen/dart_db_types.mjs\n`,
@@ -315,5 +386,6 @@ if (args.has("--check")) {
   process.exit(0);
 }
 
-writeFileSync(OUT_DART, formattedOut);
+writeFileSync(OUT_DART, rawOut);
+dartFormatInPlace(OUT_DART);
 console.log(`wrote ${OUT_DART}`);

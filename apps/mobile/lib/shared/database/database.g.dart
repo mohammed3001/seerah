@@ -316,6 +316,10 @@ class PersonalInfoRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class EducationRow {
   const EducationRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.institution,
     this.degree,
     this.fieldOfStudy,
@@ -326,6 +330,10 @@ class EducationRow {
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? institution;
   final String? degree;
   final String? fieldOfStudy;
@@ -337,6 +345,10 @@ class EducationRow {
 
   factory EducationRow.fromJson(Map<String, dynamic> json) {
     return EducationRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       institution: json['institution'] as String?,
       degree: json['degree'] as String?,
       fieldOfStudy: json['field_of_study'] as String?,
@@ -350,6 +362,10 @@ class EducationRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'institution': institution,
       'degree': degree,
       'field_of_study': fieldOfStudy,
@@ -367,6 +383,10 @@ class EducationRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class ExperienceRow {
   const ExperienceRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.company,
     this.jobTitle,
     this.startDate,
@@ -377,6 +397,10 @@ class ExperienceRow {
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? company;
   final String? jobTitle;
   final String? startDate;
@@ -388,6 +412,10 @@ class ExperienceRow {
 
   factory ExperienceRow.fromJson(Map<String, dynamic> json) {
     return ExperienceRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       company: json['company'] as String?,
       jobTitle: json['job_title'] as String?,
       startDate: json['start_date'] as String?,
@@ -401,6 +429,10 @@ class ExperienceRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'company': company,
       'job_title': jobTitle,
       'start_date': startDate,
@@ -418,15 +450,27 @@ class ExperienceRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class SkillsRow {
   const SkillsRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     required this.name,
     this.level,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String name;
   final String? level;
 
   factory SkillsRow.fromJson(Map<String, dynamic> json) {
     return SkillsRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       name: json['name'] as String? ?? '',
       level: json['level'] as String?,
     );
@@ -434,6 +478,10 @@ class SkillsRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'name': name,
       'level': level,
     };
@@ -445,17 +493,29 @@ class SkillsRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class LanguagesRow {
   const LanguagesRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     required this.languageName,
     this.fluency,
     required this.isSignLanguage,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String languageName;
   final String? fluency;
   final bool isSignLanguage;
 
   factory LanguagesRow.fromJson(Map<String, dynamic> json) {
     return LanguagesRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       languageName: json['language_name'] as String? ?? '',
       fluency: json['fluency'] as String?,
       isSignLanguage: json['is_sign_language'] as bool? ?? false,
@@ -464,6 +524,10 @@ class LanguagesRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'language_name': languageName,
       'fluency': fluency,
       'is_sign_language': isSignLanguage,
@@ -476,6 +540,10 @@ class LanguagesRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class CoursesRow {
   const CoursesRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.name,
     this.institution,
     this.startDate,
@@ -486,6 +554,10 @@ class CoursesRow {
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? name;
   final String? institution;
   final String? startDate;
@@ -497,6 +569,10 @@ class CoursesRow {
 
   factory CoursesRow.fromJson(Map<String, dynamic> json) {
     return CoursesRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       name: json['name'] as String?,
       institution: json['institution'] as String?,
       startDate: json['start_date'] as String?,
@@ -510,6 +586,10 @@ class CoursesRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'name': name,
       'institution': institution,
       'start_date': startDate,
@@ -527,6 +607,10 @@ class CoursesRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class ProjectsRow {
   const ProjectsRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.name,
     this.url,
     this.startDate,
@@ -537,6 +621,10 @@ class ProjectsRow {
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? name;
   final String? url;
   final String? startDate;
@@ -548,6 +636,10 @@ class ProjectsRow {
 
   factory ProjectsRow.fromJson(Map<String, dynamic> json) {
     return ProjectsRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       name: json['name'] as String?,
       url: json['url'] as String?,
       startDate: json['start_date'] as String?,
@@ -561,6 +653,10 @@ class ProjectsRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'name': name,
       'url': url,
       'start_date': startDate,
@@ -578,6 +674,10 @@ class ProjectsRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class ReferencesRow {
   const ReferencesRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.name,
     this.email,
     this.phone,
@@ -587,6 +687,10 @@ class ReferencesRow {
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? name;
   final String? email;
   final String? phone;
@@ -597,6 +701,10 @@ class ReferencesRow {
 
   factory ReferencesRow.fromJson(Map<String, dynamic> json) {
     return ReferencesRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       name: json['name'] as String?,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
@@ -609,6 +717,10 @@ class ReferencesRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'name': name,
       'email': email,
       'phone': phone,
@@ -625,15 +737,27 @@ class ReferencesRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class SocialLinksRow {
   const SocialLinksRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.url,
     this.linkType,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? url;
   final String? linkType;
 
   factory SocialLinksRow.fromJson(Map<String, dynamic> json) {
     return SocialLinksRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       url: json['url'] as String?,
       linkType: json['link_type'] as String?,
     );
@@ -641,6 +765,10 @@ class SocialLinksRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'url': url,
       'link_type': linkType,
     };
@@ -652,17 +780,29 @@ class SocialLinksRow {
 /// Generated from `packages/types/src/database.ts` — DO NOT EDIT BY HAND.
 class HobbiesRow {
   const HobbiesRow({
+    required this.id,
+    required this.resumeId,
+    required this.isVisible,
+    required this.sortOrder,
     this.name,
     this.ar,
     this.en,
   });
 
+  final String id;
+  final String resumeId;
+  final bool isVisible;
+  final num sortOrder;
   final String? name;
   final dynamic ar;
   final dynamic en;
 
   factory HobbiesRow.fromJson(Map<String, dynamic> json) {
     return HobbiesRow(
+      id: json['id'] as String? ?? '',
+      resumeId: json['resume_id'] as String? ?? '',
+      isVisible: json['is_visible'] as bool? ?? false,
+      sortOrder: (json['sort_order'] as num?) ?? 0,
       name: json['name'] as String?,
       ar: json['ar'],
       en: json['en'],
@@ -671,6 +811,10 @@ class HobbiesRow {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'id': id,
+      'resume_id': resumeId,
+      'is_visible': isVisible,
+      'sort_order': sortOrder,
       'name': name,
       'ar': ar,
       'en': en,
