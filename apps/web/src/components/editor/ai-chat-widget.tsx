@@ -46,7 +46,7 @@ export function AiChatWidget() {
         type="button"
         size="icon"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 end-6 z-30 h-14 w-14 rounded-full shadow-card-dark"
+        className="fixed bottom-24 end-6 z-30 h-14 w-14 rounded-full shadow-card-dark"
         aria-label="فتح محادثة المساعد"
       >
         <MessageCircle className="size-6" />
@@ -56,7 +56,7 @@ export function AiChatWidget() {
 
   return (
     <aside
-      className="fixed bottom-6 end-6 z-40 flex h-[500px] w-[380px] max-w-[calc(100vw-32px)] flex-col rounded-2xl border border-border bg-background shadow-card-dark"
+      className="fixed bottom-24 end-6 z-40 flex h-[500px] w-[380px] max-w-[calc(100vw-32px)] flex-col rounded-2xl border border-border bg-background shadow-card-dark"
       aria-label="محادثة سيرة"
       style={{ animation: "slide-in-end 220ms cubic-bezier(0.16, 1, 0.3, 1)" }}
     >

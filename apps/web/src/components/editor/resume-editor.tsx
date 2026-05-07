@@ -10,6 +10,7 @@ import { AiPanel } from "./ai-panel";
 import { EditorProvider, useEditor } from "./editor-context";
 import { PreviewPane } from "./preview-pane";
 import { SectionSidebar } from "./section-sidebar";
+import { SplitPane } from "./split-pane";
 import { AddressSection } from "./sections/address-section";
 import { CoursesSection } from "./sections/courses-section";
 import { EducationSection } from "./sections/education-section";
@@ -39,16 +40,22 @@ export function ResumeEditor({ data }: Props) {
 
 function EditorWorkspace() {
   return (
-    <div className="grid gap-4 lg:grid-cols-[220px_1fr_minmax(360px,520px)]">
+    <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
       <aside className="rounded-card border border-border bg-card p-3 shadow-soft">
         <SectionSidebar />
       </aside>
-      <main className="rounded-card border border-border bg-card p-6 shadow-soft">
-        <ActiveSection />
-      </main>
-      <aside className="hidden h-[80vh] overflow-hidden rounded-card border border-border bg-card shadow-soft lg:block">
-        <PreviewPane />
-      </aside>
+      <SplitPane
+        storageKey="seerah:editor-split-ratio"
+        defaultStartRatio={0.55}
+        minStartRatio={0.35}
+        maxStartRatio={0.75}
+        breakpoint="lg"
+        className="min-w-0"
+        startClassName="rounded-card border border-border bg-card p-6 shadow-soft lg:me-2"
+        endClassName="hidden h-[80vh] overflow-hidden rounded-card border border-border bg-card shadow-soft lg:block lg:ms-2"
+        start={<ActiveSection />}
+        end={<PreviewPane />}
+      />
     </div>
   );
 }
