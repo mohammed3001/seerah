@@ -52,6 +52,19 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Dart DB types up-to-date
+        # Regenerates apps/mobile/lib/shared/database/database.g.dart from
+        # packages/types/src/database.ts and fails if the working copy is
+        # stale. The codegen also runs `dart format` on its output so the
+        # generated file is byte-identical to what the Flutter stage's
+        # `dart format --set-exit-if-changed` will produce — without dart
+        # on PATH the two stages disagree and a regen breaks CI.
+        run: node scripts/codegen/dart_db_types.mjs --check
+
       - name: Build
         run: pnpm build
         env:
