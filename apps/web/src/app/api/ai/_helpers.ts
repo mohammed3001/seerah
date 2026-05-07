@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import { getDashboardSession } from "@/lib/dashboard/get-session";
 import { AIServiceError, aiServer } from "@/lib/ai/server";
 import type { AIResult, RateLimitInfo } from "@/lib/ai/types";
+import { enforceIpRateLimit } from "@/lib/security/ip-rate-limit";
 import { assertSameOrigin } from "@/lib/security/origin";
 
 interface OkBody<T> {
@@ -35,6 +36,13 @@ export async function handleAIRoute<TInput, TOutput>(
 ): Promise<Response> {
   const blocked = assertSameOrigin(request);
   if (blocked) return blocked;
+
+  // IP-based limiter runs BEFORE session resolution so an attacker
+  // cannot exhaust DB + Supabase round-trips just by spamming this
+  // route with garbage cookies. It's a no-op when Upstash isn't
+  // configured.
+  const throttled = await enforceIpRateLimit(request, "ai");
+  if (throttled) return throttled;
 
   // getDashboardSession may call Next's redirect() (which throws
   // NEXT_REDIRECT). Resolve it BEFORE the try/catch around aiServer so

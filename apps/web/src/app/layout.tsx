@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { Providers } from "@/components/providers";
 import { cairo, manrope, premiumFontClassNames, sfPro } from "@/lib/fonts";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${sfPro.variable} ${cairo.variable} ${manrope.variable} ${premiumFontClassNames}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
+        <PageViewTracker />
         <Providers>{children}</Providers>
       </body>
     </html>
