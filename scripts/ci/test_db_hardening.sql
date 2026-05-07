@@ -90,6 +90,17 @@ $$;
 -- `security definer` on the trigger, the inner UPDATE would silently
 -- match 0 rows under the `resumes_update_own` policy and the counter
 -- would stay at 0.
+--
+-- Real Supabase auto-grants table-level privileges to `anon` and
+-- `authenticated` (RLS then narrows them). The CI bootstrap only
+-- creates the roles, so we grant the privileges this test path
+-- exercises:
+--   * INSERT on resume_views (the path under test)
+--   * SELECT on resumes (needed by the resume_views WITH CHECK
+--     policy, which subqueries `resumes` to verify is_public=true)
+grant insert on public.resume_views to anon;
+grant select on public.resumes to anon;
+
 do $$
 declare
   v_resume_id uuid;
